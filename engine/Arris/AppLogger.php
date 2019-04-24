@@ -1,10 +1,13 @@
 <?php
 /**
- * Это не синглтон, а просто враппер.
+ * User: Karel Wintersky
  *
- * Синглтоном он будет когда мы сделаем "ленивую" инициализацию в методе scope()
+ * Class AppLogger
+ * Namespace: Arris
  *
+ * Date: 24.04.2019, 18:35
  */
+
 namespace Arris;
 
 use \Monolog\Logger;
