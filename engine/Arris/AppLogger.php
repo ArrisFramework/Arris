@@ -5,6 +5,8 @@
  * Class AppLogger
  * Namespace: Arris
  *
+ * Library: https://github.com/KarelWintersky/Arris
+ *
  * Date: 24.04.2019, 18:35
  */
 
@@ -32,7 +34,7 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = '1.0';
+    const VERSION = '1.2';
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
 
@@ -62,10 +64,24 @@ class AppLogger implements AppLoggerInterface
      */
     public static function init($app_instance_id, $options = [])
     {
-        self::$app_instance = $app_instance_id;
+        self::$app_instance
+            = $app_instance_id;
 
-        self::$_global_config['bubbling'] = $options['bubbling'] ?? false;
-        self::$_global_config['default_log_level'] = $options['default_log_level'] ?? Logger::DEBUG;
+        self::$_global_config['bubbling']
+            = $options['bubbling']
+            ?: false;
+
+        self::$_global_config['default_log_level']
+            = $options['default_log_level']
+            ?: Logger::DEBUG;
+
+        self::$_global_config['add_scope_to_log']
+            = $options['add_scope_to_log']
+            ?: false;
+
+        self::$_global_config['default_log_path']
+            = rtrim($options['default_log_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+            ?: '';
     }
 
     /**
@@ -79,10 +95,25 @@ class AppLogger implements AppLoggerInterface
     {
         $key = self::getScopeKey($scope);
 
-        $logger = new Logger($key);
+        $logger_name = self::$_global_config['add_scope_to_log'] ? $key : self::$app_instance;
+
+        $logger = new Logger($logger_name);
+
+        if (empty($options)) {
+            $options = [
+                [ '100-debug.log', Logger::DEBUG ],
+                [ '200-info.log', Logger::INFO],
+                [ '250-notice.log', Logger::NOTICE],
+                [ '300-warning.log', Logger::WARNING],
+                [ '400-error.log', Logger::ERROR],
+                [ '500-critical.log', Logger::CRITICAL],
+                [ '550-alert.log', Logger::ALERT],
+                [ '600-emergency.log', Logger::EMERGENCY]
+            ];
+        }
 
         foreach ($options as $option) {
-            $filename = $option[0];
+            $filename = self::$_global_config['default_log_path'] . $option[0];
             $loglevel = $option[1] ?? self::$_global_config['default_log_level'];
             $buggling = $option[2] ?? self::$_global_config['bubbling'];
 

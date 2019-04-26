@@ -47,3 +47,15 @@ AppLogger::scope('usage')->debug('Usage', [0, 1, 2]);
 
 - lazy initialization with AppLogger::addScope()
 - standalone class
+- добавить в опции инициализации поле "addScopeToLogRecord" - добавлять ли строчку скоупа к записи в логе:
+- describe default options for AppLogger::init()
+
+```
+[2019-04-25 12:57:44] 47news.1eab4fe8072aca08.stats.NOTICE: Usage: [0.98,4935952,"site_default","47news.local/"] []
+```
+Здесь 47news.1eab4fe8072aca08 - application id,
+stats - scope
+NOTICE - logging level
+
+ 
+

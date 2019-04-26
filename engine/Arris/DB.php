@@ -5,6 +5,8 @@
  * Date: 20.09.2018, time: 16:34 Version 2.0/ArrisFramework
  * Date: 09.10.2018, time: 06:34 Version 2.1/ArrisFramework
  * Date: 01.03.2019, Version 2.3/Arris
+ *
+ * Library: https://github.com/KarelWintersky/Arris
  */
 
 namespace Arris;

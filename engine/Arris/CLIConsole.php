@@ -5,6 +5,8 @@
  * Class CLIConsole
  * Namespace: Arris
  *
+ * Library: https://github.com/KarelWintersky/Arris
+ *
  * Date: 04.03.2018, time: 19:27
  */
 
