@@ -117,7 +117,7 @@ class AppLogger implements AppLoggerInterface
         }
 
         foreach ($options as $option) {
-            $filename = self::$_global_config['default_log_path'] . $option[0];
+            $filename = self::$_global_config['default_logfile_path'] . self::$_global_config['default_logfile_prefix'] . $option[0];
             $loglevel = $option[1] ?? self::$_global_config['default_log_level'];
             $buggling = $option[2] ?? self::$_global_config['bubbling'];
 
