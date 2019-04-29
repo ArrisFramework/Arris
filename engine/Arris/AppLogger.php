@@ -34,7 +34,7 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = '1.2';
+    const VERSION = '1.3';
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
 
@@ -68,24 +68,29 @@ class AppLogger implements AppLoggerInterface
             = $app_instance_id;
 
         self::$_global_config['bubbling']
-            = $options['bubbling']
-            ?: false;
+            = isset($options['bubbling'])
+            ? $options['bubbling']
+            : false;
 
         self::$_global_config['default_log_level']
-            = $options['default_log_level']
-            ?: Logger::DEBUG;
+            = isset($options['default_log_level'])
+            ? $options['default_log_level']
+            : Logger::DEBUG;
 
         self::$_global_config['add_scope_to_log']
-            = $options['add_scope_to_log']
-            ?: false;
+            = isset($options['add_scope_to_log'])
+            ? $options['add_scope_to_log']
+            : false;
 
         self::$_global_config['default_logfile_path']
-            = rtrim($options['default_logfile_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
-            ?: '';
+            = isset($options['default_logfile_path'])
+            ? rtrim($options['default_logfile_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+            : '';
 
         self::$_global_config['default_logfile_prefix']
-            = $options['default_logfile_prefix']
-            ?: '';
+            = isset($options['default_logfile_prefix'])
+            ? $options['default_logfile_prefix']
+            : '';
     }
 
     /**
