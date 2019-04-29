@@ -84,7 +84,7 @@ class AppLogger implements AppLoggerInterface
             ?: '';
 
         self::$_global_config['default_logfile_prefix']
-            = rtrim($options['default_logfile_prefix'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+            = $options['default_logfile_prefix']
             ?: '';
     }
 
