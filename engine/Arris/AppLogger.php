@@ -79,8 +79,12 @@ class AppLogger implements AppLoggerInterface
             = $options['add_scope_to_log']
             ?: false;
 
-        self::$_global_config['default_log_path']
-            = rtrim($options['default_log_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+        self::$_global_config['default_logfile_path']
+            = rtrim($options['default_logfile_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+            ?: '';
+
+        self::$_global_config['default_logfile_prefix']
+            = rtrim($options['default_logfile_prefix'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
             ?: '';
     }
 
