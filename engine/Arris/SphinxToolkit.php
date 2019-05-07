@@ -9,8 +9,7 @@
 /**
  * @todo:
  *
- * 1. переименовать rt_RebuildAbstractIndex в RebuildAbstractIndex
- * 2. добавить больше опций логгирования через setRebuildIndexOptions()
+ * 1. добавить больше опций логгирования через setRebuildIndexOptions()
  *
  *
  */
@@ -18,7 +17,7 @@
 namespace Arris;
 
 interface SphinxToolkitInterface {
-    public function rt_RebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', $chunk_length = 500);
+    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '');
 }
 
 
@@ -27,7 +26,7 @@ use PDO;
 
 use Arris\DB;
 
-class SphinxToolkit
+class SphinxToolkit implements SphinxToolkitInterface
 {
     /**
      * @var \PDO
@@ -39,7 +38,18 @@ class SphinxToolkit
      */
     public $sphinx_connection;
 
-    private $rai_options = [];
+    private $rai_options = [
+        'chunk_length'          =>  500,
+
+        'log_rows_inside_chunk' =>  true,
+        'log_total_rows_found'  =>  true,
+
+        'log_before_chunk'      =>  true,
+        'log_after_chunk'       =>  true,
+
+        'sleep_after_chunk'     =>  true,
+        'sleep_time'            =>  1
+    ];
 
     public function __construct(\PDO $mysql_connection, \PDO $sphinx_connection)
     {
@@ -50,15 +60,25 @@ class SphinxToolkit
     public function setRebuildIndexOptions(array $options = []):bool
     {
         // на самом деле разворачиваем опции с установкой дефолтов
-        $this->rai_options = $options;
+        $this->rai_options['chunk_length'] = isset($options['chunk_length']) ? $options['chunk_length'] : 500;
+
+        $this->rai_options['log_rows_inside_chunk'] = isset($options['log_rows_inside_chunk']) ? $options['log_rows_inside_chunk'] : true;
+        $this->rai_options['log_total_rows_found'] = isset($options['log_total_rows_found']) ? $options['log_total_rows_found'] : true;
+
+        $this->rai_options['log_before_chunk'] = isset($options['log_before_chunk']) ? $options['log_before_chunk'] : true;
+        $this->rai_options['log_after_chunk'] = isset($options['log_after_chunk']) ? $options['log_after_chunk'] : true;
+
+        $this->rai_options['sleep_after_chunk'] = isset($options['sleep_after_chunk']) ? $options['sleep_after_chunk'] : true;
+        $this->rai_options['sleep_time'] = isset($options['sleep_time']) ? $options['sleep_time'] : 1;
+
     }
 
-    public function rt_RebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', $chunk_length = 500):int
+    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
     {
         $mysql_connection = $this->mysql_connection;
         $sphinx_connection = $this->sphinx_connection;
 
-        $chunk_size = $chunk_length;
+        $chunk_size = $this->rai_options['chunk_length'];
 
         // truncate
         $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index}");
@@ -67,9 +87,15 @@ class SphinxToolkit
         $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
         $total_updated = 0;
 
+        if ($this->rai_options['log_total_rows_found'])
+            CLIConsole::echo_status("<font color='green'>{$total_count}</font> rows found.");
+
         // iterate chunks
         for ($i = 0; $i < ceil($total_count / $chunk_size); $i++) {
             $offset = $i * $chunk_size;
+
+            if ($this->rai_options['log_before_chunk'])
+                CLIConsole::echo_status("Fetching rows from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count.");
 
             $query_chunk_data = "SELECT * FROM {$mysql_table} ";
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
@@ -79,7 +105,8 @@ class SphinxToolkit
 
             // iterate inside chunk
             while ($item = $sth->fetch()) {
-                echo "{$mysql_table}: {$item['id']}", PHP_EOL;
+                if ($this->rai_options['log_rows_inside_chunk'])
+                    CLIConsole::echo_status("{$mysql_table}: {$item['id']}");
 
                 $update_set = $make_updateset_method($item);
 
@@ -89,10 +116,21 @@ class SphinxToolkit
                 $update_statement->execute($update_set);
                 $total_updated++;
             } // while
+
+            if ($this->rai_options['log_after_chunk'])
+                CLIConsole::echo_status("Updated RT-index <font color='yellow'></font>{$sphinx_index}</font>.");
+
+            if ($this->rai_options['sleep_after_chunk']) {
+                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} seconds... ", FALSE);
+                sleep($this->rai_options['sleep_time']);
+                CLIConsole::echo_status("I woke up!");
+            }
+
+
         } // for
 
         return $total_updated;
-    }
+    } // function
 
     /**
      * @param PDO $mysql
