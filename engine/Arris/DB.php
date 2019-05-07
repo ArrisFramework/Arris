@@ -506,4 +506,26 @@ LIMIT 1;";
         return ( array_key_exists($key, self::$_instances) && self::$_instances[$key] !== NULL  );
     }
 
+
+    public static function BuildReplaceQuery(string $table, array $dataset)
+    {
+        $dataset_keys = array_keys($dataset);
+
+        $query = "REPLACE INTO `{$table}` (";
+
+        $query.= implode(', ', array_map(function ($i){
+            return "`{$i}`";
+        }, $dataset_keys));
+
+        $query.= " ) VALUES ( ";
+
+        $query.= implode(', ', array_map(function ($i){
+            return ":{$i}";
+        }, $dataset_keys));
+
+        $query.= " ) ";
+
+        return $query;
+    }
+
 }
