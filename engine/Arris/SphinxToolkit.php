@@ -6,6 +6,15 @@
  *
  */
 
+/**
+ * @todo:
+ *
+ * 1. переименовать rt_RebuildAbstractIndex в RebuildAbstractIndex
+ * 2. добавить больше опций логгирования через setRebuildIndexOptions()
+ *
+ *
+ */
+
 namespace Arris;
 
 interface SphinxToolkitInterface {
@@ -30,14 +39,21 @@ class SphinxToolkit
      */
     public $sphinx_connection;
 
+    private $rai_options = [];
+
     public function __construct(\PDO $mysql_connection, \PDO $sphinx_connection)
     {
         $this->mysql_connection = $mysql_connection;
         $this->sphinx_connection = $sphinx_connection;
     }
 
+    public function setRebuildIndexOptions(array $options = []):bool
+    {
+        // на самом деле разворачиваем опции с установкой дефолтов
+        $this->rai_options = $options;
+    }
 
-    public function rt_RebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', $chunk_length = 500)
+    public function rt_RebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', $chunk_length = 500):int
     {
         $mysql_connection = $this->mysql_connection;
         $sphinx_connection = $this->sphinx_connection;
