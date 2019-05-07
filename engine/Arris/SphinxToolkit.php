@@ -1,4 +1,4 @@
-<?php declare(strict_types=1);
+<?php
 
 /**
  * Класс, имплементирующий некоторые методы работы со сфинксом/мантикорой.
@@ -34,7 +34,7 @@ use Closure;
 use PDO;
 use Arris\CLIConsole;
 
-class SphinxToolkit implements SphinxToolkitInterface
+class SphinxToolkit
 {
     /**
      * @var \PDO
@@ -126,7 +126,7 @@ class SphinxToolkit implements SphinxToolkitInterface
             } // while
 
             if ($this->rai_options['log_after_chunk'])
-                CLIConsole::echo_status("Updated RT-index <font color='yellow'></font>{$sphinx_index}</font>.");
+                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.");
 
             if ($this->rai_options['sleep_after_chunk']) {
                 CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} seconds... ", FALSE);
