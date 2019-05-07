@@ -6,25 +6,33 @@
  *
  */
 
-/**
- * @todo:
- *
- * 1. добавить больше опций логгирования через setRebuildIndexOptions()
- *
- *
- */
-
 namespace Arris;
 
 interface SphinxToolkitInterface {
-    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '');
+
+    /**
+     * Устанавливает опции для перестроителя RT-индекса
+     * @param array $options - новый набор опций
+     * @return array - результирующий набор опций
+     */
+    public function setRebuildIndexOptions(array $options = []):array;
+
+    /**
+     * Перестраивает RT-индекс
+     *
+     * @param string $mysql_table -- SQL-таблица исходник
+     * @param string $sphinx_index -- имя индекса (таблицы)
+     * @param Closure $make_updateset_method - замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
+     * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
+     * @return int -- количество обновленных записей в индексе
+     */
+    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int;
 }
 
 
 use Closure;
 use PDO;
-
-use Arris\DB;
+use Arris\CLIConsole;
 
 class SphinxToolkit implements SphinxToolkitInterface
 {
@@ -57,7 +65,7 @@ class SphinxToolkit implements SphinxToolkitInterface
         $this->sphinx_connection = $sphinx_connection;
     }
 
-    public function setRebuildIndexOptions(array $options = []):bool
+    public function setRebuildIndexOptions(array $options = []):array
     {
         // на самом деле разворачиваем опции с установкой дефолтов
         $this->rai_options['chunk_length'] = isset($options['chunk_length']) ? $options['chunk_length'] : 500;
@@ -70,7 +78,7 @@ class SphinxToolkit implements SphinxToolkitInterface
 
         $this->rai_options['sleep_after_chunk'] = isset($options['sleep_after_chunk']) ? $options['sleep_after_chunk'] : true;
         $this->rai_options['sleep_time'] = isset($options['sleep_time']) ? $options['sleep_time'] : 1;
-
+        return $this->rai_options;
     }
 
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
@@ -81,7 +89,7 @@ class SphinxToolkit implements SphinxToolkitInterface
         $chunk_size = $this->rai_options['chunk_length'];
 
         // truncate
-        $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index}");
+        $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
 
         // get total count
         $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
