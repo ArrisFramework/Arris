@@ -154,5 +154,123 @@ class SphinxToolkit
         return $mysql->query($query)->fetchColumn();
     }
 
+    public static function EmulateBuildExcerpts($source, $needle, $options)
+    {
+        //@todo: set default options
+
+        /*
+        "before_match" 	Строка, вставляемая перед ключевым словом. По умолчанию "<b>".
+    "after_match" 	Строка, вставляемая после ключевого слова. По умолчанию "</b>".
+    "chunk_separator" 	Строка, вставляемая между частями фрагмента. по умолчанию " ... ".
+    "limit" 	Максимальный размер фрагмента в символах. Integer, по умолчанию 256.
+    "around" 	Сколько слов необходимо выбрать вокруг каждого совпадающего с ключевыми словами блока. Integer, по умолчанию 5.
+    "exact_phrase" 	Необходимо ли подсвечивать только точное совпадение с поисковой фразой, а не отдельные ключевые слова. Boolean, по умолчанию FALSE.
+    "single_passage" 	Необходимо ли извлечь только единичный наиболее подходящий фрагмент. Boolean, по умолчанию FALSE.
+
+         */
+        $opts = $options;
+
+        /*$opts = array(
+            'before_match' => '<em class="hl">',
+            'after_match' => '</em>',
+            'chunk_separator' => '...',
+            'limit' => 120,
+            'around' => 3,
+        );*/
+        $target = strip_tags($source);
+
+        $target = self::mb_str_replace($needle, $opts['before_match'] . $needle . $opts['after_match'], $target);
+
+        if (mb_strlen($source) > $opts['limit'] ) {
+            $target = self::mb_trim_text($target, $opts['limit'] ,true,false, $opts['chunk_separator']);
+        }
+
+        return $target;
+    } // function
+
+    /**
+     * Multibyte string replace
+     *
+     * @param string|string[] $search  the string to be searched
+     * @param string|string[] $replace the replacement string
+     * @param string          $subject the source string
+     * @param int             &$count  number of matches found
+     *
+     * @return string replaced string
+     * @author Rodney Rehm, imported from Smarty
+     *
+     */
+    private static function mb_str_replace($search, $replace, $subject, &$count = 0)
+    {
+        if (!is_array($search) && is_array($replace)) {
+            return false;
+        }
+        if (is_array($subject)) {
+            // call mb_replace for each single string in $subject
+            foreach ($subject as &$string) {
+                $string = self::mb_str_replace($search, $replace, $string, $c);
+                $count += $c;
+            }
+        } elseif (is_array($search)) {
+            if (!is_array($replace)) {
+                foreach ($search as &$string) {
+                    $subject = self::mb_str_replace($string, $replace, $subject, $c);
+                    $count += $c;
+                }
+            } else {
+                $n = max(count($search), count($replace));
+                while ($n--) {
+                    $subject = self::mb_str_replace(current($search), current($replace), $subject, $c);
+                    $count += $c;
+                    next($search);
+                    next($replace);
+                }
+            }
+        } else {
+            $parts = mb_split(preg_quote($search), $subject);
+            $count = count($parts) - 1;
+            $subject = implode($replace, $parts);
+        }
+        return $subject;
+    }
+
+    /**
+     * trims text to a space then adds ellipses if desired
+     * @param string $input text to trim
+     * @param int $length in characters to trim to
+     * @param bool $ellipses if ellipses (...) are to be added
+     * @param bool $strip_html if html tags are to be stripped
+     * @param string $ellipses_text text to be added as ellipses
+     * @return string
+     *
+     * http://www.ebrueggeman.com/blog/abbreviate-text-without-cutting-words-in-half
+     *
+     * еще есть вариант: https://stackoverflow.com/questions/8286082/truncate-a-string-in-php-without-cutting-words (но без обработки тегов)
+     * https://www.php.net/manual/ru/function.wordwrap.php - см комментарии
+     */
+    private static function mb_trim_text($input, $length, $ellipses = true, $strip_html = true, $ellipses_text = '...')
+    {
+        //strip tags, if desired
+        if ($strip_html) {
+            $input = strip_tags($input);
+        }
+
+        //no need to trim, already shorter than trim length
+        if (mb_strlen($input) <= $length) {
+            return $input;
+        }
+
+        //find last space within length
+        $last_space = mb_strrpos(mb_substr($input, 0, $length), ' ');
+        $trimmed_text = mb_substr($input, 0, $last_space);
+
+        //add ellipses (...)
+        if ($ellipses) {
+            $trimmed_text .= $ellipses_text;
+        }
+
+        return $trimmed_text;
+    }
+
 
 }

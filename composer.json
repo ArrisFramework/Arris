@@ -15,6 +15,7 @@
     "require": {
         "php": ">=7",
         "ext-pdo": "*",
+        "ext-mbstring": "*",
         "monolog/monolog": "^1.23"
     },
     "autoload": {
