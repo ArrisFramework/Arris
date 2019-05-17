@@ -16,13 +16,14 @@
         "php": ">=7",
         "ext-pdo": "*",
         "ext-mbstring": "*",
+        "ext-json": "*",
         "monolog/monolog": "^1.23"
     },
     "autoload": {
         "files": [
         ],
         "psr-4": {
-            "Arris\\"           : "engine/Arris"
+            "Arris\\"           : "sources"
         }
     }
 }

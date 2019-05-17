@@ -65,6 +65,10 @@ class SphinxToolkit
         $this->sphinx_connection = $sphinx_connection;
     }
 
+    /**
+     * @param array $options
+     * @return array
+     */
     public function setRebuildIndexOptions(array $options = []):array
     {
         // на самом деле разворачиваем опции с установкой дефолтов
@@ -79,8 +83,17 @@ class SphinxToolkit
         $this->rai_options['sleep_after_chunk'] = isset($options['sleep_after_chunk']) ? $options['sleep_after_chunk'] : true;
         $this->rai_options['sleep_time'] = isset($options['sleep_time']) ? $options['sleep_time'] : 1;
         return $this->rai_options;
-    }
+    } // setRebuildIndexOptions
 
+    /**
+     *
+     *
+     * @param string $mysql_table
+     * @param string $sphinx_index
+     * @param Closure $make_updateset_method
+     * @param string $condition
+     * @return int
+     */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
     {
         $mysql_connection = $this->mysql_connection;
@@ -138,7 +151,7 @@ class SphinxToolkit
         } // for
 
         return $total_updated;
-    } // function
+    } // rebuildAbstractIndex
 
     /**
      * @param PDO $mysql
@@ -152,31 +165,43 @@ class SphinxToolkit
         if ($condition != '') $query .= " WHERE {$condition}";
 
         return $mysql->query($query)->fetchColumn();
-    }
+    } // mysql_GetRowCount
 
     public static function EmulateBuildExcerpts($source, $needle, $options)
     {
-        //@todo: set default options
+        $opts = [
+            // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
+            'before_match' => '<strong>',
 
-        /*
-        "before_match" 	Строка, вставляемая перед ключевым словом. По умолчанию "<b>".
-    "after_match" 	Строка, вставляемая после ключевого слова. По умолчанию "</b>".
-    "chunk_separator" 	Строка, вставляемая между частями фрагмента. по умолчанию " ... ".
-    "limit" 	Максимальный размер фрагмента в символах. Integer, по умолчанию 256.
-    "around" 	Сколько слов необходимо выбрать вокруг каждого совпадающего с ключевыми словами блока. Integer, по умолчанию 5.
-    "exact_phrase" 	Необходимо ли подсвечивать только точное совпадение с поисковой фразой, а не отдельные ключевые слова. Boolean, по умолчанию FALSE.
-    "single_passage" 	Необходимо ли извлечь только единичный наиболее подходящий фрагмент. Boolean, по умолчанию FALSE.
+            // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
+            'after_match' => '</strong>',
 
-         */
-        $opts = $options;
-
-        /*$opts = array(
-            'before_match' => '<em class="hl">',
-            'after_match' => '</em>',
+            // Строка, вставляемая между частями фрагмента. по умолчанию "...".
             'chunk_separator' => '...',
-            'limit' => 120,
-            'around' => 3,
-        );*/
+
+            // дальнейшие опции не реализованы в эмуляции
+
+            // НЕ РЕАЛИЗОВАНО: Максимальный размер фрагмента в символах. Integer, по умолчанию 256.
+            'limit'     => 256,
+
+            // НЕ РЕАЛИЗОВАНО: Сколько слов необходимо выбрать вокруг каждого совпадающего с ключевыми словами блока. Integer, по умолчанию 5.
+            'around'    => 5,
+
+            // НЕ РЕАЛИЗОВАНО: Необходимо ли подсвечивать только точное совпадение с поисковой фразой, а не отдельные ключевые слова. Boolean, по умолчанию FALSE.
+            "exact_phrase"  => null,
+
+            // НЕ РЕАЛИЗОВАНО: Необходимо ли извлечь только единичный наиболее подходящий фрагмент. Boolean, по умолчанию FALSE.
+            "single_passage"    =>  null
+        ];
+
+        if (is_array($options)) {
+            foreach ($opts as $key_name => $key_value) {
+                if (array_key_exists($key_name, $options)) {
+                    $opts[ $key_name ] = $options[ $key_name ];
+                }
+            }
+        }
+
         $target = strip_tags($source);
 
         $target = self::mb_str_replace($needle, $opts['before_match'] . $needle . $opts['after_match'], $target);
@@ -186,7 +211,7 @@ class SphinxToolkit
         }
 
         return $target;
-    } // function
+    } // EmulateBuildExcerpts
 
     /**
      * Multibyte string replace
