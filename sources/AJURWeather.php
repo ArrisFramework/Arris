@@ -5,7 +5,7 @@ namespace Arris;
 
 use Arris\AppLogger;
 
-class SpbWeather
+class AJURWeather
 {
     /**
      * список смежности регионов леобласти
