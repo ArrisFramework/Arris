@@ -52,7 +52,7 @@ use Arris\CLIConsole;
 
 class SphinxToolkit
 {
-    const VERSION = "1.12";
+    const VERSION = "1.12.1";
     /**
      * @var \PDO
      */
@@ -177,6 +177,7 @@ class SphinxToolkit
                 CLIConsole::echo_status("I woke up!");
             }
         } // for
+        if ($this->rai_options['log_after_index']) CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index.");
 
         return $total_updated;
     } // rebuildAbstractIndex
