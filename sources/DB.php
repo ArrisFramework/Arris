@@ -132,7 +132,8 @@ interface DBConnectionInterface
  */
 class DB implements DBConnectionInterface
 {
-    const VERSION = '2.3/ArrisFramework';
+    const VERSION = '2.4';
+
     const CHANGELOG = <<<CHANGELOG
 2.2 : отказ от загрузки конфига из статик-класса Config, DB::init() принимает сразу суффикс + конфиг подключения.
 2.3 : если charset/charset_collate не установлены - они не применяются к базе 

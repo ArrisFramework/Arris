@@ -27,6 +27,22 @@ interface SphinxToolkitInterface {
      * @return int -- количество обновленных записей в индексе
      */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int;
+
+    /**
+     * Эмулирует BuildExcerpts из SphinxAPI
+     *
+     * @param $source
+     * @param $needle
+     * @param $options
+     * 'before_match' => '<strong>',    // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
+     * 'after_match' => '</strong>',    // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
+     * 'chunk_separator' => '...',      // Строка, вставляемая между частями фрагмента. по умолчанию "...".
+     *
+     * опции 'limit', 'around', 'exact_phrase' и 'single_passage' в эмуляции не реализованы
+     *
+     * @return mixed
+     */
+    public static function EmulateBuildExcerpts($source, $needle, $options);
 }
 
 
@@ -36,6 +52,7 @@ use Arris\CLIConsole;
 
 class SphinxToolkit
 {
+    const VERSION = "1.12";
     /**
      * @var \PDO
      */
@@ -56,7 +73,10 @@ class SphinxToolkit
         'log_after_chunk'       =>  true,
 
         'sleep_after_chunk'     =>  true,
-        'sleep_time'            =>  1
+        'sleep_time'            =>  1,
+
+        'log_before_index'      =>  true,
+        'log_after_index'       =>  true,
     ];
 
     public function __construct(\PDO $mysql_connection, \PDO $sphinx_connection)
@@ -82,6 +102,10 @@ class SphinxToolkit
 
         $this->rai_options['sleep_after_chunk'] = isset($options['sleep_after_chunk']) ? $options['sleep_after_chunk'] : true;
         $this->rai_options['sleep_time'] = isset($options['sleep_time']) ? $options['sleep_time'] : 1;
+
+        $this->rai_options['log_before_index'] = isset($options['log_before_index']) ? $options['log_before_index'] : true;
+        $this->rai_options['log_after_index'] = isset($options['log_after_index']) ? $options['log_after_index'] : true;
+
         return $this->rai_options;
     } // setRebuildIndexOptions
 
@@ -108,15 +132,18 @@ class SphinxToolkit
         $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
         $total_updated = 0;
 
+        if ($this->rai_options['log_before_index'])
+            CLIConsole::echo_status("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
+
         if ($this->rai_options['log_total_rows_found'])
-            CLIConsole::echo_status("<font color='green'>{$total_count}</font> rows found.");
+            CLIConsole::echo_status("<font color='green'>{$total_count}</font> elements found for rebuild.");
 
         // iterate chunks
         for ($i = 0; $i < ceil($total_count / $chunk_size); $i++) {
             $offset = $i * $chunk_size;
 
             if ($this->rai_options['log_before_chunk'])
-                CLIConsole::echo_status("Fetching rows from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count.");
+                CLIConsole::echo_status("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
 
             $query_chunk_data = "SELECT * FROM {$mysql_table} ";
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
@@ -138,16 +165,17 @@ class SphinxToolkit
                 $total_updated++;
             } // while
 
-            if ($this->rai_options['log_after_chunk'])
+            if ($this->rai_options['log_after_chunk']) {
                 CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.");
+            } else {
+                CLIConsole::echo_status("<strong>Ok</strong>");
+            }
 
             if ($this->rai_options['sleep_after_chunk']) {
                 CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} seconds... ", FALSE);
                 sleep($this->rai_options['sleep_time']);
                 CLIConsole::echo_status("I woke up!");
             }
-
-
         } // for
 
         return $total_updated;
@@ -296,6 +324,5 @@ class SphinxToolkit
 
         return $trimmed_text;
     }
-
 
 }

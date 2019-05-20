@@ -7,6 +7,18 @@ use Arris\AppLogger;
 
 class AJURWeather
 {
+    const VERSION = "1.12";
+
+    /**
+     * Error consts
+     */
+    const ERROR_SOURCE_FILE_NOT_DEFINED = 1;
+    const ERROR_SOURCE_FILE_NOT_READABLE = 2;
+    const ERROR_SOURCE_FILE_PARSING_ERROR = 3;
+    const ERROR_SOURCE_FILE_HAVE_NO_DATA = 4;
+    const ERROR_NO_SUCH_DISTRICT_ID = 5;
+
+
     /**
      * список смежности регионов леобласти
      *
@@ -219,64 +231,85 @@ class AJURWeather
     ];
 
 
+
     /**
      *
      * @param $district_id
      * @param $source_file
-     * @return array|mixed
+     * @return array
      * @throws \Exception
      */
-    public function load_weather_local($district_id, $source_file)
+    public static function load_weather_local($district_id = 0, $source_file = null)
     {
         $current_weather = [];
 
         try {
+            if (is_null($source_file))
+                throw new \Exception("Weather file not defined", self::ERROR_SOURCE_FILE_NOT_DEFINED);
 
             $file_content = \file_get_contents($source_file);
             if ($file_content === FALSE)
-                throw new \Exception("Weather file `{$source_file}` not found", 1);
+                throw new \Exception("Weather file `{$source_file}` not found", self::ERROR_SOURCE_FILE_NOT_READABLE);
 
             $file_content = \json_decode($file_content, true);
 
             if (($file_content === NULL) || !\is_array($file_content))
-                throw new \Exception("Weather data can't be parsed", 2);
+                throw new \Exception("Weather data can't be parsed", self::ERROR_SOURCE_FILE_PARSING_ERROR);
 
             if (!\array_key_exists('data', $file_content))
-                throw new \Exception("Weather file does not contain DATA section", 3);
+                throw new \Exception("Weather file does not contain DATA section", self::ERROR_SOURCE_FILE_HAVE_NO_DATA);
 
             $current_weather = $file_content['data'];
 
-        } catch (\Exception $e) {
-            AppLogger::scope('main')->error('[ERROR] Load Weather ', [ $e->getMessage() ]);
-        }
-
-        if ($district_id === 0) {
+            // Погода загружена. Перемешаем массив.
             \shuffle($current_weather);
-            return $current_weather; // ранний возврат из метода
-        }
 
-        /**
-         * array_search_callback() аналогичен array_search() , только помогает искать по неодномерному массиву.
-         */
-        $local_weather = [];
+            // Район - 0 (все) ?
+            if ($district_id === 0) {
+                return $current_weather; // возвращаем перемешанный массив с погодой
+            }
 
-        // первый элемент - погода текущего региона
-        $district_owmid = self::map_intid_to_owmid[ 813 ][ $district_id ];
+            // Район не равен нулю, нужно построить массив с погодой для указанного района и ближайших:
 
-        $local_weather[] = self::array_search_callback($current_weather, function ($item) use ($district_owmid){
-            return ($item['id'] == $district_owmid);
-        });
+            // проверим, есть ли такой идентификатор района вообще в массиве кодов районов.
+            // Если нет - кидаем исключение (записываем ошибку), но возвращаем массив со случайной погодой
+            if (!array_key_exists($district_id, self::map_intid_to_owmid[ 813 ]))
+                throw new \Exception("Given district id ({$district_id}) does not exist in MAP_INTID_TO_OWMID set", self::ERROR_NO_SUCH_DISTRICT_ID);
 
-        // ближайшие регионы
-        foreach (self::lo_adjacency_lists[ $district_id ] as $adjacency_district_id ) {
+            /**
+             * array_search_callback() аналогичен array_search() , только помогает искать по неодномерному массиву.
+             */
+            $local_weather = [];
 
-            $adjacency_district_owmid = self::map_intid_to_owmid[ 813 ][ $adjacency_district_id ];
+            // первый элемент - погода текущего региона
+            $district_owmid = self::map_intid_to_owmid[ 813 ][ $district_id ];
 
-            $local_weather[] = self::array_search_callback($current_weather, function ($item) use ($adjacency_district_owmid){
-                return ($item['id'] == $adjacency_district_owmid);
+            $local_weather[] = self::array_search_callback($current_weather, function ($item) use ($district_owmid){
+                return ($item['id'] == $district_owmid);
             });
+
+            // ближайшие регионы
+            foreach (self::lo_adjacency_lists[ $district_id ] as $adjacency_district_id ) {
+
+                $adjacency_district_owmid = self::map_intid_to_owmid[ 813 ][ $adjacency_district_id ];
+
+                $local_weather[] = self::array_search_callback($current_weather, function ($item) use ($adjacency_district_owmid){
+                    return ($item['id'] == $adjacency_district_owmid);
+                });
+            }
+
+            return $local_weather;
+
+        } catch (\Exception $e) {
+            AppLogger::scope('main')->error('[ERROR] Load Weather ',
+                [
+                    array_search($e->getCode(), (new \ReflectionClass(__CLASS__))->getConstants()),
+                    $e->getMessage()
+                ]);
         }
-        return $local_weather;
+
+        return $current_weather;
+
     } // load_weather_local
 
     public static function array_search_callback(array $a, callable $callback)
