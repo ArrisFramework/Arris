@@ -125,6 +125,10 @@ interface DBConnectionInterface
      */
     public static function makeUpdateQuery($tablename, $dataset, $where_condition = '');
 
+    public static function BuildReplaceQuery(string $table, array $dataset);
+
+    public static function BuildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes);
+
 }
 
 /**
@@ -132,13 +136,7 @@ interface DBConnectionInterface
  */
 class DB implements DBConnectionInterface
 {
-    const VERSION = '2.4';
-
-    const CHANGELOG = <<<CHANGELOG
-2.2 : отказ от загрузки конфига из статик-класса Config, DB::init() принимает сразу суффикс + конфиг подключения.
-2.3 : если charset/charset_collate не установлены - они не применяются к базе 
-CHANGELOG;
-
+    const VERSION = '2.5';
 
     private static $_current_connection = null;
 
@@ -528,5 +526,46 @@ LIMIT 1;";
 
         return $query;
     }
+
+    /**
+     * Применять как:
+     *
+     * list($update_query, $newdataset) = BuildReplaceQueryMVA($table, $original_dataset, $mva_attributes_list);
+     * $update_statement = $sphinx->prepare($update_query);
+     * $update_statement->execute($newdataset);
+     *
+     *
+     * @param string $table             -- имя таблицы
+     * @param array $dataset            -- сет данных.
+     * @param array $mva_atrributes     -- массив с именами ключей MVA-атрибутов (они вставятся как значения, а не как placeholder-ы)
+     * @return array                    -- возвращает массив с двумя значениями. Первый ключ - запрос, сет данных, очищенный от MVA-атрибутов.
+     */
+    public static function BuildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes)
+    {
+        $query = "REPLACE INTO `{$table}` (";
+
+        $dataset_keys = array_keys($dataset);
+
+        $query .= implode(', ', array_map(function ($i){
+            return "`{$i}`";
+        }, $dataset_keys));
+
+        $query .= " ) VALUES ( ";
+
+        $query .= implode(', ', array_map(function ($i) use ($mva_atrributes, $dataset){
+            return in_array($i, $mva_atrributes) ? "({$dataset[$i]})" : ":{$i}";
+        }, $dataset_keys));
+
+        $query .= " ) ";
+
+        $new_dataset = array_filter($dataset, function ($value, $key) use ($mva_atrributes) {
+            return !in_array($key, $mva_atrributes);
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return [
+            $query, $new_dataset
+        ];
+    }
+
 
 }
