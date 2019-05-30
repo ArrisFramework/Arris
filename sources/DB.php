@@ -136,7 +136,7 @@ interface DBConnectionInterface
  */
 class DB implements DBConnectionInterface
 {
-    const VERSION = '2.5';
+    const VERSION = "1.13";
 
     private static $_current_connection = null;
 

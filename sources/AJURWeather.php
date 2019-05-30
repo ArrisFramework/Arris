@@ -7,7 +7,7 @@ use Arris\AppLogger;
 
 class AJURWeather
 {
-    const VERSION = "1.12";
+    const VERSION = "1.13";
 
     /**
      * Error consts

@@ -34,7 +34,8 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = '1.3';
+    const VERSION = "1.13";
+
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
 

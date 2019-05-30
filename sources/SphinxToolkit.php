@@ -28,6 +28,8 @@ interface SphinxToolkitInterface {
      */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int;
 
+    public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int;
+
     /**
      * Эмулирует BuildExcerpts из SphinxAPI
      *
@@ -43,6 +45,7 @@ interface SphinxToolkitInterface {
      * @return mixed
      */
     public static function EmulateBuildExcerpts($source, $needle, $options);
+
 }
 
 
@@ -52,7 +55,7 @@ use Arris\CLIConsole;
 
 class SphinxToolkit
 {
-    const VERSION = "1.12.1";
+    const VERSION = "1.13";
     /**
      * @var \PDO
      */
@@ -181,6 +184,81 @@ class SphinxToolkit
 
         return $total_updated;
     } // rebuildAbstractIndex
+
+    /**
+     *
+     *
+     * @param string $mysql_table               -- SQL-таблица исходник
+     * @param string $sphinx_index              -- имя индекса (таблицы)
+     * @param Closure $make_updateset_method    -- замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
+     * @param string $condition                 -- условие выборки из исходной таблицы (без WHERE !!!)
+     * @param array $mva_indexes_list           -- список MVA-индексов, значения которых не нужно биндить через плейсхолдеры
+     *
+     * @return int
+     */
+    public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int
+    {
+        $mysql_connection = $this->mysql_connection;
+        $sphinx_connection = $this->sphinx_connection;
+
+        $chunk_size = $this->rai_options['chunk_length'];
+
+        // truncate
+        $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
+
+        // get total count
+        $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
+        $total_updated = 0;
+
+        if ($this->rai_options['log_before_index'])
+            CLIConsole::echo_status("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
+
+        if ($this->rai_options['log_total_rows_found'])
+            CLIConsole::echo_status("<font color='green'>{$total_count}</font> elements found for rebuild.");
+
+        // iterate chunks
+        for ($i = 0; $i < ceil($total_count / $chunk_size); $i++) {
+            $offset = $i * $chunk_size;
+
+            if ($this->rai_options['log_before_chunk'])
+                CLIConsole::echo_status("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
+
+            $query_chunk_data = "SELECT * FROM {$mysql_table} ";
+            $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
+            $query_chunk_data.= "ORDER BY id DESC LIMIT {$offset}, {$chunk_size} ";
+
+            $sth = $mysql_connection->query($query_chunk_data);
+
+            // iterate inside chunk
+            while ($item = $sth->fetch()) {
+                if ($this->rai_options['log_rows_inside_chunk'])
+                    CLIConsole::echo_status("{$mysql_table}: {$item['id']}");
+
+                $update_set = $make_updateset_method($item);
+
+                list($update_query, $new_update_set) = DB::buildReplaceQueryMVA($sphinx_index, $update_set, $mva_indexes_list);
+
+                $update_statement = $sphinx_connection->prepare($update_query);
+                $update_statement->execute($new_update_set);
+                $total_updated++;
+            } // while
+
+            if ($this->rai_options['log_after_chunk']) {
+                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.");
+            } else {
+                CLIConsole::echo_status("<strong>Ok</strong>");
+            }
+
+            if ($this->rai_options['sleep_after_chunk']) {
+                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} seconds... ", FALSE);
+                sleep($this->rai_options['sleep_time']);
+                CLIConsole::echo_status("I woke up!");
+            }
+        } // for
+        if ($this->rai_options['log_after_index']) CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index.");
+
+        return $total_updated;
+    } // rebuildAbstractIndexMVA
 
     /**
      * @param PDO $mysql

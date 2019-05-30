@@ -23,7 +23,7 @@ namespace Arris;
  */
 class CLIConsole
 {
-    const VERSION = '1.4';
+    const VERSION = "1.13";
 
     const FOREGROUND_COLORS = [
         'black'         => '0;30',

@@ -12,7 +12,7 @@ namespace Arris;
 
 class TimerStats
 {
-    const VERSION = '1.4'; //@todo: проверить версию
+    const VERSION = "1.13"; //@todo: проверить версию
 
     const STATE_NEW = 0;
     const STATE_RUNNING = 1;
