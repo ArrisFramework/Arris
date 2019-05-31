@@ -6,12 +6,12 @@ AppLogger::init('<application id>');
 
 # Add Scope
 
-```php
+```
 AppLogger::addScope(scope_name, options);
 ```
 
 where options is array of options. Each option are:
-```php
+```
 [
     0   =>  log file
     1   =>  logging level (Logger::DEBUG, Logger::INFO, etc (see Monolog)
@@ -31,7 +31,7 @@ AppLogger::addScope('mysql', [
 
 # Usage
 
-```php
+```
 AppLogger::scope('mysql')->warn("mysql::Warning ");
 
 AppLogger::scope('mysql')->error('mysql::Error', ['foobar']);
