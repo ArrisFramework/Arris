@@ -55,7 +55,7 @@ use Arris\CLIConsole;
 
 class SphinxToolkit
 {
-    const VERSION = "1.13";
+    const VERSION = "1.13.1";
     /**
      * @var \PDO
      */
@@ -161,7 +161,7 @@ class SphinxToolkit
 
                 $update_set = $make_updateset_method($item);
 
-                $update_query = DB::BuildReplaceQuery($sphinx_index, $update_set);
+                $update_query = DB::buildReplaceQuery($sphinx_index, $update_set);
 
                 $update_statement = $sphinx_connection->prepare($update_query);
                 $update_statement->execute($update_set);
@@ -171,7 +171,7 @@ class SphinxToolkit
             if ($this->rai_options['log_after_chunk']) {
                 CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.");
             } else {
-                CLIConsole::echo_status("<strong>Ok</strong>");
+                CLIConsole::echo_status("<strong>Ok</strong><br>");
             }
 
             if ($this->rai_options['sleep_after_chunk']) {
@@ -180,7 +180,8 @@ class SphinxToolkit
                 CLIConsole::echo_status("I woke up!");
             }
         } // for
-        if ($this->rai_options['log_after_index']) CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index.");
+        if ($this->rai_options['log_after_index'])
+            CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
 
         return $total_updated;
     } // rebuildAbstractIndex
@@ -255,7 +256,8 @@ class SphinxToolkit
                 CLIConsole::echo_status("I woke up!");
             }
         } // for
-        if ($this->rai_options['log_after_index']) CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index.");
+        if ($this->rai_options['log_after_index'])
+            CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
 
         return $total_updated;
     } // rebuildAbstractIndexMVA

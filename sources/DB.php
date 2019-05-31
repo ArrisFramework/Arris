@@ -125,9 +125,9 @@ interface DBConnectionInterface
      */
     public static function makeUpdateQuery($tablename, $dataset, $where_condition = '');
 
-    public static function BuildReplaceQuery(string $table, array $dataset);
+    public static function buildReplaceQuery(string $table, array $dataset);
 
-    public static function BuildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes);
+    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes);
 
 }
 
@@ -506,7 +506,7 @@ LIMIT 1;";
     }
 
 
-    public static function BuildReplaceQuery(string $table, array $dataset)
+    public static function buildReplaceQuery(string $table, array $dataset)
     {
         $dataset_keys = array_keys($dataset);
 
@@ -540,7 +540,7 @@ LIMIT 1;";
      * @param array $mva_atrributes     -- массив с именами ключей MVA-атрибутов (они вставятся как значения, а не как placeholder-ы)
      * @return array                    -- возвращает массив с двумя значениями. Первый ключ - запрос, сет данных, очищенный от MVA-атрибутов.
      */
-    public static function BuildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes)
+    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes)
     {
         $query = "REPLACE INTO `{$table}` (";
 

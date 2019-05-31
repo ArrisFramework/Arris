@@ -9,6 +9,8 @@
             "email": "karel.wintersky@gmail.com"
         }
     ],
+    "version": "1.13.1",
+    "keywords": [ "logging", "database", "sphinx", "console" ],
     "config": {
         "optimize-autoloader": true
     },
