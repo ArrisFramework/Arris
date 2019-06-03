@@ -55,7 +55,7 @@ use Arris\CLIConsole;
 
 class SphinxToolkit
 {
-    const VERSION = "1.13.1";
+    const VERSION = "1.14.2";
     /**
      * @var \PDO
      */
@@ -105,6 +105,10 @@ class SphinxToolkit
 
         $this->rai_options['sleep_after_chunk'] = isset($options['sleep_after_chunk']) ? $options['sleep_after_chunk'] : true;
         $this->rai_options['sleep_time'] = isset($options['sleep_time']) ? $options['sleep_time'] : 1;
+
+        if ($options['sleep_time'] == 0) {
+            $options['sleep_after_chunk'] = false;
+        }
 
         $this->rai_options['log_before_index'] = isset($options['log_before_index']) ? $options['log_before_index'] : true;
         $this->rai_options['log_after_index'] = isset($options['log_after_index']) ? $options['log_after_index'] : true;
@@ -168,14 +172,16 @@ class SphinxToolkit
                 $total_updated++;
             } // while
 
+            $breakline_after_chunk = !!$this->rai_options['sleep_after_chunk'];
+
             if ($this->rai_options['log_after_chunk']) {
-                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.");
+                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
             } else {
-                CLIConsole::echo_status("<strong>Ok</strong>");
+                CLIConsole::echo_status("<strong>Ok</strong>", $breakline_after_chunk);
             }
 
             if ($this->rai_options['sleep_after_chunk']) {
-                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} seconds... ", FALSE);
+                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
                 sleep($this->rai_options['sleep_time']);
                 CLIConsole::echo_status("I woke up!");
             }
@@ -244,14 +250,16 @@ class SphinxToolkit
                 $total_updated++;
             } // while
 
+            $breakline_after_chunk = !!$this->rai_options['sleep_after_chunk'];
+
             if ($this->rai_options['log_after_chunk']) {
-                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.");
+                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
             } else {
-                CLIConsole::echo_status("<strong>Ok</strong>");
+                CLIConsole::echo_status("<strong>Ok</strong>", $breakline_after_chunk);
             }
 
             if ($this->rai_options['sleep_after_chunk']) {
-                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} seconds... ", FALSE);
+                CLIConsole::echo_status("  ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
                 sleep($this->rai_options['sleep_time']);
                 CLIConsole::echo_status("I woke up!");
             }
