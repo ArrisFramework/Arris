@@ -16,32 +16,32 @@ namespace Arris;
  */
 interface DBConnectionInterface
 {
-    public static function init($suffix, array $config);
-
-    public static function getConfig($suffix = NULL): array;
-    public static function setConfig(array $config, $suffix = NULL);
+    public static function init($suffix, $config);
 
     public static function getConnection($suffix = NULL): \PDO;
-    public static function getInstance($suffix = NULL):\PDO;
-    public static function setConnection($suffix);
-
-    public static function getTablePrefix($suffix = NULL);
+    public static function C($suffix = NULL): \PDO;
 
     public static function query($query, $suffix = NULL);
 
-    public static function getRowCount($table, $suffix = NULL);
-    public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL);
+    public static function buildUpdateQuery(string $table, array $dataset = [], $where_condition = null):string;
+    public static function buildReplaceQuery(string $table, array $dataset):string;
+    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes):array;
 
-    public static function getLastInsertId($suffix = NULL);
+    public static function makeInsertQuery($tablename, $dataset):string;
+    public static function makeUpdateQuery($tablename, $dataset, $where_condition = ''):string;
 
+    public static function getRowCount($table, $suffix = NULL):int;
+    public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL):int;
 
+    public static function getTablePrefix($suffix = NULL):string;
+    public static function getInstance($suffix = NULL):\PDO;
 
-    public static function makeInsertQuery($tablename, $dataset);
-    public static function makeUpdateQuery($tablename, $dataset, $where_condition = '');
+    public static function getLastInsertId($suffix = NULL):int;
 
-    public static function buildReplaceQuery(string $table, array $dataset);
-    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes);
+    public static function checkTableExists($table = '', $suffix = NULL):bool;
 
+    public static function getConfig($suffix = NULL): array;
+    public static function setConfig(array $config, $suffix = NULL);
 }
 
 /**
@@ -141,11 +141,19 @@ class DB implements DBConnectionInterface
      * @param null $suffix
      * @param $config
      */
-    public static function init($suffix, array $config)
+    public static function init($suffix, $config)
     {
         $config_key = self::getKey($suffix);
-        self::setConfig($config, $suffix);
-        self::$_instances[$config_key] = (new self($suffix))->getInstance($suffix);
+
+        if (is_array($config)) {
+            self::setConfig($config, $suffix);
+            self::$_instances[$config_key] = (new self($suffix))->getInstance($suffix);
+        } elseif (is_object($config)) {
+            self::setConfig([], $suffix);
+            self::$_instances[$config_key] = $config;
+        } else {
+            die(__METHOD__ . ' died: ' . PHP_EOL . print_r($config, true) . PHP_EOL . ' is not array or object! ');
+        }
     }
 
     /**
@@ -184,6 +192,10 @@ class DB implements DBConnectionInterface
     }
 
 
+    /**
+     * @param null $suffix
+     * @return \PDO
+     */
     public static function C($suffix = NULL): \PDO
     {
         return self::getConnection($suffix);
@@ -204,11 +216,17 @@ class DB implements DBConnectionInterface
     }
 
 
+    /**
+     * @param $suffix
+     */
     public static function setDefaultConnection($suffix)
     {
         self::$_current_connection = self::getKey($suffix);
     }
 
+    /**
+     * @return |null
+     */
     public static function getDefaultConnection()
     {
         return self::$_current_connection;
@@ -238,7 +256,7 @@ class DB implements DBConnectionInterface
      * @param null $suffix
      * @return null|string
      */
-    public static function getTablePrefix($suffix = NULL)
+    public static function getTablePrefix($suffix = NULL):string
     {
         if (!self::checkInstance($suffix)) return NULL;
 
@@ -268,7 +286,7 @@ class DB implements DBConnectionInterface
      * @param null $suffix
      * @return mixed|null
      */
-    public static function getRowCount($table, $suffix = NULL)
+    public static function getRowCount($table, $suffix = NULL):int
     {
         if ($table == '') return null;
         $sth = self::getConnection($suffix)->query("SELECT COUNT(*) AS cnt FROM {$table}");
@@ -286,7 +304,7 @@ class DB implements DBConnectionInterface
      * @param null $suffix
      * @return mixed|null
      */
-    public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL)
+    public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL):int
     {
         if ($table === '') return null;
 
@@ -299,12 +317,14 @@ class DB implements DBConnectionInterface
 
         return ($sth) ? $sth->fetchColumn() : null;
     }
+
     /**
      * get Last Insert ID
      *
      * @param null $suffix
+     * @return int
      */
-    public static function getLastInsertId($suffix = NULL)
+    public static function getLastInsertId($suffix = NULL):int
     {
         self::getConnection($suffix)->lastInsertId();
     }
@@ -317,7 +337,7 @@ class DB implements DBConnectionInterface
      * @return bool
      * @throws \Exception
      */
-    public static function checkTableExists($table = '', $suffix = NULL)
+    public static function checkTableExists($table = '', $suffix = NULL):bool
     {
         if (empty($table)) throw new \Exception(__CLASS__ . "::" . __METHOD__ . " -> table param empty");
 
@@ -343,7 +363,7 @@ LIMIT 1;";
      * @param $dataset
      * @return string
      */
-    public static function makeInsertQuery($tablename, $dataset)
+    public static function makeInsertQuery($tablename, $dataset):string
     {
         $query = '';
         $r = [];
@@ -371,7 +391,7 @@ LIMIT 1;";
      * @param string $where_condition
      * @return bool|string
      */
-    public static function makeUpdateQuery($tablename, $dataset, $where_condition = '')
+    public static function makeUpdateQuery($tablename, $dataset, $where_condition = ''):string
     {
         $query = '';
         $r = [];
@@ -399,7 +419,7 @@ LIMIT 1;";
      * @param null $suffix
      * @return string
      */
-    private static function getKey($suffix = NULL)
+    private static function getKey($suffix = NULL):string
     {
         return 'database' . ($suffix ? ":{$suffix}" : '');
     }
@@ -410,7 +430,8 @@ LIMIT 1;";
      * @param null $suffix
      * @return bool
      */
-    private static function checkInstance($suffix = NULL) {
+    private static function checkInstance($suffix = NULL):bool
+    {
 
         $key = self::getKey($suffix);
         return ( array_key_exists($key, self::$_instances) && self::$_instances[$key] !== NULL  );
@@ -424,7 +445,7 @@ LIMIT 1;";
      * @param array $dataset
      * @return string
      */
-    public static function buildReplaceQuery(string $table, array $dataset)
+    public static function buildReplaceQuery(string $table, array $dataset):string
     {
         $dataset_keys = array_keys($dataset);
 
@@ -480,7 +501,7 @@ LIMIT 1;";
      * @param array $mva_attributes     -- массив с именами ключей MVA-атрибутов (они вставятся как значения, а не как placeholder-ы)
      * @return array                    -- возвращает массив с двумя значениями. Первый ключ - запрос, сет данных, очищенный от MVA-атрибутов.
      */
-    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes)
+    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes):array
     {
         $query = "REPLACE INTO `{$table}` (";
 
@@ -507,11 +528,6 @@ LIMIT 1;";
         ];
     }
 
-
-}
-
-function DB()
-{
 
 }
 
