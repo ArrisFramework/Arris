@@ -1,4 +1,7 @@
 <?php
+/**
+ * Functions for Arris Framework
+ */
 
 if (!function_exists('d')) {
     /**
@@ -85,3 +88,4 @@ if (!function_exists('sort_array_in_given_order')) {
     }
 } // sort_array_in_given_order
 
+# -eof-
