@@ -1,13 +1,23 @@
 <?php
 
+if (!function_exists('d')) {
+    /**
+     * Dump and die
+     * @param $value
+     */
+    function d($value) {
+        echo '<pre>';
+        var_dump($value);
+    }
+}
+
 if (!function_exists('dd')) {
     /**
      * Dump and die
      * @param $value
      */
     function dd($value) {
-        echo '<pre>';
-        var_dump($value);
+        d($value);
         die;
     }
 }
@@ -51,7 +61,27 @@ if (!function_exists('checkAllowedValue')) {
             return ($key !== FALSE) ? $allowed_values_array[ $key ] : $invalid_value;
         }
     }
-
 }
 
+if (!function_exists('sort_array_in_given_order')) {
+
+    /**
+     * Sort array in given order by key
+     * Returns array
+     *
+     * @param $array - array for sort [ [ id, data...], [ id, data...], ...  ]
+     * @param $order - order (as array of sortkey values) [ id1, id2, id3...]
+     * @param $sort_key - sorting key (id)
+     * @return mixed
+     */
+    function sort_array_in_given_order($array, $order, $sort_key)
+    {
+        usort($array, function ($home, $away) use ($order, $sort_key) {
+            $pos_home = array_search($home[$sort_key], $order);
+            $pos_away = array_search($away[$sort_key], $order);
+            return $pos_home - $pos_away;
+        });
+        return $array;
+    }
+} // sort_array_in_given_order
 

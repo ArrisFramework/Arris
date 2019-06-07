@@ -16,118 +16,31 @@ namespace Arris;
  */
 interface DBConnectionInterface
 {
-    /**
-     * Predicted (early) initialization
-     *
-     * @param null $suffix
-     * @param $config
-     */
     public static function init($suffix, array $config);
 
-    /**
-     * Get connection config
-     *
-     * @param null $suffix
-     * @return mixed|null
-     */
     public static function getConfig($suffix = NULL): array;
-
-    /**
-     * Set connection config
-     *
-     * @param array $config
-     * @param null $suffix
-     */
     public static function setConfig(array $config, $suffix = NULL);
 
-    /**
-     * Alias: get PDO connection
-     *
-     * @param null $suffix
-     * @return \PDO
-     */
     public static function getConnection($suffix = NULL): \PDO;
-
-    /**
-     * Set current connection key for internal calls === setContext() ?
-     *
-     * @param $suffix
-     */
+    public static function getInstance($suffix = NULL):\PDO;
     public static function setConnection($suffix);
 
-    /**
-     * Get class instance == connection instance
-     *
-     * @param null $suffix
-     * @return \PDO
-     */
-    public static function getInstance($suffix = NULL):\PDO;
-
-    /**
-     * Get tables prefix for given connection
-     *
-     * @param null $suffix
-     * @return null|string
-     */
     public static function getTablePrefix($suffix = NULL);
 
-    /**
-     *
-     * @param $query
-     * @param null $suffix
-     * @return bool|\PDOStatement
-     */
     public static function query($query, $suffix = NULL);
 
-    /**
-     * Get count(*) for given table
-     *
-     * @param $table
-     * @param null $suffix
-     * @return mixed|null
-     */
     public static function getRowCount($table, $suffix = NULL);
-
-    /**
-     * Аналог rowcound, только дает возможность выбрать поле выборки и условие
-     *
-     * @param $table
-     * @param string $field
-     * @param string $condition
-     * @param null $suffix
-     * @return mixed|null
-     */
     public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL);
 
-    /**
-     * get Last Insert ID
-     *
-     * @param null $suffix
-     */
     public static function getLastInsertId($suffix = NULL);
 
-    /**
-     * Build INSERT-query by dataset for given table
-     *
-     * @param $tablename
-     * @param $dataset
-     * @return string
-     */
-    public static function makeInsertQuery($tablename, $dataset);
 
-    /**
-     * Build UPDATE query by dataset for given table
-     *
-     * @param $tablename
-     * @param $dataset
-     * @param string $where_condition
-     * @return bool|string
-     */
+
+    public static function makeInsertQuery($tablename, $dataset);
     public static function makeUpdateQuery($tablename, $dataset, $where_condition = '');
 
     public static function buildReplaceQuery(string $table, array $dataset);
-
-    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes);
+    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes);
 
 }
 
@@ -270,6 +183,12 @@ class DB implements DBConnectionInterface
         return self::getInstance($suffix);
     }
 
+
+    public static function C($suffix = NULL): \PDO
+    {
+        return self::getConnection($suffix);
+    }
+
     /*
     Set default connection context
     */
@@ -333,22 +252,13 @@ class DB implements DBConnectionInterface
 
 
     /**
-     *
      * @param $query
      * @param null $suffix
-     * @return bool|\PDOStatement
+     * @return bool|false|\PDOStatement
      */
     public static function query($query, $suffix = NULL)
     {
-        $state = FALSE;
-
-        try {
-            $state = DB::getConnection($suffix)->query($query);
-        } catch (\PDOException $e) {
-
-        }
-
-        return $state;
+        return DB::getConnection($suffix)->query($query);
     }
 
     /**
@@ -368,6 +278,7 @@ class DB implements DBConnectionInterface
 
     /**
      * Conditional getRowCount()
+     * Аналог rowcound, только дает возможность выбрать поле выборки и условие
      *
      * @param $table
      * @param string $field
@@ -505,7 +416,14 @@ LIMIT 1;";
         return ( array_key_exists($key, self::$_instances) && self::$_instances[$key] !== NULL  );
     }
 
+    /* ================================================================================================================= */
 
+
+    /**
+     * @param string $table
+     * @param array $dataset
+     * @return string
+     */
     public static function buildReplaceQuery(string $table, array $dataset)
     {
         $dataset_keys = array_keys($dataset);
@@ -528,6 +446,28 @@ LIMIT 1;";
     }
 
     /**
+     * @param string $table
+     * @param array $dataset
+     * @param null $where_condition - строка условия без WHERE ('x=0 AND y=0' ) или массив условий ['x=0', 'y=0']
+     * @return string
+     */
+    public static function buildUpdateQuery(string $table, array $dataset = [], $where_condition = null):string
+    {
+        $query = "UPDATE `{$table}` SET ";
+
+        $query.= implode(', ', array_map(function ($key, $value){
+            return "\r\n`{$key}` = :{$key}";
+        }, array_keys($dataset), $dataset));
+
+        if (!empty($where_condition))
+            $where = "WHERE " . $where_condition;
+
+        $query .= "\r\n {$where} ;";
+
+        return $query;
+    }
+
+    /**
      * Применять как:
      *
      * list($update_query, $newdataset) = BuildReplaceQueryMVA($table, $original_dataset, $mva_attributes_list);
@@ -537,10 +477,10 @@ LIMIT 1;";
      *
      * @param string $table             -- имя таблицы
      * @param array $dataset            -- сет данных.
-     * @param array $mva_atrributes     -- массив с именами ключей MVA-атрибутов (они вставятся как значения, а не как placeholder-ы)
+     * @param array $mva_attributes     -- массив с именами ключей MVA-атрибутов (они вставятся как значения, а не как placeholder-ы)
      * @return array                    -- возвращает массив с двумя значениями. Первый ключ - запрос, сет данных, очищенный от MVA-атрибутов.
      */
-    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_atrributes)
+    public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes)
     {
         $query = "REPLACE INTO `{$table}` (";
 
@@ -552,14 +492,14 @@ LIMIT 1;";
 
         $query .= " ) VALUES ( ";
 
-        $query .= implode(', ', array_map(function ($i) use ($mva_atrributes, $dataset){
-            return in_array($i, $mva_atrributes) ? "({$dataset[$i]})" : ":{$i}";
+        $query .= implode(', ', array_map(function ($i) use ($mva_attributes, $dataset){
+            return in_array($i, $mva_attributes) ? "({$dataset[$i]})" : ":{$i}";
         }, $dataset_keys));
 
         $query .= " ) ";
 
-        $new_dataset = array_filter($dataset, function ($value, $key) use ($mva_atrributes) {
-            return !in_array($key, $mva_atrributes);
+        $new_dataset = array_filter($dataset, function ($value, $key) use ($mva_attributes) {
+            return !in_array($key, $mva_attributes);
         }, ARRAY_FILTER_USE_BOTH);
 
         return [
@@ -567,6 +507,11 @@ LIMIT 1;";
         ];
     }
 
+
+}
+
+function DB()
+{
 
 }
 

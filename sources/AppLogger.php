@@ -25,6 +25,8 @@ interface AppLoggerInterface
 
     public static function addScope($scope, $options);
 
+    public static function scope($scope = null):Logger;
+
 
 }
 
@@ -34,7 +36,7 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = "1.13";
+    const VERSION = "1.14";
 
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
@@ -144,17 +146,16 @@ class AppLogger implements AppLoggerInterface
      * @return Logger
      * @throws \Exception
      */
-    public static function scope($scope = null)
+    public static function scope($scope = null):Logger
     {
         $key = self::getScopeKey( $scope );
 
         if (!self::checkInstance($key))
-            throw new \Exception("AppLogger Class reports: given scope {$key} does not exists");
+        {
+            die("AppLogger Class reports: given scope {$key} does not exists");
+        }
 
         return self::$_instances[ $key ];
-
-        // new self($scope)
-        // return self::$_instances[ $key ];
     }
 
     /**
@@ -163,7 +164,7 @@ class AppLogger implements AppLoggerInterface
      * @param $key
      * @return bool
      */
-    private static function checkInstance($key)
+    private static function checkInstance($key):bool
     {
         return ( array_key_exists($key, self::$_instances) && self::$_instances[$key] !== NULL );
     }
@@ -178,7 +179,6 @@ class AppLogger implements AppLoggerInterface
     {
         return self::$app_instance . ($scope ? (self::SCOPE_DELIMETER . (string)$scope) : '');
     }
-
 
 }
 
