@@ -1,10 +1,13 @@
-<?php
+<?php /** @noinspection ALL */
 
 
 namespace Arris;
 
-use Arris\AppLogger;
-
+/**
+ *
+ * Class AJURWeather
+ * @package Arris
+ */
 class AJURWeather
 {
     const VERSION = "1.13";
@@ -312,6 +315,13 @@ class AJURWeather
 
     } // load_weather_local
 
+    /**
+     *
+     *
+     * @param array $a
+     * @param callable $callback
+     * @return mixed|null
+     */
     public static function array_search_callback(array $a, callable $callback)
     {
         foreach ($a as $item) {

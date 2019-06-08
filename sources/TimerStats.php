@@ -1,4 +1,5 @@
-<?php
+<?php /** @noinspection ALL */
+
 /**
  * User: Karel Wintersky
  *
@@ -10,6 +11,11 @@
 
 namespace Arris;
 
+/**
+ * Class TimerStats
+ *
+ * @package Arris
+ */
 class TimerStats
 {
     const VERSION = "1.14.1";

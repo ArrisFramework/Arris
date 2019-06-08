@@ -53,9 +53,15 @@ use Closure;
 use PDO;
 use Arris\CLIConsole;
 
+/**
+ * Class SphinxToolkit
+ *
+ * @package Arris
+ */
 class SphinxToolkit
 {
     const VERSION = "1.14.2";
+
     /**
      * @var \PDO
      */
@@ -82,6 +88,12 @@ class SphinxToolkit
         'log_after_index'       =>  true,
     ];
 
+    /**
+     * SphinxToolkit constructor.
+     *
+     * @param PDO $mysql_connection
+     * @param PDO $sphinx_connection
+     */
     public function __construct(\PDO $mysql_connection, \PDO $sphinx_connection)
     {
         $this->mysql_connection = $mysql_connection;
@@ -284,6 +296,13 @@ class SphinxToolkit
         return $mysql->query($query)->fetchColumn();
     } // mysql_GetRowCount
 
+    /**
+     *
+     * @param $source
+     * @param $needle
+     * @param $options
+     * @return string
+     */
     public static function EmulateBuildExcerpts($source, $needle, $options)
     {
         $opts = [

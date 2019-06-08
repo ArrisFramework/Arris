@@ -7,5 +7,5 @@
 /tests              export-ignore
 /vendor             export-ignore
 /docs/_deprecated	export-ignore
-/functions			export-ignore
+
 

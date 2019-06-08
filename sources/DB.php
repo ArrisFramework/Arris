@@ -1,4 +1,5 @@
-<?php
+<?php /** @noinspection ALL */
+
 /**
  * User: Karel Wintersky
  * Date: 26.08.2018, time: 14:25 Version 1.5/LIBDb
@@ -326,7 +327,7 @@ class DB implements DBConnectionInterface
      */
     public static function getLastInsertId($suffix = NULL):int
     {
-        self::getConnection($suffix)->lastInsertId();
+        return self::getConnection($suffix)->lastInsertId();
     }
 
     /**
@@ -365,20 +366,18 @@ LIMIT 1;";
      */
     public static function makeInsertQuery($tablename, $dataset):string
     {
-        $query = '';
-        $r = [];
-
+        $set = [];
         if (empty($dataset)) {
-            $query = "INSERT INTO {$tablename} () VALUES (); ";
-        } else {
-            $query = "INSERT INTO `{$tablename}` SET ";
-
-            foreach ($dataset as $index=>$value) {
-                $r[] = "\r\n `{$index}` = :{$index}";
-            }
-
-            $query .= implode(', ', $r) . ' ;';
+            return "INSERT INTO {$tablename} () VALUES (); ";
         }
+
+        $query = "INSERT INTO `{$tablename}` SET ";
+
+        foreach ($dataset as $index=>$value) {
+            $set[] = "\r\n `{$index}` = :{$index}";
+        }
+
+        $query .= implode(', ', $set) . ' ;';
 
         return $query;
     }
@@ -396,19 +395,18 @@ LIMIT 1;";
         $query = '';
         $r = [];
 
-        if (empty($dataset)) {
-            return FALSE;
-        } else {
-            $query = "UPDATE `{$tablename}` SET";
+        if (empty($dataset))
+            return false;
 
-            foreach ($dataset as $index=>$value) {
-                $r[] = "\r\n`{$index}` = :{$index}";
-            }
+        $query = "UPDATE `{$tablename}` SET";
 
-            $query .= implode(', ', $r);
-
-            $query .= " \r\n" . $where_condition . " ;";
+        foreach ($dataset as $index=>$value) {
+            $r[] = "\r\n`{$index}` = :{$index}";
         }
+
+        $query .= implode(', ', $r);
+
+        $query .= " \r\n" . $where_condition . " ;";
 
         return $query;
     }
@@ -480,8 +478,10 @@ LIMIT 1;";
             return "\r\n`{$key}` = :{$key}";
         }, array_keys($dataset), $dataset));
 
-        if (!empty($where_condition))
-            $where = "WHERE " . $where_condition;
+        $where
+            = !empty($where_condition)
+            ? "WHERE " . $where_condition
+            : "";
 
         $query .= "\r\n {$where} ;";
 
