@@ -102,7 +102,6 @@ class AppLogger implements AppLoggerInterface
      *
      * @param $scope
      * @param $options
-     * @throws \Exception
      */
     public static function addScope($scope, $options)
     {
@@ -145,7 +144,6 @@ class AppLogger implements AppLoggerInterface
      *
      * @param null $scope
      * @return Logger
-     * @throws \Exception
      */
     public static function scope($scope = null):Logger
     {
