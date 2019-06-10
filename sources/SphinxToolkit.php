@@ -184,7 +184,7 @@ class SphinxToolkit
                 $total_updated++;
             } // while
 
-            $breakline_after_chunk = !!$this->rai_options['sleep_after_chunk'];
+            $breakline_after_chunk = !$this->rai_options['sleep_after_chunk'];
 
             if ($this->rai_options['log_after_chunk']) {
                 CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
@@ -262,7 +262,7 @@ class SphinxToolkit
                 $total_updated++;
             } // while
 
-            $breakline_after_chunk = !!$this->rai_options['sleep_after_chunk'];
+            $breakline_after_chunk = !$this->rai_options['sleep_after_chunk'];
 
             if ($this->rai_options['log_after_chunk']) {
                 CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);

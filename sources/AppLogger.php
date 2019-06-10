@@ -37,7 +37,7 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = "1.14";
+    const VERSION = "1.20";
 
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
@@ -105,38 +105,44 @@ class AppLogger implements AppLoggerInterface
      */
     public static function addScope($scope, $options)
     {
-        $key = self::getScopeKey($scope);
+        try {
+            $key = self::getScopeKey($scope);
 
-        $logger_name = self::$_global_config['add_scope_to_log'] ? $key : self::$app_instance;
+            $logger_name = self::$_global_config['add_scope_to_log'] ? $key : self::$app_instance;
 
-        $logger = new Logger($logger_name);
+            $logger = new Logger($logger_name);
 
-        if (empty($options)) {
-            $options = [
-                [ '100-debug.log', Logger::DEBUG ],
-                [ '200-info.log', Logger::INFO],
-                [ '250-notice.log', Logger::NOTICE],
-                [ '300-warning.log', Logger::WARNING],
-                [ '400-error.log', Logger::ERROR],
-                [ '500-critical.log', Logger::CRITICAL],
-                [ '550-alert.log', Logger::ALERT],
-                [ '600-emergency.log', Logger::EMERGENCY]
-            ];
+            if (empty($options)) {
+                $options = [
+                    [ '100-debug.log', Logger::DEBUG ],
+                    [ '200-info.log', Logger::INFO],
+                    [ '250-notice.log', Logger::NOTICE],
+                    [ '300-warning.log', Logger::WARNING],
+                    [ '400-error.log', Logger::ERROR],
+                    [ '500-critical.log', Logger::CRITICAL],
+                    [ '550-alert.log', Logger::ALERT],
+                    [ '600-emergency.log', Logger::EMERGENCY]
+                ];
+            }
+
+            foreach ($options as $option) {
+                $filename = self::$_global_config['default_logfile_path'] . self::$_global_config['default_logfile_prefix'] . $option[0];
+                $loglevel = $option[1] ?? self::$_global_config['default_log_level'];
+                $buggling = $option[2] ?? self::$_global_config['bubbling'];
+
+
+
+                if (is_null($filename))
+                    throw new \Exception("AppLogger Class reports: given empty log filename for scope `{$scope}`", self::APPLOGGER_ERROR_LOGFILENAME_EMPTY);
+
+                $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
+            }
+
+            self::$_instances[ $key ] = $logger;
+            unset($logger);
+        } catch (\Exception $e) {
+            die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
         }
-
-        foreach ($options as $option) {
-            $filename = self::$_global_config['default_logfile_path'] . self::$_global_config['default_logfile_prefix'] . $option[0];
-            $loglevel = $option[1] ?? self::$_global_config['default_log_level'];
-            $buggling = $option[2] ?? self::$_global_config['bubbling'];
-
-            if (is_null($filename))
-                throw new \Exception("AppLogger Class reports: given empty log filename for scope `{$scope}`", self::APPLOGGER_ERROR_LOGFILENAME_EMPTY);
-
-            $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
-        }
-
-        self::$_instances[ $key ] = $logger;
-        unset($logger);
     }
 
     /**
@@ -147,14 +153,17 @@ class AppLogger implements AppLoggerInterface
      */
     public static function scope($scope = null):Logger
     {
-        $key = self::getScopeKey( $scope );
+        try {
+            $key = self::getScopeKey( $scope );
 
-        if (!self::checkInstance($key))
-        {
-            die("AppLogger Class reports: given scope {$key} does not exists");
+            if (!self::checkInstance($key))
+                throw new \Exception("AppLogger Class reports: given scope {$key} does not exists");
+
+            return self::$_instances[ $key ];
+
+        } catch (\Exception $e) {
+            die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
         }
-
-        return self::$_instances[ $key ];
     }
 
     /**
