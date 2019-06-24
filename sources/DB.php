@@ -23,6 +23,7 @@ interface DBConnectionInterface
     public static function C($suffix = NULL): \PDO;
 
     public static function query($query, $suffix = NULL);
+    public static function queryDeleteRow(string $table, string $field, $id):int;
 
     public static function buildUpdateQuery(string $table, array $dataset = [], $where_condition = null):string;
     public static function buildReplaceQuery(string $table, array $dataset):string;
@@ -50,7 +51,7 @@ interface DBConnectionInterface
  */
 class DB implements DBConnectionInterface
 {
-    const VERSION = "1.13";
+    const VERSION = "1.14";
 
     private static $_current_connection = null;
 
@@ -65,6 +66,7 @@ class DB implements DBConnectionInterface
      * @var array
      */
     private static $_configs = [];
+
 
     /**
      *
@@ -281,6 +283,22 @@ class DB implements DBConnectionInterface
     }
 
     /**
+     * Удаляет единичную строку
+     *
+     * @param string $table
+     * @param string $field
+     * @param $id
+     * @return int
+     */
+    public static function queryDeleteRow(string $table, string $field, $id):int
+    {
+        if (empty($table) or empty($field) or empty($id)) return false;
+
+        $state = DB::getConnection()->prepare("DELETE FROM {$table} WHERE {$field} = :id");
+        return $state->execute(['id' => $id]);
+    }
+
+    /**
      * Get count(*) for given table
      *
      * @param $table
@@ -373,7 +391,7 @@ LIMIT 1;";
 
         $query = "INSERT INTO `{$tablename}` SET ";
 
-        foreach ($dataset as $index=>$value) {
+        foreach ($dataset as $index => $value) {
             $set[] = "\r\n `{$index}` = :{$index}";
         }
 
@@ -400,7 +418,7 @@ LIMIT 1;";
 
         $query = "UPDATE `{$tablename}` SET";
 
-        foreach ($dataset as $index=>$value) {
+        foreach ($dataset as $index => $value) {
             $r[] = "\r\n`{$index}` = :{$index}";
         }
 
@@ -528,7 +546,17 @@ LIMIT 1;";
         ];
     }
 
+}
 
+/**
+ * DB::C() helper
+ *
+ * @param null $suffix
+ * @return \PDO
+ */
+function DBC($suffix = null)
+{
+    return DB::C($suffix);
 }
 
 # -eof-

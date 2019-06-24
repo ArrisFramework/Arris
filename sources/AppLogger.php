@@ -37,12 +37,14 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = "1.20";
+    const VERSION = "1.21";
 
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
 
     const SCOPE_DELIMETER = '.';
+
+    const DEFAULT_LOG_FILENAME = '_.log';
 
     /**
      * @var array
@@ -60,10 +62,17 @@ class AppLogger implements AppLoggerInterface
     private static $_instances = [];
 
     /**
+     * Инициализирует класс логгера
+     *
      * @param $app_instance_id
      * @param $options array
-     *      * bubbling => значение "messages that are handled can bubble up the stack or not", по умолчанию FALSE
-     *      * default_log_level - default log level
+     * - bubbling => значение "messages that are handled can bubble up the stack or not", (FALSE)<br>
+     * - default_log_level - default log level (DEBUG) <br>
+     * - add_scope_to_log - добавлять ли имя скоупа к имени файла лога (FALSE) <br>
+     * - default_logfile_path - путь к файлам логов по умолчанию ('') <br>
+     * - default_logfile_prefix - префикc файла лога по умолчанию ('') <br>
+     * - default_log_file - имя файла лога по умолчанию, применяется если для имени файла передан NULL (_.log)<br>
+     * - deferred_scope_creation - разрешать ли отложенную инициализацию скоупов (TRUE) <br>
      *
      */
     public static function init($app_instance_id, $options = [])
@@ -95,6 +104,17 @@ class AppLogger implements AppLoggerInterface
             = isset($options['default_logfile_prefix'])
             ? $options['default_logfile_prefix']
             : '';
+
+        self::$_global_config['default_log_file']
+            = isset($options['default_log_file'])
+            ? $options['default_log_file']
+            : self::DEFAULT_LOG_FILENAME;
+
+        self::$_global_config['deferred_scope_creation']
+            = isset($options['deferred_scope_creation'])
+            ? $options['deferred_scope_creation']
+            : true;
+
     }
 
     /**
@@ -103,7 +123,7 @@ class AppLogger implements AppLoggerInterface
      * @param $scope
      * @param $options
      */
-    public static function addScope($scope, $options)
+    public static function addScope($scope = null, $options = [])
     {
         try {
             $key = self::getScopeKey($scope);
@@ -126,14 +146,60 @@ class AppLogger implements AppLoggerInterface
             }
 
             foreach ($options as $option) {
-                $filename = self::$_global_config['default_logfile_path'] . self::$_global_config['default_logfile_prefix'] . $option[0];
+                $filename = $options[0] ?? self::$_global_config['default_log_file'];
+                $filename = self::$_global_config['default_logfile_path'] . self::$_global_config['default_logfile_prefix'] . $filename;
+
                 $loglevel = $option[1] ?? self::$_global_config['default_log_level'];
                 $buggling = $option[2] ?? self::$_global_config['bubbling'];
 
-
-
+                /*
                 if (is_null($filename))
                     throw new \Exception("AppLogger Class reports: given empty log filename for scope `{$scope}`", self::APPLOGGER_ERROR_LOGFILENAME_EMPTY);
+                */
+
+                $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
+            }
+
+            self::$_instances[ $key ] = $logger;
+            unset($logger);
+        } catch (\Exception $e) {
+            die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
+        }
+    }
+
+    /**
+     * Поздняя инициализация скоупа значениями по умолчанию
+     *
+     * @param null $scope
+     */
+    public static function addDeferredScope($scope = null)
+    {
+        try {
+            $key = self::getScopeKey($scope);
+
+            $logger_name = self::$_global_config['add_scope_to_log'] ? $key : self::$app_instance;
+
+            $logger = new Logger($logger_name);
+
+            $options = [
+                [ $key . '-100-debug.log', Logger::DEBUG ],
+                [ $key . '-200-info.log', Logger::INFO],
+                [ $key . '-250-notice.log', Logger::NOTICE],
+                [ $key . '-300-warning.log', Logger::WARNING],
+                [ $key . '-400-error.log', Logger::ERROR],
+                [ $key . '-500-critical.log', Logger::CRITICAL],
+                [ $key . '-550-alert.log', Logger::ALERT],
+                [ $key . '-600-emergency.log', Logger::EMERGENCY]
+            ];
+
+            foreach ($options as $option) {
+                $filename
+                    = self::$_global_config['default_logfile_path']
+                    . self::$_global_config['default_logfile_prefix']
+                    . $filename;
+
+                $loglevel = $option[1];
+                $buggling = false;
 
                 $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
             }
@@ -156,8 +222,14 @@ class AppLogger implements AppLoggerInterface
         try {
             $key = self::getScopeKey( $scope );
 
+            /*
             if (!self::checkInstance($key))
                 throw new \Exception("AppLogger Class reports: given scope {$key} does not exists");
+            */
+
+            if (!self::checkInstance($key) and self::$_global_config['deferred_scope_creation']) {
+                self::addDeferredScope($key);
+            }
 
             return self::$_instances[ $key ];
 

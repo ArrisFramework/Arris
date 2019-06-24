@@ -10,42 +10,13 @@ namespace Arris;
 
 interface SphinxToolkitInterface {
 
-    /**
-     * Устанавливает опции для перестроителя RT-индекса
-     * @param array $options - новый набор опций
-     * @return array - результирующий набор опций
-     */
     public function setRebuildIndexOptions(array $options = []):array;
 
-    /**
-     * Перестраивает RT-индекс
-     *
-     * @param string $mysql_table -- SQL-таблица исходник
-     * @param string $sphinx_index -- имя индекса (таблицы)
-     * @param Closure $make_updateset_method - замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
-     * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
-     * @return int -- количество обновленных записей в индексе
-     */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int;
 
     public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int;
 
-    /**
-     * Эмулирует BuildExcerpts из SphinxAPI
-     *
-     * @param $source
-     * @param $needle
-     * @param $options
-     * 'before_match' => '<strong>',    // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
-     * 'after_match' => '</strong>',    // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
-     * 'chunk_separator' => '...',      // Строка, вставляемая между частями фрагмента. по умолчанию "...".
-     *
-     * опции 'limit', 'around', 'exact_phrase' и 'single_passage' в эмуляции не реализованы
-     *
-     * @return mixed
-     */
     public static function EmulateBuildExcerpts($source, $needle, $options);
-
 }
 
 
@@ -101,8 +72,9 @@ class SphinxToolkit
     }
 
     /**
-     * @param array $options
-     * @return array
+     * Устанавливает опции для перестроителя RT-индекса
+     * @param array $options - новый набор опций
+     * @return array - результирующий набор опций
      */
     public function setRebuildIndexOptions(array $options = []):array
     {
@@ -129,13 +101,13 @@ class SphinxToolkit
     } // setRebuildIndexOptions
 
     /**
+     * Перестраивает RT-индекс
      *
-     *
-     * @param string $mysql_table
-     * @param string $sphinx_index
-     * @param Closure $make_updateset_method
-     * @param string $condition
-     * @return int
+     * @param string $mysql_table -- SQL-таблица исходник
+     * @param string $sphinx_index -- имя индекса (таблицы)
+     * @param Closure $make_updateset_method - замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
+     * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
+     * @return int -- количество обновленных записей в индексе
      */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
     {
@@ -297,11 +269,18 @@ class SphinxToolkit
     } // mysql_GetRowCount
 
     /**
+     * Эмулирует BuildExcerpts из SphinxAPI
      *
      * @param $source
      * @param $needle
      * @param $options
-     * @return string
+     * 'before_match' => '<strong>',    // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
+     * 'after_match' => '</strong>',    // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
+     * 'chunk_separator' => '...',      // Строка, вставляемая между частями фрагмента. по умолчанию "...".
+     *
+     * опции 'limit', 'around', 'exact_phrase' и 'single_passage' в эмуляции не реализованы
+     *
+     * @return mixed
      */
     public static function EmulateBuildExcerpts($source, $needle, $options)
     {

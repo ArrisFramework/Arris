@@ -3,6 +3,40 @@
  * Functions for Arris Framework
  */
 
+interface ArrisFrameworkFunctions {
+    function d($value);
+    function dd($value);
+
+    function array_fill_like_list(array &$target_array, array $indexes, array $source_array, $default_value = NULL);
+
+    function array_search_callback(array $a, callable $callback);
+
+    function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL );
+
+    function sort_array_in_given_order(array $array, array $order, $sort_key):array;
+
+    function is_countable($var): bool;
+}
+
+if (!function_exists('array_search_callback')) {
+
+    /**
+     * array_search_callback() аналогичен array_search() , только помогает искать по неодномерному массиву.
+     *
+     * @param array $a
+     * @param callable $callback
+     * @return mixed|null
+     */
+    function array_search_callback(array $a, callable $callback)
+    {
+        foreach ($a as $item) {
+            $v = \call_user_func($callback, $item);
+            if ( $v === true ) return $item;
+        }
+        return null;
+    }
+}
+
 if (!function_exists('d')) {
     /**
      * Dump and die
@@ -77,7 +111,7 @@ if (!function_exists('sort_array_in_given_order')) {
      * @param $sort_key - sorting key (id)
      * @return mixed
      */
-    function sort_array_in_given_order($array, $order, $sort_key)
+    function sort_array_in_given_order(array $array, array $order, $sort_key):array
     {
         usort($array, function ($home, $away) use ($order, $sort_key) {
             $pos_home = array_search($home[$sort_key], $order);

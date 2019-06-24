@@ -287,7 +287,7 @@ class AJURWeather
             // первый элемент - погода текущего региона
             $district_owmid = self::map_intid_to_owmid[ 813 ][ $district_id ];
 
-            $local_weather[] = self::array_search_callback($current_weather, function ($item) use ($district_owmid){
+            $local_weather[] = array_search_callback($current_weather, function ($item) use ($district_owmid){
                 return ($item['id'] == $district_owmid);
             });
 
@@ -296,7 +296,7 @@ class AJURWeather
 
                 $adjacency_district_owmid = self::map_intid_to_owmid[ 813 ][ $adjacency_district_id ];
 
-                $local_weather[] = self::array_search_callback($current_weather, function ($item) use ($adjacency_district_owmid){
+                $local_weather[] = array_search_callback($current_weather, function ($item) use ($adjacency_district_owmid){
                     return ($item['id'] == $adjacency_district_owmid);
                 });
             }
@@ -314,23 +314,6 @@ class AJURWeather
         return $current_weather;
 
     } // load_weather_local
-
-    /**
-     *
-     *
-     * @param array $a
-     * @param callable $callback
-     * @return mixed|null
-     */
-    public static function array_search_callback(array $a, callable $callback)
-    {
-        foreach ($a as $item) {
-            $v = \call_user_func($callback, $item);
-            if ( $v === true ) return $item;
-        }
-        return null;
-    }
-
 
 }
 

@@ -11,14 +11,32 @@
 
 namespace Arris;
 
+interface TimerStatsInterface {
+    public static function init($name = null, $desc = null);
+    public static function go($name = null);
+    public static function pause($name = null);
+    public static function stop($name = null);
+    public static function stopAll();
+
+    public static function get($name = null);
+    public static function get_state($name = null);
+
+    public static function destroy($name = null);
+
+    public static function is_exists($name = null);
+    public static function get_all_timers();
+}
+
 /**
  * Class TimerStats
  *
  * @package Arris
  */
-class TimerStats
+class TimerStats implements TimerStatsInterface
 {
-    const VERSION = "1.14.1";
+    const VERSION = "1.15";
+
+    const DEFAULT_INTERNAL_NAME = 'default';
 
     const STATE_NEW = 0;
     const STATE_RUNNING = 1;
@@ -35,9 +53,9 @@ class TimerStats
      * @param string $name
      * @param string $desc
      */
-    public static function init($name = '', $desc = '')
+    public static function init($name = null, $desc = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
 
         if (\array_key_exists($name, self::$timers))
             unset( self::$timers[ $name ]);
@@ -57,9 +75,9 @@ class TimerStats
      *
      * @param string $name
      */
-    public static function go($name = '')
+    public static function go($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
 
         if (self::$timers[ $name ]['state'] == self::STATE_STOPPED) {
             self::$timers[ $name ]['totaltime'] = 0;
@@ -76,9 +94,9 @@ class TimerStats
      *
      * @param string $name
      */
-    public static function pause($name = '')
+    public static function pause($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
 
         self::$timers[ $name ]['state'] = self::STATE_PAUSED;
         self::$timers[ $name ]['totaltime'] += ( \microtime(true) - self::$timers[ $name ]['starttime']);
@@ -91,9 +109,9 @@ class TimerStats
      * @param string $name
      * @return mixed
      */
-    public static function stop($name = '')
+    public static function stop($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
 
         self::$timers[ $name ]['state'] = self::STATE_STOPPED;
         self::$timers[ $name ]['totaltime'] += ( \microtime(true) - self::$timers[ $name ]['starttime']);
@@ -124,9 +142,10 @@ class TimerStats
      * @param string $name
      * @return mixed
      */
-    public static function get($name = '')
+    public static function get($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
+
         return self::$timers[ $name ]['totaltime'];
     }
 
@@ -135,9 +154,10 @@ class TimerStats
      * @param string $name
      * @return bool
      */
-    public static function destroy($name = '')
+    public static function destroy($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
+
         if (\array_key_exists($name, self::$timers)) {
             unset( self::$timers[ $name ]);
             return true;
@@ -151,9 +171,9 @@ class TimerStats
      * @param string $name
      * @return bool
      */
-    public static function is_exists($name = '')
+    public static function is_exists($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
 
         return \array_key_exists($name, self::$timers);
     }
@@ -163,9 +183,10 @@ class TimerStats
      * @param string $name
      * @return bool
      */
-    public static function get_state($name = '')
+    public static function get_state($name = null)
     {
-        if ($name === '') $name = 'default';
+        $name = self::getTimerInternalName($name);
+
         if (array_key_exists($name, self::$timers)) {
             return self::$timers[ $name ]['state'];
         } else {
@@ -188,6 +209,14 @@ class TimerStats
             unset($item['totaltime']);
         });
         return self::$timers;
+    }
+
+    private static function getTimerInternalName($name = null)
+    {
+        return
+            (is_null($name) or $name === '')
+            ? self::DEFAULT_INTERNAL_NAME
+            : $name;
     }
 
 }
