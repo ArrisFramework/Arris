@@ -37,7 +37,7 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
-    const VERSION = "1.21";
+    const VERSION = "1.22";
 
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
@@ -46,13 +46,34 @@ class AppLogger implements AppLoggerInterface
 
     const DEFAULT_LOG_FILENAME = '_.log';
 
+    const DEFAULT_FILES = [
+        [ '100-debug.log', Logger::DEBUG ],
+        [ '200-info.log', Logger::INFO],
+        [ '250-notice.log', Logger::NOTICE],
+        [ '300-warning.log', Logger::WARNING],
+        [ '400-error.log', Logger::ERROR],
+        [ '500-critical.log', Logger::CRITICAL],
+        [ '550-alert.log', Logger::ALERT],
+        [ '600-emergency.log', Logger::EMERGENCY]
+    ];
+
     /**
      * @var array
      */
     private static $_global_config = [];
 
     /**
-     * @var $app_instance
+     * @var string
+     */
+    private static $application;
+
+    /**
+     * @var string
+     */
+    private static $instance;
+
+    /**
+     * @var string $app_instance
      */
     private static $app_instance;
 
@@ -68,17 +89,20 @@ class AppLogger implements AppLoggerInterface
      * @param $options array
      * - bubbling => значение "messages that are handled can bubble up the stack or not", (FALSE)<br>
      * - default_log_level - default log level (DEBUG) <br>
-     * - add_scope_to_log - добавлять ли имя скоупа к имени файла лога (FALSE) <br>
+     * - add_scope_to_log - добавлять ли имя скоупа к имени логгера в файле (FALSE, DEPRECATED)<br>
      * - default_logfile_path - путь к файлам логов по умолчанию ('') <br>
      * - default_logfile_prefix - префикc файла лога по умолчанию ('') <br>
      * - default_log_file - имя файла лога по умолчанию, применяется если для имени файла передан NULL (_.log)<br>
      * - deferred_scope_creation - разрешать ли отложенную инициализацию скоупов (TRUE) <br>
      *
      */
-    public static function init($app_instance_id, $options = [])
+    public static function init($application, $instance, $options = [])
     {
-        self::$app_instance
-            = $app_instance_id;
+        self::$application
+            = $application;
+
+        self::$instance
+            = $instance;
 
         self::$_global_config['bubbling']
             = isset($options['bubbling'])
@@ -114,7 +138,6 @@ class AppLogger implements AppLoggerInterface
             = isset($options['deferred_scope_creation'])
             ? $options['deferred_scope_creation']
             : true;
-
     }
 
     /**
@@ -125,42 +148,31 @@ class AppLogger implements AppLoggerInterface
      */
     public static function addScope($scope = null, $options = [])
     {
-        try {
-            $key = self::getScopeKey($scope);
+        if (empty($options)) {
+            $options = self::DEFAULT_FILES;
+        }
 
-            $logger_name = self::$_global_config['add_scope_to_log'] ? $key : self::$app_instance;
+        try {
+            $logger_name = self::getLoggerName($scope);
+            $internal_key = self::getScopeKey($scope);
 
             $logger = new Logger($logger_name);
 
-            if (empty($options)) {
-                $options = [
-                    [ '100-debug.log', Logger::DEBUG ],
-                    [ '200-info.log', Logger::INFO],
-                    [ '250-notice.log', Logger::NOTICE],
-                    [ '300-warning.log', Logger::WARNING],
-                    [ '400-error.log', Logger::ERROR],
-                    [ '500-critical.log', Logger::CRITICAL],
-                    [ '550-alert.log', Logger::ALERT],
-                    [ '600-emergency.log', Logger::EMERGENCY]
-                ];
-            }
+            foreach ($options as $an_option) {
+                $filename = empty($an_option[0]) ? self::$_global_config['default_log_file'] : $an_option[0];
 
-            foreach ($options as $option) {
-                $filename = $options[0] ?? self::$_global_config['default_log_file'];
-                $filename = self::$_global_config['default_logfile_path'] . self::$_global_config['default_logfile_prefix'] . $filename;
+                $filename
+                    = self::$_global_config['default_logfile_path']
+                    . self::$_global_config['default_logfile_prefix']
+                    . $filename;
 
-                $loglevel = $option[1] ?? self::$_global_config['default_log_level'];
-                $buggling = $option[2] ?? self::$_global_config['bubbling'];
-
-                /*
-                if (is_null($filename))
-                    throw new \Exception("AppLogger Class reports: given empty log filename for scope `{$scope}`", self::APPLOGGER_ERROR_LOGFILENAME_EMPTY);
-                */
+                $loglevel = $an_option[1] ?? self::$_global_config['default_log_level'];
+                $buggling = $an_option[2] ?? self::$_global_config['bubbling'];
 
                 $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
             }
 
-            self::$_instances[ $key ] = $logger;
+            self::$_instances[ $internal_key ] = $logger;
             unset($logger);
         } catch (\Exception $e) {
             die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
@@ -174,37 +186,28 @@ class AppLogger implements AppLoggerInterface
      */
     public static function addDeferredScope($scope = null)
     {
-        try {
-            $key = self::getScopeKey($scope);
+        $options = self::DEFAULT_FILES;
 
-            $logger_name = self::$_global_config['add_scope_to_log'] ? $key : self::$app_instance;
+        try {
+            $logger_name = self::getLoggerName($scope);
+            $internal_key = self::getScopeKey($scope);
 
             $logger = new Logger($logger_name);
 
-            $options = [
-                [ $key . '-100-debug.log', Logger::DEBUG ],
-                [ $key . '-200-info.log', Logger::INFO],
-                [ $key . '-250-notice.log', Logger::NOTICE],
-                [ $key . '-300-warning.log', Logger::WARNING],
-                [ $key . '-400-error.log', Logger::ERROR],
-                [ $key . '-500-critical.log', Logger::CRITICAL],
-                [ $key . '-550-alert.log', Logger::ALERT],
-                [ $key . '-600-emergency.log', Logger::EMERGENCY]
-            ];
-
-            foreach ($options as $option) {
+            foreach ($options as $an_option) {
                 $filename
                     = self::$_global_config['default_logfile_path']
                     . self::$_global_config['default_logfile_prefix']
-                    . $filename;
+                    . ($scope ? (string)$scope : '')
+                    . ".{$an_option[0]}";
 
-                $loglevel = $option[1];
+                $loglevel = $an_option[1];
                 $buggling = false;
 
                 $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
             }
 
-            self::$_instances[ $key ] = $logger;
+            self::$_instances[ $internal_key ] = $logger;
             unset($logger);
         } catch (\Exception $e) {
             die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
@@ -220,18 +223,13 @@ class AppLogger implements AppLoggerInterface
     public static function scope($scope = null):Logger
     {
         try {
-            $key = self::getScopeKey( $scope );
+            $internal_key = self::getScopeKey( $scope );
 
-            /*
-            if (!self::checkInstance($key))
-                throw new \Exception("AppLogger Class reports: given scope {$key} does not exists");
-            */
-
-            if (!self::checkInstance($key) and self::$_global_config['deferred_scope_creation']) {
-                self::addDeferredScope($key);
+            if (!self::checkInstance($internal_key) and self::$_global_config['deferred_scope_creation']) {
+                self::addDeferredScope($scope);
             }
 
-            return self::$_instances[ $key ];
+            return self::$_instances[ $internal_key ];
 
         } catch (\Exception $e) {
             die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
@@ -257,8 +255,25 @@ class AppLogger implements AppLoggerInterface
      */
     private static function getScopeKey($scope = null)
     {
-        return self::$app_instance . ($scope ? (self::SCOPE_DELIMETER . (string)$scope) : '');
+        $scope ? (self::SCOPE_DELIMETER . (string)$scope) : '';
+
+        return self::$application . self::$instance . $scope;
     }
+
+    /**
+     * @param null $scope
+     * @return string
+     */
+    private static function getLoggerName($scope = null)
+    {
+        $scope = $scope ? (self::SCOPE_DELIMETER . (string)$scope) : '';
+
+        return
+            self::$_global_config['add_scope_to_log']
+                ? self::$application . self::SCOPE_DELIMETER . self::$instance . self::SCOPE_DELIMETER . $scope
+                : self::$application . self::SCOPE_DELIMETER . self::$instance;
+    }
+
 
 }
 
