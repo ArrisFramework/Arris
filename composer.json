@@ -20,7 +20,9 @@
         "ext-json": "*",
         "ext-readline": "*",
         "monolog/monolog": "^1.23",
-        "foolz/sphinxql-query-builder": "^2.0"
+        "foolz/sphinxql-query-builder": "^2.0",
+        "sabre/event": "^5",
+        "cmfcmf/openweathermap-php-api": "^2.4"
     },
     "autoload": {
         "files": [
