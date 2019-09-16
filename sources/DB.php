@@ -17,6 +17,8 @@ namespace Arris;
  */
 interface DBConnectionInterface
 {
+    const MYSQL_ERROR_DUPLICATE_ENTRY = 1062;
+
     public static function init($suffix, $config);
 
     public static function getConnection($suffix = NULL): \PDO;
@@ -66,7 +68,6 @@ class DB implements DBConnectionInterface
      * @var array
      */
     private static $_configs = [];
-
 
     /**
      *
