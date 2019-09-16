@@ -18,6 +18,24 @@ interface ArrisFrameworkFunctions {
     function is_countable($var): bool;
 }
 
+if (!function_exists('ArrisFrameWorkSetOption')) {
+
+    /**
+     * use:
+     * $nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX::NGINX_CACHE_LEVELS', '1:2');
+     *
+     * @param array $options
+     * @param string $key
+     * @param string $env_key
+     * @param string $default_value
+     * @return string
+     */
+    function ArrisFrameWorkSetOption(array $options, string $key, string $env_key, $default_value = '')
+    {
+        return (array_key_exists($key, $options) ? $options[$key] : null) ?: getenv($env_key) ?: $default_value;
+    }
+}
+
 if (!function_exists('array_search_callback')) {
 
     /**
