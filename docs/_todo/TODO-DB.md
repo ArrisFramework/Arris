@@ -69,42 +69,7 @@ public function query()
 
 DB::C() return instance of this class (из массива инстансов)
 
----
-```
-/**
- * Build INSERT-query by dataset for given table
- *
- * @param $tablename
- * @param $dataset
- * @return string
- */
-function makeInsertQuery($tablename, &$dataset):string
-{
-    $set = [];
-    if (empty($dataset)) {
-        return "INSERT INTO {$tablename} () VALUES (); ";
-    }
 
-    $query = "INSERT INTO `{$tablename}` SET ";
-
-    foreach ($dataset as $index => $value) {
-
-        if (strtoupper(trim($value)) === 'NOW()') {
-            $set[] = "\r\n `{$index}` = NOW()";
-            unset($dataset[ $index ]);
-            continue;
-        }
-
-        $set[] = "\r\n `{$index}` = :{$index}";
-    }
-
-    $query .= implode(', ', $set) . ' ;';
-
-    return $query;
-}
-
-
-```
 
 
 
