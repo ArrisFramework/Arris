@@ -19,11 +19,25 @@ namespace Arris;
  * v 1.2 : + echo_status_setmode() и обработка флагов преобразования сущностей
  * v 1.3 : + обработка <BR> в echo_status_cli()
  * v 1.4 : add to AFW
+ * v 1.14 : + say() method
  *
  */
-class CLIConsole
+interface CLIConsoleInterface {
+
+    public static function readline($prompt, $allowed_pattern = '/.*/', $strict_mode = FALSE);
+
+    public static function echo_status_setmode($will_strip = FALSE, $will_decode = FALSE);
+
+    public static function say($message = "", $breakline = TRUE);
+
+    // old method names
+    public static function echo_status_cli($message = "", $breakline = TRUE);
+    public static function echo_status($message = "", $breakline = TRUE);
+}
+
+class CLIConsole implements CLIConsoleInterface
 {
-    const VERSION = "1.13";
+    const VERSION = "1.15";
 
     const FOREGROUND_COLORS = [
         'black'         => '0;30',
@@ -68,8 +82,8 @@ class CLIConsole
     ];
 
     /**
-     * ConsoleReadline::readline('Введите число от 1 до 999: ', '/^\d{1,3}$/');
-     * ConsoleReadline::readline('Введите число от 100 до 999: ', '/^\d{3}$/');
+     * CLIConsole::readline('Введите число от 1 до 999: ', '/^\d{1,3}$/');
+     * CLIConsole::readline('Введите число от 100 до 999: ', '/^\d{3}$/');
      *
      * @param $prompt -
      * @param $allowed_pattern
@@ -102,6 +116,7 @@ class CLIConsole
      * <font color=""> задает цвет из списка: black, dark gray, blue, light blue, green, lightgreen, cyan, light cyan, red, light red, purple, light purple, brown, yellow, light gray, gray
      * <hr> - горизонтальная черта, 80 минусов (работает только в отдельной строчке)
      * <strong> - заменяет белым цветом
+     *
      * @param string $message
      * @param bool|TRUE $breakline
      */
@@ -152,6 +167,7 @@ class CLIConsole
     /**
      * Wrapper around echo/echo_status_cli
      * Выводит сообщение на экран. Если мы вызваны из командной строки - заменяет теги на управляющие последовательности.
+     *
      * @param $message
      * @param bool|TRUE $breakline
      */
@@ -176,6 +192,11 @@ class CLIConsole
             'strip_tags'        => $will_strip,
             'decode_entities'   => $will_decode
         );
+    }
+
+    public static function say($message = "", $breakline = TRUE)
+    {
+        self::echo_status($message, $breakline);
     }
 
 }

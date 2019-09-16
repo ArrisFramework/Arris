@@ -9,7 +9,7 @@
             "email": "karel.wintersky@gmail.com"
         }
     ],
-    "keywords": [ "logging", "database", "sphinx", "console" ],
+    "keywords": [ "logging", "database", "sphinx", "console", "hooks" ],
     "config": {
         "optimize-autoloader": true
     },
@@ -19,10 +19,12 @@
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-readline": "*",
-        "monolog/monolog": "^1.23"
+        "monolog/monolog": "^1.23",
+        "foolz/sphinxql-query-builder": "^2.0"
     },
     "autoload": {
         "files": [
+          "functions/helpers.php",
           "functions/functions.php"
         ],
         "psr-4": {

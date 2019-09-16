@@ -1,16 +1,9 @@
 <?php
 
+namespace Arris\Toolkit;
 
-namespace Arris;
-
-class HTTP
+class HTTPToolkit
 {
-    private static $options = [];
-
-    public static function init()
-    {
-    }
-
     /**
      * HTTP-редирект.
      * Scheme редиректа определяется так: ENV->HTTP::REDIRECT_SCHEME > $scheme > 'http'

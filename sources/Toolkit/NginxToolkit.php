@@ -1,12 +1,18 @@
 <?php
 
-
 namespace Arris\Toolkit;
-
 
 use Arris\AppLogger;
 use Monolog\Logger;
 use function ArrisFrameWorkSetOption as setOption;
+
+interface NginxToolkitInterface {
+    public static function init($options = []);
+    public static function clear_nginx_cache(string $url);
+    public static function clear_nginx_cache_entire();
+
+    public static function rmdir(string $directory): bool;
+}
 
 class NginxToolkit
 {
@@ -76,9 +82,6 @@ class NginxToolkit
     }
 
     /**
-     *
-     *
-     *
      * Записывает логи:
      * DEBUG: очистка лога в случае, если установлена ENV -> NGINX::LOG_CACHE_CLEANING
      *
@@ -197,3 +200,5 @@ class NginxToolkit
         return rmdir($directory);
     }
 }
+
+# -eof-
