@@ -1,16 +1,36 @@
-<?php /** @noinspection ALL */
+<?php
 
+/*
+Использовать:
 
-namespace Arris;
+AJURWeather::init( AppLogger::scope('weather') );
+
+AJURWeather::load_weather_local()
+
+ */
+
+namespace Arris\AJUR;
+
+use Arris\AppLogger;
+use Monolog\Logger;
+use Cmfcmf\OpenWeatherMap\CurrentWeather;
 
 /**
  *
  * Class AJURWeather
  * @package Arris
  */
+interface AJURWeatherInterface {
+    public static function init($logger);
+    public static function load_weather_local($district_id = 0, $source_file = null);
+
+    public static function makeWeatherInfo($id, CurrentWeather $weather):array;
+    public static function makeWeatherInfoJSON(int $id, CurrentWeather $region_weather):array;
+}
+
 class AJURWeather
 {
-    const VERSION = "1.13";
+    const VERSION = "1.14";
 
     /**
      * Error consts
@@ -20,7 +40,6 @@ class AJURWeather
     const ERROR_SOURCE_FILE_PARSING_ERROR = 3;
     const ERROR_SOURCE_FILE_HAVE_NO_DATA = 4;
     const ERROR_NO_SUCH_DISTRICT_ID = 5;
-
 
     /**
      * список смежности регионов леобласти
@@ -233,7 +252,53 @@ class AJURWeather
         ],
     ];
 
+    const icons_conversion = [
+        // clear sky - чистое небо
+        '01d'   =>  '31d',
+        '01n'   =>  '31n',
 
+        // few clouds - малая облачность
+        '02d'   =>  '30d',
+        '02n'   =>  '30n',
+
+        // scattered clouds - рассеянная облачность
+        '03d'   =>  '26d',
+        '03n'   =>  '26n',
+
+        // broken clouds - облачно с прояснениями
+        '04d'   =>  '27d',
+        '04n'   =>  '27n',
+
+        // shower rain  =- проливной дождь
+        '09d'   =>  '10d',
+        '09n'   =>  '10n',
+
+        // rain - дождь
+        '10d'   =>  '9d',
+        '10n'   =>  '9n',
+
+        // thunderstorm - гроза
+        '11d'   =>  '0d',
+        '11n'   =>  '0n',
+
+        // snow - снег
+        '13d'   =>  '6d',
+        '13n'   =>  '6n',
+
+        // mist - туман
+        '50d'   =>  '22d',
+        '50n'   =>  '22n',
+    ];
+
+    /**
+     * @var Logger
+     */
+    private static $logger;
+
+    public static function init($logger)
+    {
+        self::$logger = $logger;
+    }
 
     /**
      *
@@ -304,16 +369,71 @@ class AJURWeather
             return $local_weather;
 
         } catch (\Exception $e) {
-            AppLogger::scope('main')->error('[ERROR] Load Weather ',
-                [
-                    array_search($e->getCode(), (new \ReflectionClass(__CLASS__))->getConstants()),
-                    $e->getMessage()
-                ]);
+            if (self::$logger instanceof AppLogger) {
+                self::$logger->error('[ERROR] Load Weather ',
+                    [
+                        array_search($e->getCode(), (new \ReflectionClass(__CLASS__))->getConstants()),
+                        $e->getMessage()
+                    ]);
+            }
         }
 
         return $current_weather;
 
     } // load_weather_local
+
+    public static function makeWeatherInfo($id, CurrentWeather $weather):array
+    {
+        $info = [
+            'id'            =>  $id,
+            'name'          =>  self::outer_regions[ $id ]['title'],
+            'temperature'   =>  $weather->temperature->now->getValue()      ?? 0,
+            'humidity'      =>  $weather->humidity->getFormatted()          ?? '0 %',     // форматированное, с %
+            'pressure_hpa'  =>  $weather->pressure->getValue()              ?? 0,         // в гектопаскалях, сырое значение
+            'pressure_mm'   =>  round(($weather->pressure->getValue()   ?? 0) * 0.75006375541921, 0),
+            'wind_speed'    =>  $weather->wind->speed->getValue()           ?? 0,      // м/с, сырое
+            'wind_dir_raw'  =>  $weather->wind->direction->getValue()       ?? 0,    //@todo: ЕСЛИ ПРИШЛО NULL то будет ошибка
+            'wind_dir'      =>  $weather->wind->direction->getUnit()        ?? '',   // направление, аббревиатурой (NULL не ломает)
+            'clouds_value'  =>  $weather->clouds->getValue()                ?? 0,            // облачность (% значение)
+            'clouds_text'   =>  $weather->clouds->getDescription()          ?? '',      // облачность, текстом
+            'precipitation' =>  $weather->precipitation->getValue()         ?? 0,    // осадки, сырое значение
+            'weather_icon'  =>  $weather->weather->icon                     ?? '',                 // погодная иконка, название
+            'weather_icon_url'  =>  $weather->weather->getIconUrl()         ?? '',     // погода, текстом
+            't'         =>  round(($weather->temperature->now->getValue()   ?? 0), 0),
+            's'         =>  array_key_exists($weather->weather->icon, self::icons_conversion)
+                ? self::icons_conversion[ $weather->weather->icon ]
+                : '44d',
+        ];
+        return $info;
+    }
+
+    public static function makeWeatherInfoJSON(int $id, CurrentWeather $region_weather):array {
+        $info = [
+            'id'            =>  $id,
+            'name'          =>  self::outer_regions[ $id ]['title'],
+            'temperature'   =>  round($region_weather['main']['temp'], 0),
+            'humidity'      =>  ($region_weather['main']['humidity'] ?? '0')  . '%',     // форматированное, с %
+            'pressure_hpa'  =>  round($region_weather['main']['pressure_hpa'] ?? 0, 0),         // в гектопаскалях, сырое значение
+            'wind_speed'    =>  round($region_weather['wind']['speed'] ?? 0, 0),
+            'wind_dir_raw'  =>  $region_weather['wind']['deg'] ?? 0,                    // направление, градусы
+
+            'clouds_value'  =>  $region_weather->clouds->getValue()                ?? 0,            // облачность (% значение)
+            'clouds_text'   =>  $region_weather->clouds->getDescription()          ?? '',      // облачность, текстом
+            'precipitation' =>  $region_weather->precipitation->getValue()         ?? 0,    // осадки, сырое значение
+            'weather_icon'  =>  $region_weather->weather->icon                     ?? '',                 // погодная иконка, название
+            'weather_icon_url'  =>  $region_weather->weather->getIconUrl()         ?? '',     // погода, текстом
+            't'         =>  round(($region_weather->temperature->now->getValue()   ?? 0), 0),
+            's'         =>  array_key_exists($region_weather->weather->icon, self::icons_conversion)
+                ? self::icons_conversion[ $region_weather->weather->icon ]
+                : '44d',
+        ];
+
+        $info['pressure_mm'] = round(($region_weather['main']['pressure_hpa'] ?? 0) * 0.75006375541921, 0);
+
+        return $info;
+    }
+
+
 
 }
 
