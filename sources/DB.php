@@ -377,22 +377,31 @@ LIMIT 1;";
 
 
     /**
-     * Build INSERT-query by dataset for given table
+     * Строит INSERT-запрос на основе массива данных для указанной таблицы.
+     * В массиве допустима конструкция 'key' => 'NOW()'
+     * В этом случае она будет добавлена в запрос и удалена из набора данных (он пере).
      *
-     * @param $tablename
-     * @param $dataset
-     * @return string
+     * @param $tablename    -- таблица
+     * @param $dataset      -- передается по ссылке, мутабелен
+     * @return string       -- результирующая строка запроса
      */
-    public static function makeInsertQuery($tablename, $dataset):string
+    public static function makeInsertQuery($tablename, &$dataset):string
     {
-        $set = [];
         if (empty($dataset)) {
             return "INSERT INTO {$tablename} () VALUES (); ";
         }
 
+        $set = [];
+
         $query = "INSERT INTO `{$tablename}` SET ";
 
         foreach ($dataset as $index => $value) {
+            if (strtoupper(trim($value)) === 'NOW()') {
+                $set[] = "\r\n `{$index}` = NOW()";
+                unset($dataset[ $index ]);
+                continue;
+            }
+
             $set[] = "\r\n `{$index}` = :{$index}";
         }
 
