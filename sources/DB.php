@@ -31,8 +31,8 @@ interface DBConnectionInterface
     public static function buildReplaceQuery(string $table, array $dataset):string;
     public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes):array;
 
-    public static function makeInsertQuery($tablename, $dataset):string;
-    public static function makeUpdateQuery($tablename, $dataset, $where_condition = ''):string;
+    public static function makeInsertQuery($tablename, &$dataset):string;
+    public static function makeUpdateQuery($tablename, &$dataset, $where_condition = ''):string;
 
     public static function getRowCount($table, $suffix = NULL):int;
     public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL):int;
@@ -418,7 +418,7 @@ LIMIT 1;";
      * @param string $where_condition
      * @return bool|string
      */
-    public static function makeUpdateQuery($tablename, $dataset, $where_condition = ''):string
+    public static function makeUpdateQuery($tablename, &$dataset, $where_condition = ''):string
     {
         $query = '';
         $r = [];
@@ -429,6 +429,12 @@ LIMIT 1;";
         $query = "UPDATE `{$tablename}` SET";
 
         foreach ($dataset as $index => $value) {
+            if (strtoupper(trim($value)) === 'NOW()') {
+                $set[] = "\r\n `{$index}` = NOW()";
+                unset($dataset[ $index ]);
+                continue;
+            }
+
             $r[] = "\r\n`{$index}` = :{$index}";
         }
 

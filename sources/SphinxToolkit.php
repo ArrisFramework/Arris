@@ -22,7 +22,6 @@ interface SphinxToolkitInterface {
 
 use Closure;
 use PDO;
-use Arris\CLIConsole;
 
 /**
  * Class SphinxToolkit
@@ -111,16 +110,13 @@ class SphinxToolkit
      */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
     {
-        $mysql_connection = $this->mysql_connection;
-        $sphinx_connection = $this->sphinx_connection;
-
         $chunk_size = $this->rai_options['chunk_length'];
 
         // truncate
-        $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
+        $this->sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
 
         // get total count
-        $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
+        $total_count = $this->mysql_GetRowCount($this->mysql_connection, $mysql_table, $condition);
         $total_updated = 0;
 
         if ($this->rai_options['log_before_index'])
@@ -140,7 +136,7 @@ class SphinxToolkit
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
             $query_chunk_data.= "ORDER BY id DESC LIMIT {$offset}, {$chunk_size} ";
 
-            $sth = $mysql_connection->query($query_chunk_data);
+            $sth = $this->mysql_connection->query($query_chunk_data);
 
             // iterate inside chunk
             while ($item = $sth->fetch()) {
@@ -151,7 +147,7 @@ class SphinxToolkit
 
                 $update_query = DB::buildReplaceQuery($sphinx_index, $update_set);
 
-                $update_statement = $sphinx_connection->prepare($update_query);
+                $update_statement = $this->sphinx_connection->prepare($update_query);
                 $update_statement->execute($update_set);
                 $total_updated++;
             } // while
@@ -189,16 +185,13 @@ class SphinxToolkit
      */
     public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int
     {
-        $mysql_connection = $this->mysql_connection;
-        $sphinx_connection = $this->sphinx_connection;
-
         $chunk_size = $this->rai_options['chunk_length'];
 
         // truncate
-        $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
+        $this->sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
 
         // get total count
-        $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
+        $total_count = $this->mysql_GetRowCount($this->mysql_connection, $mysql_table, $condition);
         $total_updated = 0;
 
         if ($this->rai_options['log_before_index'])
@@ -218,7 +211,7 @@ class SphinxToolkit
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
             $query_chunk_data.= "ORDER BY id DESC LIMIT {$offset}, {$chunk_size} ";
 
-            $sth = $mysql_connection->query($query_chunk_data);
+            $sth = $this->mysql_connection->query($query_chunk_data);
 
             // iterate inside chunk
             while ($item = $sth->fetch()) {
@@ -229,7 +222,7 @@ class SphinxToolkit
 
                 list($update_query, $new_update_set) = DB::buildReplaceQueryMVA($sphinx_index, $update_set, $mva_indexes_list);
 
-                $update_statement = $sphinx_connection->prepare($update_query);
+                $update_statement = $this->sphinx_connection->prepare($update_query);
                 $update_statement->execute($new_update_set);
                 $total_updated++;
             } // while

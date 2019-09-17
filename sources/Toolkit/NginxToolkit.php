@@ -86,14 +86,10 @@ class NginxToolkit
      * DEBUG: очистка лога в случае, если установлена ENV -> NGINX::LOG_CACHE_CLEANING
      *
      * @param string $url
-     * @param string $levels
-     * @param string $cache_key
      * @return bool
      */
     public static function clear_nginx_cache(string $url)
     {
-        $unlink_status = true;
-
         if (self::$is_using_cache == 0) {
             return false;
         }
