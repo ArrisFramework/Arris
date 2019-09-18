@@ -368,7 +368,7 @@ class AJURWeather implements AJURWeatherInterface
             return $local_weather;
 
         } catch (\Exception $e) {
-            if (self::$logger instanceof AppLogger) {
+            if (self::$logger instanceof Logger) {
                 self::$logger->error('[ERROR] Load Weather ',
                     [
                         array_search($e->getCode(), (new \ReflectionClass(__CLASS__))->getConstants()),
