@@ -15,11 +15,6 @@ use Arris\AppLogger;
 use Monolog\Logger;
 use Cmfcmf\OpenWeatherMap\CurrentWeather;
 
-/**
- *
- * Class AJURWeather
- * @package Arris
- */
 interface AJURWeatherInterface {
     public static function init($logger);
     public static function load_weather_local($district_id = 0, $source_file = null);
@@ -28,7 +23,7 @@ interface AJURWeatherInterface {
     public static function makeWeatherInfoJSON(int $id, CurrentWeather $region_weather):array;
 }
 
-class AJURWeather
+class AJURWeather implements AJURWeatherInterface
 {
     const VERSION = "1.14";
 
@@ -40,6 +35,7 @@ class AJURWeather
     const ERROR_SOURCE_FILE_PARSING_ERROR = 3;
     const ERROR_SOURCE_FILE_HAVE_NO_DATA = 4;
     const ERROR_NO_SUCH_DISTRICT_ID = 5;
+    const ERROR_SOURCE_FILE_READING_ERROR = 6;
 
     /**
      * список смежности регионов леобласти
@@ -315,9 +311,12 @@ class AJURWeather
             if (is_null($source_file))
                 throw new \Exception("Weather file not defined", self::ERROR_SOURCE_FILE_NOT_DEFINED);
 
+            if (!is_readable($source_file))
+                throw new \Exception("Weather file `{$source_file}` not found", self::ERROR_SOURCE_FILE_NOT_READABLE);
+
             $file_content = \file_get_contents($source_file);
             if ($file_content === FALSE)
-                throw new \Exception("Weather file `{$source_file}` not found", self::ERROR_SOURCE_FILE_NOT_READABLE);
+                throw new \Exception("Error reading weather file `{$source_file}`", self::ERROR_SOURCE_FILE_READING_ERROR);
 
             $file_content = \json_decode($file_content, true);
 
