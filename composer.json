@@ -26,8 +26,8 @@
     },
     "autoload": {
         "files": [
-          "functions/helpers.php",
-          "functions/functions.php"
+          "functions/functions.php",
+          "functions/helpers.php"
         ],
         "psr-4": {
             "Arris\\"           : "sources"
