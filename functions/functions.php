@@ -1,65 +1,174 @@
 <?php
-/**
- * Functions for Arris Framework
- */
 
-interface ArrisFrameworkFunctions {
-    function d($value);
-    function dd($value);
+namespace Arris;
 
-    function array_fill_like_list(array &$target_array, array $indexes, array $source_array, $default_value = NULL);
+interface ArrisFunctionsInterface {
 
-    function array_search_callback(array $a, callable $callback);
-
+    function setOption(array $options, string $key, $env_key = null, $default_value = '');
     function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL );
 
-    function sort_array_in_given_order(array $array, array $order, $sort_key):array;
+    function mb_trim_text($input, $length, $ellipses = true, $strip_html = true, $ellipses_text = '...'):string;
+    function mb_str_replace($search, $replace, $subject, &$count = 0):string;
 
-    function is_countable($var): bool;
+    function array_map_to_integer(array $input): array;
+    function array_fill_like_list(array &$target_array, array $indexes, array $source_array, $default_value = NULL);
+    function array_search_callback(array $a, callable $callback);
+    function array_sort_in_given_order(array $array, array $order, $sort_key):array;
+
 }
 
-if (!function_exists('array_search_callback')) {
+if (!function_exists('Arris\checkAllowedValue')) {
 
     /**
-     * array_search_callback() аналогичен array_search() , только помогает искать по неодномерному массиву.
-     *
-     * @param array $a
-     * @param callable $callback
+     * @param $value
+     * @param $allowed_values_array
+     * @param null $invalid_value
      * @return mixed|null
      */
-    function array_search_callback(array $a, callable $callback)
+    function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL )
     {
-        foreach ($a as $item) {
-            $v = \call_user_func($callback, $item);
-            if ( $v === true ) return $item;
+        if (empty($value)) {
+            return $invalid_value;
+        } else {
+            $key = array_search( $value, $allowed_values_array);
+
+            return ($key !== FALSE) ? $allowed_values_array[ $key ] : $invalid_value;
         }
-        return null;
     }
 }
 
-if (!function_exists('d')) {
+if (!function_exists('Arris\setOption')) {
+
     /**
-     * Dump and die
-     * @param $value
+     * use:
+     *
+     * use function ArrisFunctions\setOption as setOption;
+     *
+     * $nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX::NGINX_CACHE_LEVELS', '1:2');
+     *
+     * @param array $options
+     * @param string $key
+     * @param mixed $env_key
+     * @param string $default_value
+     * @return string
      */
-    function d($value) {
-        echo '<pre>';
-        var_dump($value);
+    function setOption(array $options, string $key, $env_key = null, $default_value = '')
+    {
+        // return (array_key_exists($key, $options) ? $options[$key] : null) ?: getenv($env_key) ?: $default_value;
+
+        return (array_key_exists($key, $options) ? $options[$key] : null)
+            ?: (!is_null($env_key) ? getenv($env_key) : null )
+                ?: $default_value;
     }
 }
 
-if (!function_exists('dd')) {
+if (!function_exists('Arris\mb_trim_text')) {
+
     /**
-     * Dump and die
-     * @param $value
+     * trims text to a space then adds ellipses if desired
+     * @param string $input text to trim
+     * @param int $length in characters to trim to
+     * @param bool $ellipses if ellipses (...) are to be added
+     * @param bool $strip_html if html tags are to be stripped
+     * @param string $ellipses_text text to be added as ellipses
+     * @return string
+     *
+     * http://www.ebrueggeman.com/blog/abbreviate-text-without-cutting-words-in-half
+     *
+     * еще есть вариант: https://stackoverflow.com/questions/8286082/truncate-a-string-in-php-without-cutting-words (но без обработки тегов)
+     * https://www.php.net/manual/ru/function.wordwrap.php - см комментарии
      */
-    function dd($value) {
-        d($value);
-        die;
+    function mb_trim_text($input, $length, $ellipses = true, $strip_html = true, $ellipses_text = '...'):string
+    {
+        //strip tags, if desired
+        if ($strip_html) {
+            $input = strip_tags($input);
+        }
+
+        //no need to trim, already shorter than trim length
+        if (mb_strlen($input) <= $length) {
+            return $input;
+        }
+
+        //find last space within length
+        $last_space = mb_strrpos(mb_substr($input, 0, $length), ' ');
+        $trimmed_text = mb_substr($input, 0, $last_space);
+
+        //add ellipses (...)
+        if ($ellipses) {
+            $trimmed_text .= $ellipses_text;
+        }
+
+        return $trimmed_text;
     }
 }
 
-if (!function_exists('array_fill_like_list')) {
+if (!function_exists('Arris\mb_str_replace')) {
+
+    /**
+     * Multibyte string replace
+     *
+     * @param string|string[] $search  the string to be searched
+     * @param string|string[] $replace the replacement string
+     * @param string          $subject the source string
+     * @param int             &$count  number of matches found
+     *
+     * @return string replaced string
+     * @author Rodney Rehm, imported from Smarty
+     *
+     */
+    function mb_str_replace($search, $replace, $subject, &$count = 0)
+    {
+        if (!is_array($search) && is_array($replace)) {
+            return false;
+        }
+        if (is_array($subject)) {
+            // call mb_replace for each single string in $subject
+            foreach ($subject as &$string) {
+                $string = \Arris\mb_str_replace($search, $replace, $string, $c);
+                $count += $c;
+            }
+        } elseif (is_array($search)) {
+            if (!is_array($replace)) {
+                foreach ($search as &$string) {
+                    $subject = \Arris\mb_str_replace($string, $replace, $subject, $c);
+                    $count += $c;
+                }
+            } else {
+                $n = max(count($search), count($replace));
+                while ($n--) {
+                    $subject = \Arris\mb_str_replace(current($search), current($replace), $subject, $c);
+                    $count += $c;
+                    next($search);
+                    next($replace);
+                }
+            }
+        } else {
+            $parts = mb_split(preg_quote($search), $subject);
+            $count = count($parts) - 1;
+            $subject = implode($replace, $parts);
+        }
+        return $subject;
+
+    }
+}
+
+if (!function_exists('Arris\array_map_to_integer')) {
+    /**
+     * Хелпер преобразования всех элементов массива к типу integer
+     *
+     * @param array $input
+     * @return array
+     */
+    function array_map_to_integer(array $input): array
+    {
+        return array_map(function ($i) {
+            return intval($i);
+        }, $input);
+    }
+}
+
+if (!function_exists('Arris\array_fill_like_list')) {
     /**
      *
      * Аналог list($dataset['a'], $dataset['b']) = explode(',', 'AAAAAA,BBBBBB'); только с учетом размерной массивов и дефолтными знач
@@ -80,27 +189,26 @@ if (!function_exists('array_fill_like_list')) {
     }
 }
 
-if (!function_exists('checkAllowedValue')) {
+if (!function_exists('Arris\array_search_callback')) {
 
     /**
-     * @param $value
-     * @param $allowed_values_array
-     * @param null $invalid_value
+     * array_search_callback() аналогичен array_search() , только помогает искать по неодномерному массиву.
+     *
+     * @param array $a
+     * @param callable $callback
      * @return mixed|null
      */
-    function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL )
+    function array_search_callback(array $a, callable $callback)
     {
-        if (empty($value)) {
-            return $invalid_value;
-        } else {
-            $key = array_search( $value, $allowed_values_array);
-
-            return ($key !== FALSE) ? $allowed_values_array[ $key ] : $invalid_value;
+        foreach ($a as $item) {
+            $v = \call_user_func($callback, $item);
+            if ( $v === true ) return $item;
         }
+        return null;
     }
 }
 
-if (!function_exists('sort_array_in_given_order')) {
+if (!function_exists('Arris\array_sort_in_given_order')) {
 
     /**
      * Sort array in given order by key
@@ -111,7 +219,7 @@ if (!function_exists('sort_array_in_given_order')) {
      * @param $sort_key - sorting key (id)
      * @return mixed
      */
-    function sort_array_in_given_order(array $array, array $order, $sort_key):array
+    function array_sort_in_given_order(array $array, array $order, $sort_key):array
     {
         usort($array, function ($home, $away) use ($order, $sort_key) {
             $pos_home = array_search($home[$sort_key], $order);
@@ -122,15 +230,14 @@ if (!function_exists('sort_array_in_given_order')) {
     }
 } // sort_array_in_given_order
 
-if (version_compare(PHP_VERSION, "7.3") < 0 && !function_exists("is_countable")) {
-    /**
-     * @param $var
-     * @return bool
-     */
-    function is_countable($var): bool
+
+// template function
+if (!function_exists('Arris\__template__')) {
+    function __template__()
     {
-        return (is_array($var) || is_object($var) || is_iterable($var) || $var instanceof Countable);
+
     }
 }
+
 
 # -eof-

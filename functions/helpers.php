@@ -1,32 +1,37 @@
 <?php
 
-interface ArrisFrameworkHelpers {
+// Хэлперы объявлены ВНЕ неймспейса
 
-    function ArrisFrameWorkSetOption(array $options, string $key, $env_key = null, $default_value = '');
-
+if (version_compare(PHP_VERSION, "7.3") < 0 && !function_exists("is_countable")) {
+    /**
+     * @param $var
+     * @return bool
+     */
+    function is_countable($var): bool
+    {
+        return (is_array($var) || is_object($var) || is_iterable($var) || $var instanceof Countable);
+    }
 }
 
-if (!function_exists('ArrisFrameWorkSetOption')) {
-
+if (!function_exists('d')) {
     /**
-     * use:
-     * use function ArrisFrameWorkSetOption as setOption;
-     *
-     * $nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX::NGINX_CACHE_LEVELS', '1:2');
-     *
-     * @param array $options
-     * @param string $key
-     * @param mixed $env_key
-     * @param string $default_value
-     * @return string
+     * Dump and die
+     * @param $value
      */
-    function ArrisFrameWorkSetOption(array $options, string $key, $env_key = null, $default_value = '')
-    {
-        // return (array_key_exists($key, $options) ? $options[$key] : null) ?: getenv($env_key) ?: $default_value;
+    function d($value) {
+        echo '<pre>';
+        var_dump($value);
+    }
+}
 
-        return (array_key_exists($key, $options) ? $options[$key] : null)
-            ?: (!is_null($env_key) ? getenv($env_key) : null )
-                ?: $default_value;
+if (!function_exists('dd')) {
+    /**
+     * Dump and die
+     * @param $value
+     */
+    function dd($value) {
+        d($value);
+        die;
     }
 }
 
