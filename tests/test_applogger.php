@@ -6,7 +6,7 @@ use Arris\AppLogger;
 use Monolog\Logger;
 
 try {
-    AppLogger::init('application');
+    AppLogger::init('application', bin2hex(random_bytes(8)));
 
     AppLogger::addScope('mysql', [
         [ '__mysql.debug-100.log', Logger::DEBUG],

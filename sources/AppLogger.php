@@ -27,8 +27,6 @@ interface AppLoggerInterface
     public static function addScope($scope, $options);
 
     public static function scope($scope = null):Logger;
-
-
 }
 
 /**
@@ -85,11 +83,12 @@ class AppLogger implements AppLoggerInterface
     /**
      * Инициализирует класс логгера
      *
-     * @param $app_instance_id
-     * @param $options array
-     * - bubbling => значение "messages that are handled can bubble up the stack or not", (FALSE)<br>
-     * - default_log_level - default log level (DEBUG) <br>
-     * - add_scope_to_log - добавлять ли имя скоупа к имени логгера в файле (FALSE, DEPRECATED)<br>
+     * @param $application - Имя приложения
+     * @param $instance - код инстанса приложения (например, bin2hex(random_bytes(8)) )
+     * @param array $options:
+     * - bubbling           - значение "messages that are handled can bubble up the stack or not", (FALSE)<br>
+     * - default_log_level  - default log level (DEBUG) <br>
+     * - add_scope_to_log   - добавлять ли имя скоупа к имени логгера в файле (FALSE, DEPRECATED)<br>
      * - default_logfile_path - путь к файлам логов по умолчанию ('') <br>
      * - default_logfile_prefix - префикc файла лога по умолчанию ('') <br>
      * - default_log_file - имя файла лога по умолчанию, применяется если для имени файла передан NULL (_.log)<br>
