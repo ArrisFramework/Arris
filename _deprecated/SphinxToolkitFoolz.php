@@ -62,7 +62,7 @@ interface SphinxToolkitFoolzInterface {
 
 }
 
-class SphinxToolkitFoolz
+class SphinxToolkitFoolz implements SphinxToolkitFoolzInterface
 {
     /* ================== STATIC USAGE =================== */
     /**

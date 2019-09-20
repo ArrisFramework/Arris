@@ -52,12 +52,13 @@ $toolkit->rebuildAbstractIndexMVA('articles', getenv('SPHINX_REALTIME_INDEX_ARTI
 
 namespace Arris\Toolkit;
 
-
 use Arris\CLIConsole;
 use Arris\DB;
 use Closure;
 
-use function ArrisFrameWorkSetOption as setOption;
+use function ArrisFramework__SetOption as setOption;
+use function ArrisFramework__mb_trim_text as mb_trim_text;
+use function ArrisFramework__mb_str_replace as mb_str_replace;
 
 interface SphinxToolkitMysqliInterface {
 
@@ -138,6 +139,7 @@ class SphinxToolkitMysqli
      * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
      * @return int -- количество обновленных записей в индексе
      */
+
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
     {
         $mysql_connection = $this->mysql_connection;
@@ -145,25 +147,32 @@ class SphinxToolkitMysqli
 
         $chunk_size = $this->rai_options['chunk_length'];
 
+        // проверяем, существует ли индекс
+        $index_definition = $sphinx_connection->query("SHOW TABLES LIKE '{$sphinx_index}' ")->fetchAll();
+
+        if (count($index_definition) == 0 ) {
+            return -1;
+        }
+
         // truncate
-        $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
+        $sphinx_connection->query("TRUNCATE RTINDEX '{$sphinx_index}' ");
 
         // get total count
         $total_count = $this->mysql_GetRowCount($mysql_connection, $mysql_table, $condition);
         $total_updated = 0;
 
         if ($this->rai_options['log_before_index'])
-            CLIConsole::echo_status("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
+            CLIConsole::say("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
 
         if ($this->rai_options['log_total_rows_found'])
-            CLIConsole::echo_status("<font color='green'>{$total_count}</font> elements found for rebuild.");
+            CLIConsole::say("<font color='green'>{$total_count}</font> elements found for rebuild.");
 
         // iterate chunks
         for ($i = 0; $i < ceil($total_count / $chunk_size); $i++) {
             $offset = $i * $chunk_size;
 
             if ($this->rai_options['log_before_chunk'])
-                CLIConsole::echo_status("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
+                CLIConsole::say("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
 
             $query_chunk_data = "SELECT * FROM {$mysql_table} ";
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
@@ -174,7 +183,7 @@ class SphinxToolkitMysqli
             // iterate inside chunk
             while ($item = $sth->fetch()) {
                 if ($this->rai_options['log_rows_inside_chunk'])
-                    CLIConsole::echo_status("{$mysql_table}: {$item['id']}");
+                    CLIConsole::say("{$mysql_table}: {$item['id']}");
 
                 $update_set = $make_updateset_method($item);
 
@@ -188,19 +197,19 @@ class SphinxToolkitMysqli
             $breakline_after_chunk = !$this->rai_options['sleep_after_chunk'];
 
             if ($this->rai_options['log_after_chunk']) {
-                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
+                CLIConsole::say("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
             } else {
-                CLIConsole::echo_status("<strong>Ok</strong>", $breakline_after_chunk);
+                CLIConsole::say("<strong>Ok</strong>", $breakline_after_chunk);
             }
 
             if ($this->rai_options['sleep_after_chunk']) {
-                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
+                CLIConsole::say("ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
                 sleep($this->rai_options['sleep_time']);
-                CLIConsole::echo_status("I woke up!");
+                CLIConsole::say("I woke up!");
             }
         } // for
         if ($this->rai_options['log_after_index'])
-            CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
+            CLIConsole::say("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
 
         return $total_updated;
     } // rebuildAbstractIndex
@@ -231,17 +240,17 @@ class SphinxToolkitMysqli
         $total_updated = 0;
 
         if ($this->rai_options['log_before_index'])
-            CLIConsole::echo_status("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
+            CLIConsole::say("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
 
         if ($this->rai_options['log_total_rows_found'])
-            CLIConsole::echo_status("<font color='green'>{$total_count}</font> elements found for rebuild.");
+            CLIConsole::say("<font color='green'>{$total_count}</font> elements found for rebuild.");
 
         // iterate chunks
         for ($i = 0; $i < ceil($total_count / $chunk_size); $i++) {
             $offset = $i * $chunk_size;
 
             if ($this->rai_options['log_before_chunk'])
-                CLIConsole::echo_status("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
+                CLIConsole::say("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
 
             $query_chunk_data = "SELECT * FROM {$mysql_table} ";
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
@@ -252,7 +261,7 @@ class SphinxToolkitMysqli
             // iterate inside chunk
             while ($item = $sth->fetch()) {
                 if ($this->rai_options['log_rows_inside_chunk'])
-                    CLIConsole::echo_status("{$mysql_table}: {$item['id']}");
+                    CLIConsole::say("{$mysql_table}: {$item['id']}");
 
                 $update_set = $make_updateset_method($item);
 
@@ -266,19 +275,19 @@ class SphinxToolkitMysqli
             $breakline_after_chunk = !$this->rai_options['sleep_after_chunk'];
 
             if ($this->rai_options['log_after_chunk']) {
-                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
+                CLIConsole::say("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
             } else {
-                CLIConsole::echo_status("<strong>Ok</strong>", $breakline_after_chunk);
+                CLIConsole::say("<strong>Ok</strong>", $breakline_after_chunk);
             }
 
             if ($this->rai_options['sleep_after_chunk']) {
-                CLIConsole::echo_status("  ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
+                CLIConsole::say("  ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
                 sleep($this->rai_options['sleep_time']);
-                CLIConsole::echo_status("I woke up!");
+                CLIConsole::say("I woke up!");
             }
         } // for
         if ($this->rai_options['log_after_index'])
-            CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
+            CLIConsole::say("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
 
         return $total_updated;
     } // rebuildAbstractIndexMVA
@@ -348,98 +357,14 @@ class SphinxToolkitMysqli
 
         $target = strip_tags($source);
 
-        $target = self::mb_str_replace($needle, $opts['before_match'] . $needle . $opts['after_match'], $target);
+        $target = mb_str_replace($needle, $opts['before_match'] . $needle . $opts['after_match'], $target);
 
         if (mb_strlen($source) > $opts['limit'] ) {
-            $target = self::mb_trim_text($target, $opts['limit'] ,true,false, $opts['chunk_separator']);
+            $target = mb_trim_text($target, $opts['limit'] ,true,false, $opts['chunk_separator']);
         }
 
         return $target;
     } // EmulateBuildExcerpts
-
-    /**
-     * Multibyte string replace
-     *
-     * @param string|string[] $search  the string to be searched
-     * @param string|string[] $replace the replacement string
-     * @param string          $subject the source string
-     * @param int             &$count  number of matches found
-     *
-     * @return string replaced string
-     * @author Rodney Rehm, imported from Smarty
-     *
-     */
-    private static function mb_str_replace($search, $replace, $subject, &$count = 0)
-    {
-        if (!is_array($search) && is_array($replace)) {
-            return false;
-        }
-        if (is_array($subject)) {
-            // call mb_replace for each single string in $subject
-            foreach ($subject as &$string) {
-                $string = self::mb_str_replace($search, $replace, $string, $c);
-                $count += $c;
-            }
-        } elseif (is_array($search)) {
-            if (!is_array($replace)) {
-                foreach ($search as &$string) {
-                    $subject = self::mb_str_replace($string, $replace, $subject, $c);
-                    $count += $c;
-                }
-            } else {
-                $n = max(count($search), count($replace));
-                while ($n--) {
-                    $subject = self::mb_str_replace(current($search), current($replace), $subject, $c);
-                    $count += $c;
-                    next($search);
-                    next($replace);
-                }
-            }
-        } else {
-            $parts = mb_split(preg_quote($search), $subject);
-            $count = count($parts) - 1;
-            $subject = implode($replace, $parts);
-        }
-        return $subject;
-    }
-
-    /**
-     * trims text to a space then adds ellipses if desired
-     * @param string $input text to trim
-     * @param int $length in characters to trim to
-     * @param bool $ellipses if ellipses (...) are to be added
-     * @param bool $strip_html if html tags are to be stripped
-     * @param string $ellipses_text text to be added as ellipses
-     * @return string
-     *
-     * http://www.ebrueggeman.com/blog/abbreviate-text-without-cutting-words-in-half
-     *
-     * еще есть вариант: https://stackoverflow.com/questions/8286082/truncate-a-string-in-php-without-cutting-words (но без обработки тегов)
-     * https://www.php.net/manual/ru/function.wordwrap.php - см комментарии
-     */
-    private static function mb_trim_text($input, $length, $ellipses = true, $strip_html = true, $ellipses_text = '...')
-    {
-        //strip tags, if desired
-        if ($strip_html) {
-            $input = strip_tags($input);
-        }
-
-        //no need to trim, already shorter than trim length
-        if (mb_strlen($input) <= $length) {
-            return $input;
-        }
-
-        //find last space within length
-        $last_space = mb_strrpos(mb_substr($input, 0, $length), ' ');
-        $trimmed_text = mb_substr($input, 0, $last_space);
-
-        //add ellipses (...)
-        if ($ellipses) {
-            $trimmed_text .= $ellipses_text;
-        }
-
-        return $trimmed_text;
-    }
 
 }
 
