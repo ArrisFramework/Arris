@@ -8,5 +8,5 @@
 /vendor             export-ignore
 /docs/_deprecated	export-ignore
 /docs/_todo         export-ignore
-
+_deprecated         export-ignore
 
