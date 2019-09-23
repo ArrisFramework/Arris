@@ -25,13 +25,76 @@ use function Arris\mb_str_replace as mb_str_replace;
  * @package Arris\Toolkit
  */
 interface __SphinxToolkitFoolzInterface {
+
+    /**
+     * Инициализация статического интерфейса к методам
+     *
+     * @param string $sphinx_connection_host
+     * @param string $sphinx_connection_port
+     * @param array $options
+     */
     public static function init(string $sphinx_connection_host, string $sphinx_connection_port, $options = []);
+
+    /**
+     * Создает коннекшен для множественных обновлений (в крон-скриптах, к примеру, вызывается после init() )
+     */
     public static function initConnection();
 
+    /**
+     * Создает инстанс SphinxQL (для однократного обновления)
+     *
+     * @return SphinxQL
+     */
+    public static function createInstance();
+
+    /**
+     * Обновляет (REPLACE) реалтайм-индекс по набору данных
+     * с созданием коннекшена "сейчас"
+     *
+     * @param string $index_name
+     * @param array $updateset
+     * @return ResultSetInterface|null
+     *
+     * @throws DatabaseException
+     * @throws \Foolz\SphinxQL\Exception\ConnectionException
+     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
+     */
     public static function rt_ReplaceIndex(string $index_name, array $updateset);
+
+    /**
+     * Удаляет строку реалтайм-индекса
+     * с созданием коннекшена "сейчас"
+     *
+     * @param string $index_name        -- индекс
+     * @param string $field             -- поле для поиска индекса
+     * @param null $field_value         -- значение для поиска индекса
+     * @return ResultSetInterface|null
+     *
+     * @throws DatabaseException
+     * @throws \Foolz\SphinxQL\Exception\ConnectionException
+     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
+     */
     public static function rt_DeleteIndex(string $index_name, string $field, $field_value = null);
 
+    /**
+     * @param \PDO $pdo_connection
+     * @param string $sql_source_table
+     * @param string $sphinx_index
+     * @param Closure $make_updateset_method
+     * @param string $condition
+     * @return int
+     * @throws DatabaseException
+     * @throws \Foolz\SphinxQL\Exception\ConnectionException
+     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
+     */
     public static function rt_RebuildAbstractIndex(\PDO $pdo_connection, string $sql_source_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '');
+
+    /**
+     * Получает инстанс (для множественных обновлений)
+     *
+     * @return SphinxQL
+     */
+    public static function getInstance();
 }
 
 /**
@@ -42,14 +105,62 @@ interface __SphinxToolkitFoolzInterface {
  * @package Arris\Toolkit
  */
 interface __SphinxToolkitMysqliInterface {
+
+    /**
+     * SphinxToolkit constructor.
+     *
+     * @param \PDO $mysql_connection
+     * @param \PDO $sphinx_connection
+     */
     public function __construct(\PDO $mysql_connection, \PDO $sphinx_connection);
+
+    /**
+     * Устанавливает опции для перестроителя RT-индекса
+     *
+     * @param array $options - новый набор опций
+     * @return array - результирующий набор опций
+     */
     public function setRebuildIndexOptions(array $options = []):array;
 
+    /**
+     * Перестраивает RT-индекс
+     *
+     * @param string $mysql_table -- SQL-таблица исходник
+     * @param string $sphinx_index -- имя индекса (таблицы)
+     * @param Closure $make_updateset_method - замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
+     * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
+     * @return int -- количество обновленных записей в индексе
+     */
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int;
+
+    /**
+     *
+     *
+     * @param string $mysql_table               -- SQL-таблица исходник
+     * @param string $sphinx_index              -- имя индекса (таблицы)
+     * @param Closure $make_updateset_method    -- замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
+     * @param string $condition                 -- условие выборки из исходной таблицы (без WHERE !!!)
+     * @param array $mva_indexes_list           -- список MVA-индексов, значения которых не нужно биндить через плейсхолдеры
+     *
+     * @return int
+     */
     public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int;
 
+    /**
+     * Эмулирует BuildExcerpts из SphinxAPI
+     *
+     * @param $source
+     * @param $needle
+     * @param $options
+     * 'before_match' => '<strong>',    // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
+     * 'after_match' => '</strong>',    // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
+     * 'chunk_separator' => '...',      // Строка, вставляемая между частями фрагмента. по умолчанию "...".
+     *
+     * опции 'limit', 'around', 'exact_phrase' и 'single_passage' в эмуляции не реализованы
+     *
+     * @return mixed
+     */
     public static function EmulateBuildExcerpts($source, $needle, $options);
-
 }
 
 class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFoolzInterface
@@ -70,23 +181,13 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
      */
     private $sphinx_connection;
 
-    /**
-     * SphinxToolkit constructor.
-     *
-     * @param \PDO $mysql_connection
-     * @param \PDO $sphinx_connection
-     */
     public function __construct(\PDO $mysql_connection, \PDO $sphinx_connection)
     {
         $this->mysql_connection = $mysql_connection;
         $this->sphinx_connection = $sphinx_connection;
     }
 
-    /**
-     * Устанавливает опции для перестроителя RT-индекса
-     * @param array $options - новый набор опций
-     * @return array - результирующий набор опций
-     */
+
     public function setRebuildIndexOptions(array $options = []):array
     {
         // на самом деле разворачиваем опции с установкой дефолтов
@@ -111,15 +212,7 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         return $this->rai_options;
     } // setRebuildIndexOptions
 
-    /**
-     * Перестраивает RT-индекс
-     *
-     * @param string $mysql_table -- SQL-таблица исходник
-     * @param string $sphinx_index -- имя индекса (таблицы)
-     * @param Closure $make_updateset_method - замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
-     * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
-     * @return int -- количество обновленных записей в индексе
-     */
+
     public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
     {
         $mysql_connection = $this->mysql_connection;
@@ -196,17 +289,7 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         return $total_updated;
     } // rebuildAbstractIndex
 
-    /**
-     *
-     *
-     * @param string $mysql_table               -- SQL-таблица исходник
-     * @param string $sphinx_index              -- имя индекса (таблицы)
-     * @param Closure $make_updateset_method    -- замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
-     * @param string $condition                 -- условие выборки из исходной таблицы (без WHERE !!!)
-     * @param array $mva_indexes_list           -- список MVA-индексов, значения которых не нужно биндить через плейсхолдеры
-     *
-     * @return int
-     */
+
     public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int
     {
         $mysql_connection = $this->mysql_connection;
@@ -303,20 +386,7 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
     }
 
     /* =========================== СТАТИЧЕСКИЕ МЕТОДЫ ==================================== */
-    /**
-     * Эмулирует BuildExcerpts из SphinxAPI
-     *
-     * @param $source
-     * @param $needle
-     * @param $options
-     * 'before_match' => '<strong>',    // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
-     * 'after_match' => '</strong>',    // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
-     * 'chunk_separator' => '...',      // Строка, вставляемая между частями фрагмента. по умолчанию "...".
-     *
-     * опции 'limit', 'around', 'exact_phrase' и 'single_passage' в эмуляции не реализованы
-     *
-     * @return mixed
-     */
+
     public static function EmulateBuildExcerpts($source, $needle, $options)
     {
         $opts = [
@@ -346,7 +416,7 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
 
         $target = mb_str_replace($needle, $opts['before_match'] . $needle . $opts['after_match'], $target);
 
-        if (mb_strlen($source) > $opts['limit'] ) {
+        if (($opts['limit'] > 0) && ( mb_strlen($source) > $opts['limit'] )) {
             $target = mb_trim_text($target, $opts['limit'] ,true,false, $opts['chunk_separator']);
         }
 
@@ -376,13 +446,6 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
      */
     private static $spql_connection;
 
-    /**
-     * Инициализация статического интерфейса к методам
-     *
-     * @param string $sphinx_connection_host
-     * @param string $sphinx_connection_port
-     * @param array $options
-     */
     public static function init(string $sphinx_connection_host, string $sphinx_connection_port, $options = [])
     {
         self::$spql_connection_host = $sphinx_connection_host;
@@ -407,9 +470,6 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         self::$rlo['log_after_index']       = setOption($options, 'log_after_index', null, true);
     }
 
-    /**
-     * Создает коннекшен для множественных обновлений (в крон-скриптах, к примеру, вызывается после init() )
-     */
     public static function initConnection()
     {
         $conn = new Connection();
@@ -421,22 +481,12 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         self::$spql_connection = $conn;
     }
 
-    /**
-     * Получает инстанс (для множественных обновлений)
-     *
-     * @return SphinxQL
-     */
-    private static function getInstance()
+    public static function getInstance()
     {
         return (new SphinxQL(self::$spql_connection));
     }
 
-    /**
-     * Создает инстанс SphinxQL (для однократного обновления)
-     *
-     * @return SphinxQL
-     */
-    private static function createInstance()
+    public static function createInstance()
     {
         $conn = new Connection();
         $conn->setParams([
@@ -447,18 +497,6 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         return (new SphinxQL($conn));
     }
 
-    /**
-     * Обновляет (REPLACE) реалтайм-индекс по набору данных
-     * с созданием коннекшена "сейчас"
-     *
-     * @param string $index_name
-     * @param array $updateset
-     * @return ResultSetInterface|null
-     *
-     * @throws DatabaseException
-     * @throws \Foolz\SphinxQL\Exception\ConnectionException
-     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
-     */
     public static function rt_ReplaceIndex(string $index_name, array $updateset)
     {
         if (empty($updateset)) return null;
@@ -470,19 +508,6 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
             ->execute();
     }
 
-    /**
-     * Удаляет строку реалтайм-индекса
-     * с созданием коннекшена "сейчас"
-     *
-     * @param string $index_name        -- индекс
-     * @param string $field             -- поле для поиска индекса
-     * @param null $field_value         -- значение для поиска индекса
-     * @return ResultSetInterface|null
-     *
-     * @throws DatabaseException
-     * @throws \Foolz\SphinxQL\Exception\ConnectionException
-     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
-     */
     public static function rt_DeleteIndex(string $index_name, string $field, $field_value = null)
     {
         if (is_null($field_value)) return null;
@@ -494,17 +519,6 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
             ->execute();
     }
 
-    /**
-     * @param \PDO $pdo_connection
-     * @param string $sql_source_table
-     * @param string $sphinx_index
-     * @param Closure $make_updateset_method
-     * @param string $condition
-     * @return int
-     * @throws DatabaseException
-     * @throws \Foolz\SphinxQL\Exception\ConnectionException
-     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
-     */
     public static function rt_RebuildAbstractIndex(\PDO $pdo_connection, string $sql_source_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '')
     {
         $chunk_size = self::$rlo['chunk_length'];
