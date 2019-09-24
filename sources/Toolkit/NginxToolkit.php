@@ -129,21 +129,21 @@ class NginxToolkit implements NginxToolkitInterface
         $cache_filepath .= "/{$cache_filename}";
 
         if (file_exists($cache_filepath)) {
-            if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+            if (self::$LOGGER instanceof \Monolog\Logger) {
                 self::$LOGGER->debug("NGINX Cache Force Cleaner: cached data present: ", [ $cache_filepath ]);
             }
 
             $unlink_status = unlink($cache_filepath);
 
         } else {
-            if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+            if (self::$LOGGER instanceof \Monolog\Logger) {
                 self::$LOGGER->debug("NGINX Cache Force Cleaner: cached data not found: ", [ $cache_filepath ]);
             }
 
             $unlink_status = true;
         }
 
-        if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+        if (self::$LOGGER instanceof \Monolog\Logger) {
             self::$LOGGER->debug("NGINX Cache Force Cleaner: Clear status (key/status)", [$cache_key, $unlink_status]);
         }
 
@@ -159,7 +159,7 @@ class NginxToolkit implements NginxToolkitInterface
     {
         $unlink_status = true;
 
-        if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+        if (self::$LOGGER instanceof \Monolog\Logger) {
             self::$LOGGER->debug("NGINX Cache Force Cleaner: requested clean whole cache");
         }
 
@@ -171,8 +171,8 @@ class NginxToolkit implements NginxToolkitInterface
             }
         }
 
-        if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
-            self::$LOGGER->debug("NGINX Cache Force Cleaner: whole cache clean status: ", [self::$nginx_cache_root, $unlink_status]);
+        if (self::$LOGGER instanceof \Monolog\Logger) {
+            self::$LOGGER->debug("NGINX Cache Force Cleaner: whole cache clean status: ", [ self::$nginx_cache_root, $unlink_status ]);
         }
 
         return $unlink_status;
@@ -187,7 +187,7 @@ class NginxToolkit implements NginxToolkitInterface
     public static function rmdir(string $directory): bool
     {
         if (!is_dir($directory)) {
-            if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+            if (self::$LOGGER instanceof \Monolog\Logger) {
                 self::$LOGGER->warning(__METHOD__ . ' throws warning: no such file or directory', [ $directory ]);
             }
 
