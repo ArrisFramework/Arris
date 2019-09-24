@@ -22,11 +22,49 @@ use \Monolog\Handler\StreamHandler;
  */
 interface AppLoggerInterface
 {
-    public static function init($app_instance_id, $options);
+    /**
+     * Инициализирует класс логгера
+     *
+     * @param $application - Имя приложения
+     * @param $instance - код инстанса приложения (например, bin2hex(random_bytes(8)) )
+     * @param array $options:
+     * - bubbling           - значение "messages that are handled can bubble up the stack or not", (FALSE)<br>
+     * - default_log_level  - default log level (DEBUG) <br>
+     * - add_scope_to_log   - добавлять ли имя скоупа к имени логгера в файле (FALSE, DEPRECATED)<br>
+     * - default_logfile_path - путь к файлам логов по умолчанию ('') <br>
+     * - default_logfile_prefix - префикc файла лога по умолчанию ('') <br>
+     * - default_log_file - имя файла лога по умолчанию, применяется если для имени файла передан NULL (_.log)<br>
+     * - deferred_scope_creation - разрешать ли отложенную инициализацию скоупов (TRUE) <br>
+     *
+     */
+    public static function init($application, $instance, $options = []);
 
+    /**
+     * Добавляет скоуп
+     *
+     * @param $scope - имя скоупа
+     * @param $options - массив кортежей:
+     * [ filename , logging_level, use_logger ], где:
+     * - filename - имя файла лога
+     * - уровень логгирования - уровень логгирования (переменные Logger::DEBUG etc)
+     * - use_logger - [true], булево значение, FALSE означает использовать для этого уровня логгирования NULL Handler
+     */
     public static function addScope($scope, $options);
 
+    /**
+     * Получает скоуп
+     *
+     * @param null $scope
+     * @return Logger
+     */
     public static function scope($scope = null):Logger;
+
+    /**
+     * Поздняя инициализация скоупа значениями по умолчанию
+     *
+     * @param null $scope
+     */
+    public static function addDeferredScope($scope = null):Logger;
 }
 
 /**
@@ -44,15 +82,15 @@ class AppLogger implements AppLoggerInterface
 
     const DEFAULT_LOG_FILENAME = '_.log';
 
-    const DEFAULT_FILES = [
-        [ '100-debug.log', Logger::DEBUG ],
-        [ '200-info.log', Logger::INFO],
-        [ '250-notice.log', Logger::NOTICE],
-        [ '300-warning.log', Logger::WARNING],
-        [ '400-error.log', Logger::ERROR],
-        [ '500-critical.log', Logger::CRITICAL],
-        [ '550-alert.log', Logger::ALERT],
-        [ '600-emergency.log', Logger::EMERGENCY]
+    const DEFAULT_SCOPE_OPTIONS = [
+        [ '100-debug.log',      Logger::DEBUG,      TRUE],
+        [ '200-info.log',       Logger::INFO,       TRUE],
+        [ '250-notice.log',     Logger::NOTICE,     TRUE],
+        [ '300-warning.log',    Logger::WARNING,    TRUE],
+        [ '400-error.log',      Logger::ERROR,      TRUE],
+        [ '500-critical.log',   Logger::CRITICAL,   TRUE],
+        [ '550-alert.log',      Logger::ALERT,      TRUE],
+        [ '600-emergency.log',  Logger::EMERGENCY,  TRUE]
     ];
 
     /**
@@ -80,21 +118,6 @@ class AppLogger implements AppLoggerInterface
      */
     private static $_instances = [];
 
-    /**
-     * Инициализирует класс логгера
-     *
-     * @param $application - Имя приложения
-     * @param $instance - код инстанса приложения (например, bin2hex(random_bytes(8)) )
-     * @param array $options:
-     * - bubbling           - значение "messages that are handled can bubble up the stack or not", (FALSE)<br>
-     * - default_log_level  - default log level (DEBUG) <br>
-     * - add_scope_to_log   - добавлять ли имя скоупа к имени логгера в файле (FALSE, DEPRECATED)<br>
-     * - default_logfile_path - путь к файлам логов по умолчанию ('') <br>
-     * - default_logfile_prefix - префикc файла лога по умолчанию ('') <br>
-     * - default_log_file - имя файла лога по умолчанию, применяется если для имени файла передан NULL (_.log)<br>
-     * - deferred_scope_creation - разрешать ли отложенную инициализацию скоупов (TRUE) <br>
-     *
-     */
     public static function init($application, $instance, $options = [])
     {
         self::$application
@@ -139,16 +162,12 @@ class AppLogger implements AppLoggerInterface
             : true;
     }
 
-    /**
-     * Добавляет скоуп
-     *
-     * @param $scope
-     * @param $options
-     */
     public static function addScope($scope = null, $options = [])
     {
+        //@todo: делать "мерж" переопределенных значений > дефолтных (без if empty() ). Ключ проверки - значение уровня логгирования
+
         if (empty($options)) {
-            $options = self::DEFAULT_FILES;
+            $options = self::DEFAULT_SCOPE_OPTIONS;
         }
 
         try {
@@ -158,6 +177,7 @@ class AppLogger implements AppLoggerInterface
             $logger = new Logger($logger_name);
 
             foreach ($options as $an_option) {
+
                 $filename = empty($an_option[0]) ? self::$_global_config['default_log_file'] : $an_option[0];
 
                 $filename
@@ -168,7 +188,14 @@ class AppLogger implements AppLoggerInterface
                 $loglevel = $an_option[1] ?? self::$_global_config['default_log_level'];
                 $buggling = $an_option[2] ?? self::$_global_config['bubbling'];
 
-                $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
+                //@todo: more handlers, FALSE is null handler
+
+                if (array_key_exists(2, $an_option) && $an_option[2] == FALSE) {
+                    $logger->pushHandler(new \Monolog\Handler\NullHandler());
+                } else {
+                    $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
+                }
+
             }
 
             self::$_instances[ $internal_key ] = $logger;
@@ -178,14 +205,9 @@ class AppLogger implements AppLoggerInterface
         }
     }
 
-    /**
-     * Поздняя инициализация скоупа значениями по умолчанию
-     *
-     * @param null $scope
-     */
     public static function addDeferredScope($scope = null)
     {
-        $options = self::DEFAULT_FILES;
+        $options = self::DEFAULT_SCOPE_OPTIONS;
 
         try {
             $logger_name = self::getLoggerName($scope);
@@ -213,12 +235,6 @@ class AppLogger implements AppLoggerInterface
         }
     }
 
-    /**
-     * Получает скоуп
-     *
-     * @param null $scope
-     * @return Logger
-     */
     public static function scope($scope = null):Logger
     {
         try {

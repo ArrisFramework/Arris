@@ -1,7 +1,7 @@
 # Init 
 
 ```
-AppLogger::init('<application id>');
+AppLogger::init('<application id>', options);
 ```
 
 # Add Scope
