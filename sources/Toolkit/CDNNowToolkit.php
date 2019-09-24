@@ -8,6 +8,7 @@
 namespace Arris\Toolkit;
 
 use Exception;
+use Curl\Curl;
 
 interface CDNNowToolkitInterface
 {
@@ -16,41 +17,57 @@ interface CDNNowToolkitInterface
      *
      * @param $username
      * @param $password
-     * @param $client_token
-     * @param $project_token
-     * @return mixed
+     * @param $client_id
+     * @param $project_id
+     * @return mixed|void
+     * @throws \ErrorException
      */
-    public static function init($username, $password, $client_token, $project_token);
+    public static function init($username, $password, $client_id, $project_id);
 
     /**
-     * Авторизация. Возвращает токен
+     * Авторизация. Возвращает true при успешной авторизации, false в противном случае.
+     * Состояние
      *
-     * @return mixed
+     * @return bool
      * @throws Exception
      */
     public static function makeAuth();
 
     /**
+     * Возвращает статистику по указанному проекту или всем проектам
      *
      * @param $year
      * @param $month
      * @param null $project_id
      * @return array
      */
-    public static function getStatistic($year, $month, $project_id = null):array ;
+    public static function getStatistic($year, $month, $project_id = null);
 
     /**
+     * Очищает кэш CDN по маске.
+     *
+     * Варианты маски:
+     * [] - очистить весь кэш
+     * [ '/img/*' ] - файлы типа '/img/one.jpg', '/img/two.jpg' etc
+     * [ '/img/*', '/video/*' ] - несколько масок, аналогично предыдущему случаю
+     * [ '/img/my_super_image.jpg?id=8193737182253' ] - удалить по строгому соответствию
      *
      * @param $url_list
      * @return mixed
      */
-    public static function clearCache($url_list);
+    public static function clearCache(array $url_list = []);
+
+    /**
+     * @return mixed
+     */
+    public static function getState();
 }
 
 class CDNNowToolkit implements CDNNowToolkitInterface
 {
-    const URL_BASE = 'https://api.cdnnow.ru/api/v1/';
-    const URL_AUTH = 'https://api.cdnnow.ru/api/v1/auth/login';
+    const URL_BASE = 'https://api.cdnnow.ru/api/v1';
+    const URL_AUTH = '/auth/login';
+    const URL_STAT = '/statistic/traffic/projects';
 
     private static $options = [
         'username'      => NULL,
@@ -61,116 +78,87 @@ class CDNNowToolkit implements CDNNowToolkitInterface
         'auth_token'    => NULL
     ];
 
+    /**
+     * @var \Curl\Curl $curl;
+     */
     private static $curl;
 
-    /**
-     *
-     * @param $method
-     * @param $path
-     * @param array $data
-     * @return mixed
-     * @throws Exception
-     */
-    private static function request($method = 'GET', $path = '', array $data = [])
-    {
-        $url = self::URL_BASE . $path;
-
-        //@todo: переписать, потому что stream_context_create поддерживает любые методы
-        switch ($method) {
-            case 'POST':
-                $context = stream_context_create([
-                    'http' => [
-                        'method' => 'POST',
-                        'header' => 'Content-Type: application/x-www-form-urlencoded' . PHP_EOL,
-                        'content' => http_build_query($data)
-                    ],
-                ]);
-                $response = json_decode(@file_get_contents($url, false, $context), true);
-                break;
-            case 'GET':
-                $response = json_decode(@file_get_contents($url . '?' . http_build_query($data)), true);
-                break;
-            default:
-                throw new Exception('Invalid request method: ' . $method);
-        }
-
-        if (null === $response || !$response || !array_key_exists('status', $response) || !array_key_exists('data', $response)) {
-            throw new Exception('Response is not valid');
-        }
-
-        if ('ok' !== $response['status']) {
-            throw new Exception('Response status is not valid');
-        }
-
-        return $response;
-    }
-
-    public static function init($username, $password, $client_token, $project_token)
+    public static function init($username, $password, $client_id, $project_id)
     {
         self::$options['username'] = $username;
         self::$options['password'] = $password;
-        self::$options['client_token'] = $client_token;
-        self::$options['project_token'] = $project_token;
-    }
+        self::$options['client_token'] = $client_id;
+        self::$options['project_token'] = $project_id;
 
-    /**
-     * Очищает кэш CDN с автоматической авторизацией
-     *
-     * @param $url_list - список файлов
-     * @throws Exception
-     */
-    public static function clearCache($url_list)
-    {
-        if (!is_array($url_list)) {
-            $url_list[] = $url_list;
-        }
-
-        $auth_token = self::makeAuth()['token'];
-
-        self::request(
-            'GET',
-            sprintf('clients/%s/projects/%s/cache-clear', self::$options['client_token'], self::$options['project_token']),
-            [
-                'token' => $auth_token,
-                'masks' => $url_list
-            ]
-        );
-    }
-
-    /**
-     * @throws Exception
-     */
-    public static function getStatistic($year, $month, $project_id = null):array
-    {
-        $auth_token = self::makeAuth()['token'];
-
-        $response = self::request('GET', 'statistic/traffic/projects', [
-            'token' => $auth_token,
-            'year' => $year,
-            'month' => $month,
-            'client' => self::$options['client_token'],
-            'project' => $project_id
-        ]);
-
-        if (empty($response['data'])) return [];
-
-        return $response;
+        self::$curl = new Curl();
     }
 
     public static function makeAuth()
     {
-        $response = self::request(
-            'GET',
-            'auth/login', [
-                'username' => self::$options['username'],
-                'password' => self::$options['password']
-            ]
-        );
+        self::$curl->post(self::URL_BASE . self::URL_AUTH, [
+            'username'  =>  self::$options['username'],
+            'password'  =>  self::$options['password']
+        ]);
 
-        self::$options['auth_token'] = $response['data']['token'];
+        $response_auth = self::$curl->response;
 
-        return $response['data'];
+        //@throw error state
+        if (!isset($response_auth->data)) return false;
+        if (!isset($response_auth->data->client)) return false;
+        if (!isset($response_auth->data->token)) return false;
+
+        self::$options['client_token'] = $response_auth->data->client;
+        self::$options['auth_token'] = $response_auth->data->token;
+        return true;
     }
 
+    /**
+     *
+     * @param $year
+     * @param $month
+     * @param null $project_id
+     * @return array
+     */
+    public static function getStatistic($year, $month, $project_id = null)
+    {
+        $dataset = [
+            'year'      =>  $year,
+            'month'     =>  $month,
+            'client'    =>  self::$options['client_token'],
+            'token'     =>  self::$options['auth_token']
+        ];
+        if (!is_null($project_id)) {
+            $dataset['project'] = $project_id;
+        }
+        self::$curl->get( self::URL_BASE . self::URL_STAT, $dataset );
 
+        return self::$curl->response;
+    }
+
+    /**
+     *
+     * @param array $url_list
+     * @return mixed
+     */
+    public static function clearCache(array $url_list = [])
+    {
+        $url = self::URL_BASE . sprintf('/clients/%s/projects/%s/cache-clear', self::$options['client_token'], self::$options['project_token']);
+
+        $dataset = [
+            'token' =>  self::$options['auth_token'],
+        ];
+        if (!empty($url_list)) {
+            $dataset['masks'] = $url_list;
+        }
+
+        self::$curl->post($url, $dataset);
+
+        return self::$curl->response;
+    }
+
+    public static function getState()
+    {
+        return self::$curl;
+    }
 }
+

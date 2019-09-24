@@ -4,7 +4,6 @@ namespace Arris\Toolkit;
 
 use Closure;
 
-use Arris\DB;
 use Arris\CLIConsole;
 
 use Foolz\SphinxQL\Drivers\Mysqli\Connection;
@@ -262,7 +261,7 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
 
                 $update_set = $make_updateset_method($item);
 
-                $update_query = DB::buildReplaceQuery($sphinx_index, $update_set);
+                $update_query = self::buildReplaceQuery($sphinx_index, $update_set);
 
                 $update_statement = $sphinx_connection->prepare($update_query);
                 $update_statement->execute($update_set);
@@ -337,7 +336,7 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
 
                 $update_set = $make_updateset_method($item);
 
-                list($update_query, $new_update_set) = DB::buildReplaceQueryMVA($sphinx_index, $update_set, $mva_indexes_list);
+                list($update_query, $new_update_set) = self::buildReplaceQueryMVA($sphinx_index, $update_set, $mva_indexes_list);
 
                 $update_statement = $sphinx_connection->prepare($update_query);
                 $update_statement->execute($new_update_set);
@@ -363,6 +362,73 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
 
         return $total_updated;
     } // rebuildAbstractIndexMVA
+
+    /**
+     * Применять как:
+     *
+     * list($update_query, $newdataset) = BuildReplaceQueryMVA($table, $original_dataset, $mva_attributes_list);
+     * $update_statement = $sphinx->prepare($update_query);
+     * $update_statement->execute($newdataset);
+     *
+     *
+     * @param string $table             -- имя таблицы
+     * @param array $dataset            -- сет данных.
+     * @param array $mva_attributes     -- массив с именами ключей MVA-атрибутов (они вставятся как значения, а не как placeholder-ы)
+     * @return array                    -- возвращает массив с двумя значениями. Первый ключ - запрос, сет данных, очищенный от MVA-атрибутов.
+     */
+    private static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes):array
+    {
+        $query = "REPLACE INTO `{$table}` (";
+
+        $dataset_keys = array_keys($dataset);
+
+        $query .= implode(', ', array_map(function ($i){
+            return "`{$i}`";
+        }, $dataset_keys));
+
+        $query .= " ) VALUES ( ";
+
+        $query .= implode(', ', array_map(function ($i) use ($mva_attributes, $dataset){
+            return in_array($i, $mva_attributes) ? "({$dataset[$i]})" : ":{$i}";
+        }, $dataset_keys));
+
+        $query .= " ) ";
+
+        $new_dataset = array_filter($dataset, function ($value, $key) use ($mva_attributes) {
+            return !in_array($key, $mva_attributes);
+        }, ARRAY_FILTER_USE_BOTH);
+
+        return [
+            $query, $new_dataset
+        ];
+    } // BuildReplaceQueryMVA
+
+    /**
+     * @param string $table
+     * @param array $dataset
+     * @return string
+     */
+    private static function buildReplaceQuery(string $table, array $dataset):string
+    {
+        $dataset_keys = array_keys($dataset);
+
+        $query = "REPLACE INTO `{$table}` (";
+
+        $query.= implode(', ', array_map(function ($i){
+            return "`{$i}`";
+        }, $dataset_keys));
+
+        $query.= " ) VALUES ( ";
+
+        $query.= implode(', ', array_map(function ($i){
+            return ":{$i}";
+        }, $dataset_keys));
+
+        $query.= " ) ";
+
+        return $query;
+    }
+
 
     /**
      * @param \PDO $mysql

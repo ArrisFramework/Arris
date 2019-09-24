@@ -11,9 +11,9 @@ AJURWeather::load_weather_local()
 
 namespace Arris\AJUR;
 
-use Arris\AppLogger;
 use Monolog\Logger;
 use Cmfcmf\OpenWeatherMap\CurrentWeather;
+use function Arris\array_search_callback as array_search_callback;
 
 interface AJURWeatherInterface {
     public static function init($logger);

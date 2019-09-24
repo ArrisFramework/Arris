@@ -22,7 +22,8 @@
         "monolog/monolog": "^1.23",
         "foolz/sphinxql-query-builder": "^2.0",
         "sabre/event": "^5",
-        "cmfcmf/openweathermap-php-api": "^2.4"
+        "cmfcmf/openweathermap-php-api": "^2.4",
+        "php-curl-class/php-curl-class": "^8.6"
     },
     "autoload": {
         "files": [

@@ -4,17 +4,35 @@ namespace Arris\Toolkit;
 
 use Arris\AppLogger;
 use Monolog\Logger;
-use function ArrisFrameWorkSetOption as setOption;
+use function Arris\setOption as setOption;
 
 interface NginxToolkitInterface {
+
+    /**
+     * Init NGINX Toolkit class
+     * Options:
+     * - isUseCache | ENV->NGINX.NGINX_CACHE_USE   - использовать ли кэш?
+     * - isLogging | ENV->NGINX.LOG_CACHE_CLEANING - логгировать ли операции очистки кэша
+     * - cache_root | ENV->NGINX.NGINX_CACHE_PATH - путь до кэша nginx
+     * - cache_levels | ENV->NGINX.NGINX_CACHE_LEVELS - уровни кэша
+     * - cache_key_format | ENV->NGINX.NGINX_CACHE_KEY_FORMAT - определение формата ключа
+     *
+     * Logger: инстанс Monolog\Logger для логгирования
+     *
+     * @param array $options
+     * @param \Monolog\Logger $logger
+     * @throws \Exception
+     */
     public static function init($options = []);
+
+
     public static function clear_nginx_cache(string $url);
     public static function clear_nginx_cache_entire();
 
     public static function rmdir(string $directory): bool;
 }
 
-class NginxToolkit
+class NginxToolkit implements NginxToolkitInterface
 {
     /**
      * @var mixed
@@ -34,7 +52,7 @@ class NginxToolkit
     /**
      * @var Logger
      */
-    private static $LOGGER;
+    private static $LOGGER = null;
 
     /**
      * @var bool
@@ -46,39 +64,26 @@ class NginxToolkit
      */
     private static $is_using_cache;
 
-
-    /**
-     * Init NGINX Toolkit class
-     * Options:
-     * - isUseCache | ENV->NGINX::NGINX_CACHE_USE   - использовать ли кэш?
-     * - isLogging | ENV->NGINX::LOG_CACHE_CLEANING - логгировать ли операции очистки кэша
-     * - cache_root | ENV->NGINX::NGINX_CACHE_PATH - путь до кэша nginx
-     * - cache_levels | ENV->NGINX::NGINX_CACHE_LEVELS - уровни кэша
-     * - cache_key_format | ENV->NGINX::NGINX_CACHE_KEY_FORMAT - определение формата ключа
-     *
-     *
-     *
-     * @param array $options
-     * @throws \Exception
-     */
-    public static function init($options = [])
+    public static function init($options = [], $logger = null)
     {
-        self::$LOGGER = AppLogger::scope('main');
-
-        self::$is_logging = setOption($options, 'isLogging', 'NGINX::LOG_CACHE_CLEANING', false);
-
-        self::$is_using_cache = setOption($options, 'isUseCache', 'NGINX::NGINX_CACHE_USE', false);
-
-        self::$nginx_cache_root = setOption($options, 'cache_root', 'NGINX::NGINX_CACHE_PATH');
-        self::$nginx_cache_root = rtrim(self::$nginx_cache_root, DIRECTORY_SEPARATOR);
-        if (empty(self::$nginx_cache_root)) {
-            throw new \Exception(__METHOD__ . ' throws error, NGINX::NGINX_CACHE_PATH is empty');
+        if ($logger instanceof \Monolog\Logger) {
+            self::$LOGGER = $logger;
         }
 
-        self::$nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX::NGINX_CACHE_LEVELS', '1:2');
+        self::$is_logging = setOption($options, 'isLogging', 'NGINX.LOG_CACHE_CLEANING', false);
+
+        self::$is_using_cache = setOption($options, 'isUseCache', 'NGINX.NGINX_CACHE_USE', false);
+
+        self::$nginx_cache_root = setOption($options, 'cache_root', 'NGINX.NGINX_CACHE_PATH');
+        self::$nginx_cache_root = rtrim(self::$nginx_cache_root, DIRECTORY_SEPARATOR);
+        if (empty(self::$nginx_cache_root)) {
+            throw new \Exception(__METHOD__ . ' throws error, NGINX.NGINX_CACHE_PATH is empty');
+        }
+
+        self::$nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX.NGINX_CACHE_LEVELS', '1:2');
         self::$nginx_cache_levels = explode(':', self::$nginx_cache_levels);
 
-        self::$nginx_cache_key = setOption($options, 'cache_key_format', 'NGINX::NGINX_CACHE_KEY_FORMAT', 'GET|||HOST|PATH');
+        self::$nginx_cache_key = setOption($options, 'cache_key_format', 'NGINX.NGINX_CACHE_KEY_FORMAT', 'GET|||HOST|PATH');
     }
 
     /**
@@ -124,22 +129,22 @@ class NginxToolkit
         $cache_filepath .= "/{$cache_filename}";
 
         if (file_exists($cache_filepath)) {
-            if (self::$is_logging) {
+            if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
                 self::$LOGGER->debug("NGINX Cache Force Cleaner: cached data present: ", [ $cache_filepath ]);
             }
 
             $unlink_status = unlink($cache_filepath);
 
         } else {
-            if (self::$is_logging) {
+            if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
                 self::$LOGGER->debug("NGINX Cache Force Cleaner: cached data not found: ", [ $cache_filepath ]);
             }
 
             $unlink_status = true;
         }
 
-        if (self::$is_logging) {
-            AppLogger::scope('main')->debug("NGINX Cache Force Cleaner: Clear status (key/status)", [$cache_key, $unlink_status]);
+        if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+            self::$LOGGER->debug("NGINX Cache Force Cleaner: Clear status (key/status)", [$cache_key, $unlink_status]);
         }
 
         return $unlink_status;
@@ -154,7 +159,7 @@ class NginxToolkit
     {
         $unlink_status = true;
 
-        if (self::$is_logging) {
+        if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
             self::$LOGGER->debug("NGINX Cache Force Cleaner: requested clean whole cache");
         }
 
@@ -166,7 +171,7 @@ class NginxToolkit
             }
         }
 
-        if (self::$is_logging) {
+        if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
             self::$LOGGER->debug("NGINX Cache Force Cleaner: whole cache clean status: ", [self::$nginx_cache_root, $unlink_status]);
         }
 
@@ -182,7 +187,10 @@ class NginxToolkit
     public static function rmdir(string $directory): bool
     {
         if (!is_dir($directory)) {
-            self::$LOGGER->warning(__METHOD__ . ' throws warning: no such file or directory', [ $directory ]);
+            if (self::$is_logging && self::$LOGGER instanceof \Monolog\Logger) {
+                self::$LOGGER->warning(__METHOD__ . ' throws warning: no such file or directory', [ $directory ]);
+            }
+
             return false;
         }
 
