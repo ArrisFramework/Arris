@@ -15,6 +15,9 @@ interface ArrisFunctionsInterface {
     function array_search_callback(array $a, callable $callback);
     function array_sort_in_given_order(array $array, array $order, $sort_key):array;
 
+    function http_redirect($uri, $replace_prev_headers = false, $code = 302, $scheme = '');
+
+    function pluralForm($number, $forms, string $glue = '|'):string;
 }
 
 if (!function_exists('Arris\checkAllowedValue')) {
@@ -251,6 +254,35 @@ if (!function_exists('Arris\http_redirect')) {
             header("Location: {$default_scheme}://{$_SERVER['HTTP_HOST']}{$uri}", $replace_prev_headers, $code);
         }
         exit(0);
+    }
+}
+
+if (!function_exists('Arris\pluralForm')) {
+    /**
+     *
+     * @param $number
+     * @param array $forms (array or string with glues, x|y|z or [x,y,z]
+     * @param string $glue
+     * @return string
+     */
+    function pluralForm($number, $forms, string $glue = '|'):string
+    {
+        if (is_string($forms)) {
+            $forms = explode($forms, $glue);
+        } elseif (!is_array($forms)) {
+            return '';
+        }
+
+        if (count($forms) != 3) return '';
+
+        return
+            ($number % 10 == 1 && $number % 100 != 11)
+                ? $forms[0]
+                : (
+            ($number % 10 >= 2 && $number % 10 <= 4 && ($number % 100 < 10 || $number % 100 >= 20))
+                ? $forms[1]
+                : $forms[2]
+            );
     }
 }
 
