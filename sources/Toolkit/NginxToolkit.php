@@ -90,18 +90,18 @@ class NginxToolkit implements NginxToolkitInterface
 
         self::$is_logging = setOption($options, 'isLogging', 'NGINX.LOG_CACHE_CLEANING', false);
 
-        self::$is_using_cache = setOption($options, 'isUseCache', 'NGINX.NGINX_CACHE_USE', false);
+        self::$is_using_cache = setOption($options, 'isUseCache', 'NGINX.CACHE_USE', false);
 
-        self::$nginx_cache_root = setOption($options, 'cache_root', 'NGINX.NGINX_CACHE_PATH');
+        self::$nginx_cache_root = setOption($options, 'cache_root', 'NGINX.CACHE_PATH');
         self::$nginx_cache_root = rtrim(self::$nginx_cache_root, DIRECTORY_SEPARATOR);
         if (empty(self::$nginx_cache_root)) {
-            throw new \Exception(__METHOD__ . ' throws error, NGINX.NGINX_CACHE_PATH is empty');
+            throw new \Exception(__METHOD__ . ' throws error, NGINX.CACHE_PATH is empty');
         }
 
-        self::$nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX.NGINX_CACHE_LEVELS', '1:2');
+        self::$nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX.CACHE_LEVELS', '1:2');
         self::$nginx_cache_levels = explode(':', self::$nginx_cache_levels);
 
-        self::$nginx_cache_key = setOption($options, 'cache_key_format', 'NGINX.NGINX_CACHE_KEY_FORMAT', 'GET|||HOST|PATH');
+        self::$nginx_cache_key = setOption($options, 'cache_key_format', 'NGINX.CACHE_KEY_FORMAT', 'GET|||HOST|PATH');
     }
 
     public static function clear_nginx_cache(string $url)

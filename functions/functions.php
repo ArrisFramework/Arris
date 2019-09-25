@@ -4,7 +4,7 @@ namespace Arris;
 
 interface ArrisFunctionsInterface {
 
-    function setOption(array $options, string $key, $env_key = null, $default_value = '');
+    function setOption(array $options, $key, $env_key = null, $default_value = '');
     function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL );
 
     function mb_trim_text($input, $length, $ellipses = true, $strip_html = true, $ellipses_text = '...'):string;
@@ -47,7 +47,11 @@ if (!function_exists('Arris\setOption')) {
      *
      * use function ArrisFunctions\setOption as setOption;
      *
-     * $nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX::NGINX_CACHE_LEVELS', '1:2');
+     * ($options, $key, $env_key, $default) =>  $options[ $key ]
+     * ([], $key, $env_key, $default)       =>  get_env( $env_key )
+     * ($arr, null, $env_key, $default)     =>  get_env( $env_key )
+     * ([], null, null, $default)           =>  default
+     * ([], null, null, null)               =>  null
      *
      * @param array $options
      * @param string $key
@@ -55,13 +59,23 @@ if (!function_exists('Arris\setOption')) {
      * @param string $default_value
      * @return string
      */
-    function setOption(array $options, string $key, $env_key = null, $default_value = '')
+    function setOption(array $options, $key, $env_key = null, $default_value = '')
     {
-        // return (array_key_exists($key, $options) ? $options[$key] : null) ?: getenv($env_key) ?: $default_value;
+        if (empty($options) || is_null($key)) {
 
-        return (array_key_exists($key, $options) ? $options[$key] : null)
-            ?: (!is_null($env_key) ? getenv($env_key) : null )
-                ?: $default_value;
+            if (is_null($env_key)) {
+                return $default_value;
+            }
+
+            return getenv($env_key);
+
+        } elseif (array_key_exists($key, $options)) {
+            return $options[$key];
+        } elseif (!is_null($env_key)) {
+            return getenv($env_key);
+        } else {
+            return $default_value;
+        }
     }
 }
 
