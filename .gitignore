@@ -3,3 +3,4 @@ _experiments
 .idea
 composer.lock
 vendor
+_env*
