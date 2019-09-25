@@ -1,4 +1,4 @@
-<?php /** @noinspection ALL */
+<?php
 
 /**
  * User: Karel Wintersky
@@ -12,19 +12,81 @@
 namespace Arris;
 
 interface TimerStatsInterface {
+
+    /**
+     * Создает таймер с указанным идентификатором и описанием.
+     * Если не указать имя - будет использован таймер по умолчанию - default.
+     * Если такой таймер уже существует - он будет уничтожен (и пересоздан)
+     *
+     * @param string $name
+     * @param string $desc
+     */
     public static function init($name = null, $desc = null);
+
+    /**
+     * Запускает таймер с указанным идентификатором
+     *
+     * @param string $name
+     */
     public static function go($name = null);
+
+    /**
+     * Ставит на паузу таймер с указанным идентификатором
+     *
+     * @param string $name
+     */
     public static function pause($name = null);
+
+    /**
+     * Останавливает таймер с указанным идентификатором и возвращает его значение в миллисекундах.
+     * При следующем запуске отсчет начнется сначала, т.е. значение таймера сбросится.
+     *
+     * @param string $name
+     * @return mixed
+     */
     public static function stop($name = null);
+
+    /**
+     * Останавливает все таймеры
+     */
     public static function stopAll();
 
+    /**
+     * Возвращает значение указанного таймера
+     *
+     * @param string $name
+     * @return mixed
+     */
     public static function get($name = null);
+
+    /**
+     * Возвращает все таймеры в виде массива:
+     *   идентификатор_таймера => [ name => имя таймера, desc => описание таймера, time => время работы таймера ]
+     * @return array
+     */
+    public static function get_all_timers();
+
+    /**
+     * Возвращает статус указанного таймера
+     * @param string $name
+     * @return bool
+     */
     public static function get_state($name = null);
 
+    /**
+     * Уничтожает указанный таймер
+     * @param string $name
+     * @return bool
+     */
     public static function destroy($name = null);
 
+    /**
+     * Проверяет существование указанного таймера
+     * @param string $name
+     * @return bool
+     */
     public static function is_exists($name = null);
-    public static function get_all_timers();
+
 }
 
 /**
@@ -45,14 +107,6 @@ class TimerStats implements TimerStatsInterface
 
     public static $timers = array();
 
-    /**
-     * Создает таймер с указанным идентификатором и описанием.
-     * Если не указать имя - будет использован таймер по умолчанию - default.
-     * Если такой таймер уже существует - он будет уничтожен (и пересоздан)
-     *
-     * @param string $name
-     * @param string $desc
-     */
     public static function init($name = null, $desc = null)
     {
         $name = self::getTimerInternalName($name);
@@ -70,11 +124,6 @@ class TimerStats implements TimerStatsInterface
         );
     }
 
-    /**
-     * Запускает таймер с указанным идентификатором
-     *
-     * @param string $name
-     */
     public static function go($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -89,11 +138,6 @@ class TimerStats implements TimerStatsInterface
         self::$timers[ $name ]['iterations']++;
     }
 
-    /**
-     * Ставит на паузу таймер с указанным идентификатором
-     *
-     * @param string $name
-     */
     public static function pause($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -102,13 +146,6 @@ class TimerStats implements TimerStatsInterface
         self::$timers[ $name ]['totaltime'] += ( \microtime(true) - self::$timers[ $name ]['starttime']);
     }
 
-    /**
-     * Останавливает таймер с указанным идентификатором и возвращает его значение в миллисекундах.
-     * При следующем запуске отсчет начнется сначала, т.е. значение таймера сбросится.
-     *
-     * @param string $name
-     * @return mixed
-     */
     public static function stop($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -118,9 +155,6 @@ class TimerStats implements TimerStatsInterface
         return self::$timers[ $name ]['totaltime'];
     }
 
-    /**
-     * Останавливает все таймеры
-     */
     public static function stopAll()
     {
         foreach (self::$timers as $n => $timer) {
@@ -136,12 +170,6 @@ class TimerStats implements TimerStatsInterface
         }
     }
 
-    /**
-     * Возвращает значение указанного таймера
-     *
-     * @param string $name
-     * @return mixed
-     */
     public static function get($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -149,11 +177,6 @@ class TimerStats implements TimerStatsInterface
         return self::$timers[ $name ]['totaltime'];
     }
 
-    /**
-     * Уничтожает указанный таймер
-     * @param string $name
-     * @return bool
-     */
     public static function destroy($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -166,11 +189,6 @@ class TimerStats implements TimerStatsInterface
         }
     }
 
-    /**
-     * Проверяет существование указанного таймера
-     * @param string $name
-     * @return bool
-     */
     public static function is_exists($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -178,11 +196,6 @@ class TimerStats implements TimerStatsInterface
         return \array_key_exists($name, self::$timers);
     }
 
-    /**
-     * Возвращает статус указанного таймера
-     * @param string $name
-     * @return bool
-     */
     public static function get_state($name = null)
     {
         $name = self::getTimerInternalName($name);
@@ -194,11 +207,6 @@ class TimerStats implements TimerStatsInterface
         }
     }
 
-    /**
-     * Возвращает все таймеры в виде массива:
-     *   идентификатор_таймера => [ name => имя таймера, desc => описание таймера, time => время работы таймера ]
-     * @return array
-     */
     public static function get_all_timers()
     {
         array_walk(self::$timers, function(&$item){

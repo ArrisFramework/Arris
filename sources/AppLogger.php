@@ -64,7 +64,7 @@ interface AppLoggerInterface
      *
      * @param null $scope
      */
-    public static function addDeferredScope($scope = null):Logger;
+    public static function addDeferredScope($scope = null);
 }
 
 /**

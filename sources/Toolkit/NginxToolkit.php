@@ -23,12 +23,30 @@ interface NginxToolkitInterface {
      * @param \Monolog\Logger $logger
      * @throws \Exception
      */
-    public static function init($options = []);
+    public static function init($options = [], $logger = null);
 
-
+    /**
+     * Очищает nginx-кэш для переданного URL
+     * Логгирует всегда
+     *
+     * @param string $url
+     * @return bool
+     */
     public static function clear_nginx_cache(string $url);
+
+    /**
+     * Полная очистка КЭША NGINX
+     *
+     * @return bool
+     */
     public static function clear_nginx_cache_entire();
 
+    /**
+     * Рекурсивно удаляет каталоги по указанному пути
+     *
+     * @param $directory
+     * @return bool
+     */
     public static function rmdir(string $directory): bool;
 }
 
@@ -86,13 +104,6 @@ class NginxToolkit implements NginxToolkitInterface
         self::$nginx_cache_key = setOption($options, 'cache_key_format', 'NGINX.NGINX_CACHE_KEY_FORMAT', 'GET|||HOST|PATH');
     }
 
-    /**
-     * Записывает логи:
-     * DEBUG: очистка лога в случае, если установлена ENV -> NGINX::LOG_CACHE_CLEANING
-     *
-     * @param string $url
-     * @return bool
-     */
     public static function clear_nginx_cache(string $url)
     {
         if (self::$is_using_cache == 0) {
@@ -150,11 +161,6 @@ class NginxToolkit implements NginxToolkitInterface
         return $unlink_status;
     } // -clear_nginx_cache()
 
-    /**
-     * Полная очистка КЭША NGINX
-     *
-     * @return bool
-     */
     public static function clear_nginx_cache_entire()
     {
         $unlink_status = true;
@@ -178,12 +184,6 @@ class NginxToolkit implements NginxToolkitInterface
         return $unlink_status;
     }
 
-    /**
-     * Рекурсивно удаляет каталоги по указанному пути
-     *
-     * @param $directory
-     * @return bool
-     */
     public static function rmdir(string $directory): bool
     {
         if (!is_dir($directory)) {
