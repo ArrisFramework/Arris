@@ -28,6 +28,7 @@
     "autoload": {
         "files": [
           "functions/functions.php",
+          "functions/classes.php",
           "functions/helpers.php"
         ],
         "psr-4": {

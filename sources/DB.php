@@ -10,6 +10,7 @@
 namespace Arris;
 
 use Monolog\Logger;
+use Arris\AppStateHandler;
 
 /**
  * Interface DBConnectionInterface
@@ -82,7 +83,7 @@ class DB implements DBConnectionInterface
      */
     public function __construct($suffix)
     {
-        $connection_state = AppState::addState(__CLASS__);
+        $connection_state = new AppStateHandler(__CLASS__);
 
         $config_key = self::getKey($suffix);
 
