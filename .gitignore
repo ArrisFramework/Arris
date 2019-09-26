@@ -4,3 +4,4 @@ _experiments
 composer.lock
 vendor
 _env*
+tests/*.log

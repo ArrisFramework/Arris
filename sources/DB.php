@@ -1,16 +1,15 @@
-<?php /** @noinspection ALL */
+<?php
 
 /**
  * User: Karel Wintersky
- * Date: 26.08.2018, time: 14:25 Version 1.5/LIBDb
- * Date: 20.09.2018, time: 16:34 Version 2.0/ArrisFramework
- * Date: 09.10.2018, time: 06:34 Version 2.1/ArrisFramework
  * Date: 01.03.2019, Version 2.3/Arris
  *
  * Library: https://github.com/KarelWintersky/Arris
  */
 
 namespace Arris;
+
+use Monolog\Logger;
 
 /**
  * Interface DBConnectionInterface
@@ -19,7 +18,7 @@ interface DBConnectionInterface
 {
     const MYSQL_ERROR_DUPLICATE_ENTRY = 1062;
 
-    public static function init($suffix, $config);
+    public static function init($suffix, $config, Logger $logger = null);
 
     public static function getConnection($suffix = NULL): \PDO;
     public static function C($suffix = NULL): \PDO;
@@ -46,6 +45,7 @@ interface DBConnectionInterface
 
     public static function getConfig($suffix = NULL): array;
     public static function setConfig(array $config, $suffix = NULL);
+    public static function getLogger($suffix = NULL);
 }
 
 /**
@@ -64,37 +64,52 @@ class DB implements DBConnectionInterface
     private static $_instances = [];
 
     /**
-     * DB Configs
+     * Connection configs
      * @var array
      */
     private static $_configs = [];
 
     /**
-     *
+     * Connection Loggers
+     * @var array
+     */
+    private static $_loggers = [];
+
+    /**
      * DB constructor.
      * @param $suffix
+     * @throws \Exception
      */
     public function __construct($suffix)
     {
+        $connection_state = AppState::addState(__CLASS__);
+
         $config_key = self::getKey($suffix);
 
         $config = self::getConfig($suffix);
 
-        $dbhost = $config['hostname'] ?? 'localhost';
-        $dbname = $config['database'] ?? 'mysql';
-        $dbuser = $config['username'] ?? 'root';
-        $dbpass = $config['password'] ?? '';
-        $dbport = $config['port'] ?? 3306;
+        $logger = self::getLogger($suffix);
 
-        $dsl = "mysql:host={$dbhost};port={$dbport};dbname={$dbname}";
+        $db_driver = $config['driver'] ?? 'mysql';
+        $db_host = $config['hostname'] ?? 'localhost';
+        $db_name = $config['database'] ?? 'mysql';
+        $db_user = $config['username'] ?? 'root';
+        $db_pass = $config['password'] ?? '';
+        $db_port = $config['port'] ?? 3306;
+
+        $dsl = "{$db_driver}:host={$db_host};port={$db_port};dbname={$db_name}";
+
         try {
-            if ($config === NULL)
+            if ($config === NULL) {
                 throw new \Exception("DB class can't find configuration data for suffix {$suffix}" . PHP_EOL, 2);
+            }
 
-            $dbh = new \PDO($dsl, $dbuser, $dbpass);
+            $dbh = new \PDO($dsl, $db_user, $db_pass);
 
             if (isset($config['charset']) && isset($config['charset_collate'])) {
                 $dbh->exec("SET NAMES {$config['charset']} COLLATE {$config['charset_collate']}");
+            } elseif (isset($config['charset'])) {
+                $dbh->exec("SET NAMES {$config['charset']}");
             }
 
             $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -102,26 +117,29 @@ class DB implements DBConnectionInterface
 
             self::$_instances[$config_key] = $dbh;
 
-            $connection_state = TRUE;
+            $connection_state->setState(FALSE);
 
-        } catch (\PDOException $pdo_e) {
-            $message = "Unable to connect `{$dsl}`, PDO CONNECTION ERROR: " . $pdo_e->getMessage() . "\r\n" . PHP_EOL;
+        } catch (\PDOException $e) {
+            $message = "Unable to connect `{$dsl}`, PDO CONNECTION ERROR: " . $e->getMessage() . "\r\n" . PHP_EOL;
 
-            $connection_state = [
-                'error' => $message,
-                'state' => FALSE
-            ];
+            if ($logger instanceof Logger) {
+                $logger->emergency("Unable to connect DSL `{$dsl}`, PDO Connection error", [ $e->getMessage() , $e->getCode()] );
+            }
+
+            $connection_state->setState(TRUE, $message, $e->getCode());
 
         } catch (\Exception $e) {
-            $connection_state = [
-                'error' => $e->getMessage(),
-                'state' => FALSE
-            ];
+            $connection_state->setState(TRUE, $e->getMessage(), $e->getCode());
+
             self::$_configs[$config_key] = NULL;
+
+            if ($logger instanceof Logger) {
+                $logger->emergency("Arris\\DB ERROR: ", [ $e->getMessage() , $e->getCode()] );
+            }
         }
 
-        if ($connection_state !== TRUE) {
-            die($connection_state['error']);
+        if ($connection_state->error == true) {
+            throw new \Exception($connection_state->errorMsg, $connection_state->errorCode);
         }
 
         self::$_configs[$config_key] = $config;
@@ -130,7 +148,10 @@ class DB implements DBConnectionInterface
     /**
      * Predicted (early) initialization
      *
-     * $config must have:
+     * @param $suffix
+     * @param $config
+     * $config must have fields:
+     *  'driver' (default mysql)
      *  'hostname' (default localhost)
      *  'database' (default mysql)
      *  'username' (default root)
@@ -140,24 +161,34 @@ class DB implements DBConnectionInterface
      * optional:
      *  'charset'
      *  'charset_collate'
-     *
-     *
-     * @param null $suffix
-     * @param $config
+
+     * @param Logger|null $logger
+     * @throws \Exception
      */
-    public static function init($suffix, $config)
+    public static function init($suffix, $config, Logger $logger = null)
     {
         $config_key = self::getKey($suffix);
 
-        if (is_array($config)) {
-            self::setConfig($config, $suffix);
-            self::$_instances[$config_key] = (new self($suffix))->getInstance($suffix);
-        } elseif (is_object($config)) {
-            self::setConfig([], $suffix);
-            self::$_instances[$config_key] = $config;
-        } else {
-            die(__METHOD__ . ' died: ' . PHP_EOL . print_r($config, true) . PHP_EOL . ' is not array or object! ');
+        if (!is_array($config) || empty($config) ) {
+            $message = __METHOD__
+                . ' can\'t use given data: '
+                . PHP_EOL . var_export($config, true) . PHP_EOL
+                . ' as configuration for database connection with '
+                . (is_null($suffix) ? 'default suffix ' : "suffix {$suffix}");
+
+            if ($logger instanceof Logger) {
+                $logger->emergency($message);
+            }
+
+            throw new \Exception($message);
         }
+
+        if ($logger instanceof Logger) {
+            self::$_loggers[ $config_key ] = $logger;
+        }
+
+        self::setConfig($config, $suffix);
+        self::$_instances[ $config_key ] = (new self($suffix))->getInstance($suffix);
     }
 
     /**
@@ -170,6 +201,16 @@ class DB implements DBConnectionInterface
     {
         $config_key = self::getKey($suffix);
         return array_key_exists($config_key, self::$_configs) ? self::$_configs[$config_key] : NULL;
+    }
+
+    /**
+     * @param null $suffix
+     * @return Logger|null
+     */
+    public static function getLogger($suffix = NULL)
+    {
+        $config_key = self::getKey($suffix);
+        return array_key_exists($config_key, self::$_loggers) ? self::$_loggers[$config_key] : NULL;
     }
 
     /**
@@ -189,6 +230,7 @@ class DB implements DBConnectionInterface
      *
      * @param null $suffix
      * @return \PDO
+     * @throws \Exception
      */
     public static function getConnection($suffix = NULL): \PDO
     {
@@ -199,6 +241,7 @@ class DB implements DBConnectionInterface
     /**
      * @param null $suffix
      * @return \PDO
+     * @throws \Exception
      */
     public static function C($suffix = NULL): \PDO
     {
@@ -239,9 +282,11 @@ class DB implements DBConnectionInterface
 
     /**
      * Get class instance == connection instance
+     * @todo: logger?
      *
      * @param null $suffix
      * @return \PDO
+     * @throws \Exception
      */
     public static function getInstance($suffix = NULL):\PDO
     {

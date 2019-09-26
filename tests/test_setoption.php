@@ -2,7 +2,6 @@
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
 
-use function Arris\setOption;
 use function Arris\setOption as test;
 
 $options = [
