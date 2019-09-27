@@ -65,6 +65,12 @@ interface AppLoggerInterface
      * @param null $scope
      */
     public static function addDeferredScope($scope = null);
+
+    /**
+     * Добавляет null-logger
+     * @return mixed Logger
+     */
+    public static function addNullLogger();
 }
 
 /**
@@ -233,6 +239,11 @@ class AppLogger implements AppLoggerInterface
         } catch (\Exception $e) {
             die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
         }
+    }
+
+    public static function addNullLogger()
+    {
+        return (new Logger('null'))->pushHandler(new \Monolog\Handler\NullHandler());
     }
 
     public static function scope($scope = null):Logger
