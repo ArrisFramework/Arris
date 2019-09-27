@@ -47,7 +47,21 @@ interface __SphinxToolkitFoolzInterface {
     public static function createInstance();
 
     /**
-     * Обновляет (REPLACE) реалтайм-индекс по набору данных
+     * Обновляет (UPDATE) реалтайм-индекс по набору данных
+     * с созданием коннекшена "сейчас"
+     *
+     * @param string $index_name
+     * @param array $updateset
+     * @return ResultSetInterface|null
+     *
+     * @throws DatabaseException
+     * @throws \Foolz\SphinxQL\Exception\ConnectionException
+     * @throws \Foolz\SphinxQL\Exception\SphinxQLException
+     */
+    public static function rt_UpdateIndex(string $index_name, array $updateset);
+
+    /**
+     * Замещает (REPLACE) реалтайм-индекс по набору данных
      * с созданием коннекшена "сейчас"
      *
      * @param string $index_name
@@ -569,6 +583,17 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
 
         return self::createInstance()
             ->replace()
+            ->into($index_name)
+            ->set($updateset)
+            ->execute();
+    }
+
+    public static function rt_UpdateIndex(string $index_name, array $updateset)
+    {
+        if (empty($updateset)) return null;
+
+        return self::createInstance()
+            ->update($index_name)
             ->into($index_name)
             ->set($updateset)
             ->execute();
