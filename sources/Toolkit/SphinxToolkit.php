@@ -215,8 +215,8 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         $this->rai_options['sleep_after_chunk'] = setOption($options, 'sleep_after_chunk', null, true);
 
         $this->rai_options['sleep_time'] = setOption($options, 'sleep_time', null, 1);
-        if ($options['sleep_time'] == 0) {
-            $options['sleep_after_chunk'] = false;
+        if ($this->rai_options['sleep_time'] == 0) {
+            $this->rai_options['sleep_after_chunk'] = false;
         }
 
         $this->rai_options['log_before_index'] = setOption($options, 'log_before_index', null, true);
@@ -542,8 +542,8 @@ class SphinxToolkit implements __SphinxToolkitMysqliInterface, __SphinxToolkitFo
         self::$rlo['sleep_after_chunk']     = setOption($options, 'sleep_after_chunk', null, true);
 
         self::$rlo['sleep_time'] = setOption($options, 'sleep_time', null, 1);
-        if ($options['sleep_time'] == 0) {
-            $options['sleep_after_chunk'] = false;
+        if (self::$rlo['sleep_time'] == 0) {
+            self::$rlo['sleep_after_chunk'] = false;
         }
 
         self::$rlo['log_before_index']      = setOption($options, 'log_before_index', null, true);

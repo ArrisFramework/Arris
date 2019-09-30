@@ -19,6 +19,8 @@
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-readline": "*",
+        "ext-curl": "*",
+        "ext-simplexml": "*",
         "monolog/monolog": "^1.23",
         "foolz/sphinxql-query-builder": "^2.0",
         "sabre/event": "^5",

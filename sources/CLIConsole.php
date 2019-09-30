@@ -73,8 +73,6 @@ interface CLIConsoleInterface {
 
 class CLIConsole implements CLIConsoleInterface
 {
-    const VERSION = "1.15";
-
     const FOREGROUND_COLORS = [
         'black'         => '0;30',
         'dark gray'     => '1;30',

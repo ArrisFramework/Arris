@@ -25,8 +25,6 @@ interface AJURWeatherInterface {
 
 class AJURWeather implements AJURWeatherInterface
 {
-    const VERSION = "1.14";
-
     /**
      * Error consts
      */

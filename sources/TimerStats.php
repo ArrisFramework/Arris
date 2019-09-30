@@ -96,8 +96,6 @@ interface TimerStatsInterface {
  */
 class TimerStats implements TimerStatsInterface
 {
-    const VERSION = "1.15";
-
     const DEFAULT_INTERNAL_NAME = 'default';
 
     const STATE_NEW = 0;
