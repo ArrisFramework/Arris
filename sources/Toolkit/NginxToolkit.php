@@ -86,6 +86,8 @@ class NginxToolkit implements NginxToolkitInterface
     {
         if ($logger instanceof \Monolog\Logger) {
             self::$LOGGER = $logger;
+        } else {
+            self::$LOGGER = AppLogger::addNullLogger();
         }
 
         self::$is_logging = setOption($options, 'isLogging', 'NGINX.LOG_CACHE_CLEANING', false);
@@ -115,6 +117,7 @@ class NginxToolkit implements NginxToolkitInterface
         endif; // endif
 
         $url_parts = parse_url($url);
+
         $url_parts['host'] = $url_parts['host'] ?? '';
         $url_parts['path'] = $url_parts['path'] ?? '';
 
@@ -140,23 +143,15 @@ class NginxToolkit implements NginxToolkitInterface
         $cache_filepath .= "/{$cache_filename}";
 
         if (file_exists($cache_filepath)) {
-            if (self::$LOGGER instanceof \Monolog\Logger) {
-                self::$LOGGER->debug("NGINX Cache Force Cleaner: cached data present: ", [ $cache_filepath ]);
-            }
-
+            self::$LOGGER->info("NGINX Cache Force Cleaner: cached data present: ", [ $cache_filepath ]);
             $unlink_status = unlink($cache_filepath);
 
         } else {
-            if (self::$LOGGER instanceof \Monolog\Logger) {
-                self::$LOGGER->debug("NGINX Cache Force Cleaner: cached data not found: ", [ $cache_filepath ]);
-            }
-
+            self::$LOGGER->info("NGINX Cache Force Cleaner: cached data not found: ", [ $cache_filepath ]);
             $unlink_status = true;
         }
 
-        if (self::$LOGGER instanceof \Monolog\Logger) {
-            self::$LOGGER->debug("NGINX Cache Force Cleaner: Clear status (key/status)", [$cache_key, $unlink_status]);
-        }
+        self::$LOGGER->info("NGINX Cache Force Cleaner: Clear status (key/status)", [$cache_key, $unlink_status]);
 
         return $unlink_status;
     } // -clear_nginx_cache()
@@ -165,21 +160,15 @@ class NginxToolkit implements NginxToolkitInterface
     {
         $unlink_status = true;
 
-        if (self::$LOGGER instanceof \Monolog\Logger) {
-            self::$LOGGER->debug("NGINX Cache Force Cleaner: requested clean whole cache");
-        }
+        self::$LOGGER->debug("NGINX Cache Force Cleaner: requested clean whole cache");
 
         $dir_content = array_diff(scandir(self::$nginx_cache_root), ['.', '..']);
 
         foreach ($dir_content as $subdir) {
-            if (is_dir(self::$nginx_cache_root . DIRECTORY_SEPARATOR . $subdir)) {
-                $unlink_status = $unlink_status && self::rmdir(self::$nginx_cache_root . DIRECTORY_SEPARATOR . $subdir . '/');
-            }
+            $unlink_status = $unlink_status && self::rmdir(self::$nginx_cache_root . DIRECTORY_SEPARATOR . $subdir . '/');
         }
 
-        if (self::$LOGGER instanceof \Monolog\Logger) {
-            self::$LOGGER->debug("NGINX Cache Force Cleaner: whole cache clean status: ", [ self::$nginx_cache_root, $unlink_status ]);
-        }
+        self::$LOGGER->debug("NGINX Cache Force Cleaner: whole cache clean status: ", [ self::$nginx_cache_root, $unlink_status ]);
 
         return $unlink_status;
     }
@@ -187,10 +176,7 @@ class NginxToolkit implements NginxToolkitInterface
     public static function rmdir(string $directory): bool
     {
         if (!is_dir($directory)) {
-            if (self::$LOGGER instanceof \Monolog\Logger) {
-                self::$LOGGER->warning(__METHOD__ . ' throws warning: no such file or directory', [ $directory ]);
-            }
-
+            self::$LOGGER->warning(__METHOD__ . ' throws warning: no such file or directory', [ $directory ]);
             return false;
         }
 
