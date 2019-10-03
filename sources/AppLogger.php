@@ -13,6 +13,7 @@
 
 namespace Arris;
 
+use Monolog\Handler\NullHandler;
 use \Monolog\Logger;
 use \Monolog\Handler\StreamHandler;
 
@@ -25,10 +26,10 @@ interface AppLoggerInterface
     /**
      * порядок опций в параметре $options метода addScope()
      */
-    const addScope_OPTION_FILENAME = 0;
-    const addScope_OPTION_LOGLEVEL = 1;
-    const addScope_OPTION_BUBBLING = 2;
-    const addScope_OPTION_USELOGGER = 3;
+    const addScopeLegacy_OPTION_FILENAME = 0;
+    const addScopeLegacy_OPTION_LOGLEVEL = 1;
+    const addScopeLegacy_OPTION_BUBBLING = 2;
+    const addScopeLegacy_OPTION_USELOGGER = 3;
 
     /**
      * Инициализирует класс логгера
@@ -51,7 +52,7 @@ interface AppLoggerInterface
      * Добавляет скоуп
      *
      * @param $scope - имя скоупа
-     * @param $scope_options - массив кортежей:
+     * @param $scope_levels - массив кортежей:
      * [ filename , logging_level, use_logger ], где:
      * - filename - имя файла лога
      * - уровень логгирования - уровень логгирования (переменные Logger::DEBUG etc)
@@ -60,7 +61,26 @@ interface AppLoggerInterface
      *
      * @param bool $scope_enable_logging - false - использовать NullLogger для всего Scope
      */
-    public static function addScope($scope, $scope_options, $scope_enable_logging = true);
+    public static function addScope_legacy($scope, $scope_levels, $scope_enable_logging = true);
+
+    /**
+     * Добавляет скоуп
+     *
+     * @param null $scope - имя скоупа
+     * @param array $scope_levels - массив кортежей:
+     * [ filename , logging_level, options ], где:
+     * - filename - имя файла лога
+     * - logging_level - уровень логгирования - уровень логгирования (переменные Logger::DEBUG etc)
+     * - options - хэш с возможными параметрами:
+     * [
+     *   - enabled - [TRUE], использовать ли логгер для этого уровня
+     *   - bubbling - [FALSE], всплывает ли сообщение логгирования
+     *   - handler - [НЕ ОПРЕЛЕЛЕНО] либо инстанс Хэндлера, реализующего интерфейс Monolog\Handler\HandlerInterface
+     * ]
+     * @param bool $scope_enabled_logging
+     * @return mixed
+     */
+    public static function addScope($scope = null, $scope_levels = [], $scope_enabled_logging = true);
 
     /**
      * Получает скоуп
@@ -90,6 +110,8 @@ interface AppLoggerInterface
  */
 class AppLogger implements AppLoggerInterface
 {
+    const VERSION = '2.0';
+
     const APPLOGGER_ERROR_OPTIONS_EMPTY = 1;
     const APPLOGGER_ERROR_LOGFILENAME_EMPTY = 2;
 
@@ -97,7 +119,24 @@ class AppLogger implements AppLoggerInterface
 
     const DEFAULT_LOG_FILENAME = '_.log';
 
+    const DEFAULT_LEVEL_OPTIONS = [
+        'bubbling'  =>  false,
+        'enable'    =>  true,
+        'handler'   =>  \Monolog\Handler\StreamHandler::class
+    ];
+
     const DEFAULT_SCOPE_OPTIONS = [
+        [ '100-debug.log',      Logger::DEBUG,      self::DEFAULT_LEVEL_OPTIONS],
+        [ '200-info.log',       Logger::INFO,       self::DEFAULT_LEVEL_OPTIONS],
+        [ '250-notice.log',     Logger::NOTICE,     self::DEFAULT_LEVEL_OPTIONS],
+        [ '300-warning.log',    Logger::WARNING,    self::DEFAULT_LEVEL_OPTIONS],
+        [ '400-error.log',      Logger::ERROR,      self::DEFAULT_LEVEL_OPTIONS],
+        [ '500-critical.log',   Logger::CRITICAL,   self::DEFAULT_LEVEL_OPTIONS],
+        [ '550-alert.log',      Logger::ALERT,      self::DEFAULT_LEVEL_OPTIONS],
+        [ '600-emergency.log',  Logger::EMERGENCY,  self::DEFAULT_LEVEL_OPTIONS]
+    ];
+
+    const DEFAULT_SCOPE_OPTIONS_LEGACY = [
         [ '100-debug.log',      Logger::DEBUG,      FALSE],
         [ '200-info.log',       Logger::INFO,       FALSE],
         [ '250-notice.log',     Logger::NOTICE,     FALSE],
@@ -111,7 +150,7 @@ class AppLogger implements AppLoggerInterface
     /**
      * @var array
      */
-    private static $_global_config = [];
+    public static $_global_config = [];
 
     /**
      * @var string
@@ -135,54 +174,30 @@ class AppLogger implements AppLoggerInterface
 
     public static function init($application, $instance, $options = [])
     {
-        self::$application
-            = $application;
+        self::$application = $application;
 
-        self::$instance
-            = $instance;
+        self::$instance = $instance;
 
-        self::$_global_config['bubbling']
-            = isset($options['bubbling'])
-            ? $options['bubbling']
-            : false;
+        self::$_global_config['bubbling'] = setOption($options, 'bubbling', null, false);
+        self::$_global_config['default_log_level'] = setOption($options, 'default_log_level', null, Logger::DEBUG);
+        self::$_global_config['add_scope_to_log'] = setOption($options, 'add_scope_to_log', null, false);
+        self::$_global_config['default_logfile_path'] = setOption($options, 'default_logfile_path', null, '');
 
-        self::$_global_config['default_log_level']
-            = isset($options['default_log_level'])
-            ? $options['default_log_level']
-            : Logger::DEBUG;
+        if (!empty(self::$_global_config['default_logfile_path'])) {
+            self::$_global_config['default_logfile_path'] = rtrim(self::$_global_config['default_logfile_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR ;
+        }
 
-        self::$_global_config['add_scope_to_log']
-            = isset($options['add_scope_to_log'])
-            ? $options['add_scope_to_log']
-            : false;
+        self::$_global_config['default_logfile_prefix'] = setOption($options, 'default_logfile_prefix', null, '');
 
-        self::$_global_config['default_logfile_path']
-            = isset($options['default_logfile_path'])
-            ? rtrim($options['default_logfile_path'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
-            : '';
+        self::$_global_config['default_log_file'] = setOption($options, 'default_log_file', null, self::DEFAULT_LOG_FILENAME);
 
-        self::$_global_config['default_logfile_prefix']
-            = isset($options['default_logfile_prefix'])
-            ? $options['default_logfile_prefix']
-            : '';
-
-        self::$_global_config['default_log_file']
-            = isset($options['default_log_file'])
-            ? $options['default_log_file']
-            : self::DEFAULT_LOG_FILENAME;
-
-        self::$_global_config['deferred_scope_creation']
-            = isset($options['deferred_scope_creation'])
-            ? $options['deferred_scope_creation']
-            : true;
+        self::$_global_config['deferred_scope_creation'] = setOption($options, 'deferred_scope_creation', null, true);
     }
 
-    public static function addScope($scope = null, $scope_options = [], $scope_enable_logging = true)
+    public static function addScope($scope = null, $scope_levels = [], $scope_enabled_logging = true)
     {
-        //@todo: делать "мерж" переопределенных значений > дефолтных (без if empty() ). Ключ проверки - значение уровня логгирования
-
-        if (empty($scope_options)) {
-            $scope_options = self::DEFAULT_SCOPE_OPTIONS;
+        if (empty($scope_levels)) {
+            $scope_levels = self::DEFAULT_SCOPE_OPTIONS;
         }
 
         try {
@@ -191,31 +206,106 @@ class AppLogger implements AppLoggerInterface
 
             $logger = new Logger($logger_name);
 
-            foreach ($scope_options as $an_option) {
+            foreach ($scope_levels as $level) {
+                $filename
+                    = empty($level[ self::addScopeLegacy_OPTION_FILENAME ])
+                    ? self::$_global_config['default_log_file']
+                    : $level[ self::addScopeLegacy_OPTION_FILENAME ];
+                $filename
+                    = self::$_global_config['default_logfile_path']
+                    . self::$_global_config['default_logfile_prefix']
+                    . $filename;
+
+                $loglevel = $level[ self::addScopeLegacy_OPTION_LOGLEVEL ] ?? self::$_global_config['default_log_level'];
+
+                //@todo: оптимизировать блок
+                // если массива опций уровня логгирования (3 аргумент) пуст или это не массив
+                if (empty($level[ 2 ]) || !is_array($level[ 2 ])) {
+                    $level_options = [
+                        'bubbling'  =>  self::$_global_config['bubbling'],
+                        'enable'    =>  $scope_enabled_logging,
+                        'handler'   =>  \Monolog\Handler\StreamHandler::class
+                    ];
+                } else {
+                    // это массив с какими-то опциями
+                    $level_options = [
+                        'bubbling'  =>  setOption($level[2], 'bubbling', null, self::$_global_config['bubbling']),
+                        'enable'    =>  setOption($level[2], 'enabled', null, $scope_enabled_logging),
+                        'handler'   =>  setOption($level[2],'handler',null,\Monolog\Handler\StreamHandler::class)
+                    ];
+                    // если уровень запрещен - ставим null-logger
+                    if ($level_options['enable'] == false) {
+                        $level_options['handler'] = \Monolog\Handler\NullHandler::class;
+                    }
+                }
+                // проверка, что хэндлер реализует интерфейс:
+                var_dump( in_array('Monolog\Handler\HandlerInterface', class_implements($level_options['handler'])) );
+
+                if ($level_options['enable'] == false || $scope_enabled_logging == false) {
+                    // логгирование запрещено
+                    $logger->pushHandler(new \Monolog\Handler\NullHandler($loglevel));
+
+                } elseif ($level_options['handler'] == \Monolog\Handler\StreamHandler::class) {
+                    //хэндлер SteamHandler
+                    $logger->pushHandler(new \Monolog\Handler\StreamHandler($filename, $loglevel, $level_options['bubbling'] ));
+
+                } elseif ( in_array('Monolog\Handler\HandlerInterface', class_implements($level_options['handler'])) ) {
+                    // хэндлер реализует интерфейс
+                    $logger->pushHandler( $level_options['handler'] );
+
+                } else {
+                    // во всех остальных случаях NULL
+                    $logger->pushHandler(new \Monolog\Handler\NullHandler($loglevel));
+
+                }
+
+            } //foreach
+            self::$_instances[ $internal_key ] = $logger;
+            unset($logger);
+
+        } catch (\Exception $e) {
+            die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
+        }
+
+    }
+
+    public static function addScope_legacy($scope = null, $scope_levels = [], $scope_enable_logging = true)
+    {
+        if (empty($scope_levels)) {
+            $scope_levels = self::DEFAULT_SCOPE_OPTIONS_LEGACY;
+        }
+
+        try {
+            $logger_name = self::getLoggerName($scope);
+            $internal_key = self::getScopeKey($scope);
+
+            $logger = new Logger($logger_name);
+
+            foreach ($scope_levels as $option) {
 
                 $filename
-                    = empty($an_option[ self::addScope_OPTION_FILENAME ])
+                    = empty($option[ self::addScopeLegacy_OPTION_FILENAME ])
                     ? self::$_global_config['default_log_file']
-                    : $an_option[ self::addScope_OPTION_FILENAME ];
+                    : $option[ self::addScopeLegacy_OPTION_FILENAME ];
 
                 $filename
                     = self::$_global_config['default_logfile_path']
                     . self::$_global_config['default_logfile_prefix']
                     . $filename;
 
-                $loglevel = $an_option[ self::addScope_OPTION_LOGLEVEL ] ?? self::$_global_config['default_log_level'];
-                $buggling = $an_option[ self::addScope_OPTION_BUBBLING ] ?? self::$_global_config['bubbling'];
+                $loglevel = $option[ self::addScopeLegacy_OPTION_LOGLEVEL ] ?? self::$_global_config['default_log_level'];
+                $bubbling = $option[ self::addScopeLegacy_OPTION_BUBBLING ] ?? self::$_global_config['bubbling'];
 
                 //@todo: more handlers, FALSE is null handler
 
                 // параметр use_logger перекрывает частные опции логгирования
                 if ($scope_enable_logging) {
                     // если уровень логгирования прямо запрещен (или не указан) - делаем нулл-логгер
-                    if (array_key_exists(self::addScope_OPTION_USELOGGER, $an_option) && $an_option[ self::addScope_OPTION_USELOGGER ] == FALSE) {
-                        $logger->pushHandler(new \Monolog\Handler\NullHandler());
+                    if (array_key_exists(self::addScopeLegacy_OPTION_USELOGGER, $option) && $option[ self::addScopeLegacy_OPTION_USELOGGER ] == FALSE) {
+                        $logger->pushHandler(new \Monolog\Handler\NullHandler($loglevel));
                     } else {
                         // иначе stream logger
-                        $logger->pushHandler(new StreamHandler($filename, $loglevel, $buggling ));
+                        $logger->pushHandler(new StreamHandler($filename, $loglevel, $bubbling ));
                     }
                 } else {
                     //
@@ -233,7 +323,7 @@ class AppLogger implements AppLoggerInterface
 
     public static function addDeferredScope($scope = null)
     {
-        $options = self::DEFAULT_SCOPE_OPTIONS;
+        $options = self::DEFAULT_SCOPE_OPTIONS_LEGACY;
 
         try {
             $logger_name = self::getLoggerName($scope);
