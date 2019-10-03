@@ -1,3 +1,16 @@
+Upgrade AppLogger:
+
+```
+AppLogger::addScope('xxx', [
+    [ 'debug.log', Logger::DEBUG, ['bubbling' => false, 'enable' => true, 'handler' => \Monolog\Handler\StreamHandler::class] ]
+], $total_use_logger);
+
+То есть опции передаются массивом
+
+
+```
+
+
 Рекомендуемый способ инициализации сторонних классов:
 
 ```
