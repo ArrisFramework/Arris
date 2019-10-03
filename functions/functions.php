@@ -63,20 +63,16 @@ if (!function_exists('Arris\setOption')) {
      */
     function setOption(array $options, $key, $env_key = null, $default_value = '')
     {
-        if (empty($options) || is_null($key)) {
-
+        if (empty($options) || is_null($key) || !array_key_exists($key, $options)) {
             if (is_null($env_key)) {
                 return $default_value;
             }
-
-            return getenv($env_key);
-
-        } elseif (array_key_exists($key, $options)) {
-            return $options[$key];
-        } elseif (!is_null($env_key)) {
+            if (getenv($env_key) === false) {
+                return $default_value;
+            }
             return getenv($env_key);
         } else {
-            return $default_value;
+            return $options[$key];
         }
     }
 }
