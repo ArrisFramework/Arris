@@ -9,6 +9,7 @@
 
 namespace Arris;
 
+use Arris\System\DBQueryBuilder;
 use Monolog\Logger;
 use Arris\AppStateHandler;
 
@@ -30,6 +31,8 @@ interface DBConnectionInterface
     public static function buildUpdateQuery(string $table, array $dataset = [], $where_condition = null):string;
     public static function buildReplaceQuery(string $table, array $dataset):string;
     public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes):array;
+
+    public static function makeQuery():DBQueryBuilder;
 
     public static function makeInsertQuery($tablename, &$dataset):string;
     public static function makeUpdateQuery($tablename, &$dataset, $where_condition = ''):string;
@@ -466,8 +469,7 @@ LIMIT 1;";
      */
     public static function makeUpdateQuery($tablename, &$dataset, $where_condition = ''):string
     {
-        $query = '';
-        $r = [];
+        $set = [];
 
         if (empty($dataset))
             return false;
@@ -481,14 +483,19 @@ LIMIT 1;";
                 continue;
             }
 
-            $r[] = "\r\n`{$index}` = :{$index}";
+            $set[] = "\r\n`{$index}` = :{$index}";
         }
 
-        $query .= implode(', ', $r);
+        $query .= implode(', ', $set);
 
         $query .= " \r\n" . $where_condition . " ;";
 
         return $query;
+    }
+
+    public static function makeQuery():DBQueryBuilder
+    {
+        return (new DBQueryBuilder());
     }
 
     /**
