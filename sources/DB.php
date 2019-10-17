@@ -11,7 +11,6 @@ namespace Arris;
 
 use Arris\System\DBQueryBuilder;
 use Monolog\Logger;
-use Arris\AppStateHandler;
 
 /**
  * Interface DBConnectionInterface
@@ -57,7 +56,7 @@ interface DBConnectionInterface
  */
 class DB implements DBConnectionInterface
 {
-    const VERSION = "1.14";
+    const VERSION = "1.16";
 
     private static $_current_connection = null;
 
@@ -89,26 +88,53 @@ class DB implements DBConnectionInterface
         $connection_state = new AppStateHandler(__CLASS__);
 
         $config_key = self::getKey($suffix);
-
         $config = self::getConfig($suffix);
-
         $logger = self::getLogger($suffix);
-
-        $db_driver = $config['driver'] ?? 'mysql';
-        $db_host = $config['hostname'] ?? 'localhost';
-        $db_name = $config['database'] ?? 'mysql';
-        $db_user = $config['username'] ?? 'root';
-        $db_pass = $config['password'] ?? '';
-        $db_port = $config['port'] ?? 3306;
-
-        $dsl = "{$db_driver}:host={$db_host};port={$db_port};dbname={$db_name}";
 
         try {
             if ($config === NULL) {
                 throw new \Exception("DB class can't find configuration data for suffix {$suffix}" . PHP_EOL, 2);
             }
 
-            $dbh = new \PDO($dsl, $db_user, $db_pass);
+            $db_driver = $config['driver'] ?? 'mysql';
+            $db_host = $config['hostname'] ?? 'localhost';
+            $db_name = $config['database'] ?? 'mysql';
+            $db_user = $config['username'] ?? 'root';
+            $db_pass = $config['password'] ?? '';
+            $db_port = $config['port'] ?? 3306;
+
+            switch ($db_driver) {
+                case 'mysql': {
+                    $dsl = sprintf("mysql:host=%s;port=%s;dbname=%s",
+                        $db_host,
+                        $db_port,
+                        $db_name);
+                    $dbh = new \PDO($dsl, $db_user, $db_pass);
+
+                    break;
+                }
+                case 'pgsql': {
+                    $dsl = sprintf("pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+                        $db_host,
+                        $db_port,
+                        $db_name,
+                        $db_user,
+                        $db_pass);
+
+                    $dbh = new \PDO($dsl);
+                    break;
+                }
+                case 'sqlite': {
+                    $dsl = sprintf("sqlite:%s", realpath($db_host));
+                    $dbh = new \PDO($dsl);
+                    break;
+                }
+                default: {
+                    throw new \Exception('Unknown database driver : ' . $db_driver);
+                    break;
+                }
+            } // switch
+
 
             if (isset($config['charset']) && isset($config['charset_collate'])) {
                 $dbh->exec("SET NAMES {$config['charset']} COLLATE {$config['charset_collate']}");
@@ -187,9 +213,10 @@ class DB implements DBConnectionInterface
             throw new \Exception($message);
         }
 
-        if ($logger instanceof Logger) {
-            self::$_loggers[ $config_key ] = $logger;
-        }
+        self::$_loggers[ $config_key ]
+            = $logger instanceof Logger
+            ? $logger
+            : (new Logger('null'))->pushHandler(new \Monolog\Handler\NullHandler());
 
         self::setConfig($config, $suffix);
         self::$_instances[ $config_key ] = (new self($suffix))->getInstance($suffix);
@@ -286,7 +313,6 @@ class DB implements DBConnectionInterface
 
     /**
      * Get class instance == connection instance
-     * @todo: logger?
      *
      * @param null $suffix
      * @return \PDO
@@ -399,7 +425,7 @@ class DB implements DBConnectionInterface
     }
 
     /**
-     * Проверяет существование таблицы в БД
+     * + Проверяет существование таблицы в БД
      *
      * @param string $table
      * @param null $suffix
@@ -410,20 +436,45 @@ class DB implements DBConnectionInterface
     {
         if (empty($table)) throw new \Exception(__CLASS__ . "::" . __METHOD__ . " -> table param empty");
 
-        $query = "
-SELECT *
-FROM information_schema.tables
-WHERE table_name LIKE ':table'
-LIMIT 1;";
-        $state = self::getConnection($suffix)->prepare($query);
-        $state->execute(["table" => $table]);
-        $result = $state->fetchColumn(2);
+        $db_settings = self::getConfig($suffix);
+
+        switch ($db_settings['driver']) {
+            case 'mysql': {
+                $query = "SELECT * FROM information_schema.tables WHERE table_name LIKE ':table' AND table_schema LIKE ':database' LIMIT 1 ";
+
+                $state = self::getConnection($suffix)->prepare($query);
+                $state->execute(["table" => $table, 'database'  =>  $db_settings['database']]);
+                $result = $state->fetchColumn(2);
+
+                break;
+            }
+            case 'pgsql': {
+                $query = "SELECT count(*) FROM pg_catalog.pg_tables WHERE tablename LIKE ':table' AND tableowner LIKE ':database'";
+
+                $state = self::getConnection($suffix)->prepare($query);
+                $state->execute(["table" => $table, 'database'  =>  $db_settings['database']]);
+                $result = $state->fetchColumn(2);
+
+                break;
+            }
+            case 'sqlite': {
+                $query = "SELECT name FROM sqlite_master WHERE type='table' AND name=':table' ";
+
+                $state = self::getConnection($suffix)->prepare($query);
+                $state->execute(["table" => $table ]);
+                $result = $state->fetchColumn(1);
+
+                break;
+            }
+            default: {
+                throw new \Exception('Unknown DB driver ' . $db_settings['driver']);
+                break;
+            }
+        }
 
         if ($result && ($result === $table)) return true;
         return false;
     }
-
-
 
     /**
      * Строит INSERT-запрос на основе массива данных для указанной таблицы.
@@ -622,6 +673,7 @@ LIMIT 1;";
  *
  * @param null $suffix
  * @return \PDO
+ * @throws \Exception
  */
 function DBC($suffix = null)
 {
