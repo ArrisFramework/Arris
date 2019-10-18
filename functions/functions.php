@@ -260,13 +260,14 @@ if (!function_exists('Arris\http_redirect')) {
      */
     function http_redirect($uri, $replace_prev_headers = false, $code = 302, $scheme = '')
     {
-        $default_scheme = getenv('HTTP.REDIRECT_SCHEME') ?: $scheme ?: 'http';
+        $default_scheme = $scheme ?: getenv('HTTP.REDIRECT_SCHEME') ?: 'http';
 
-        if (strstr($uri, "http://") or strstr($uri, "https://")) {
-            header("Location: " . $uri, $replace_prev_headers, $code);
-        } else {
-            header("Location: {$default_scheme}://{$_SERVER['HTTP_HOST']}{$uri}", $replace_prev_headers, $code);
-        }
+        $location
+            = (strstr($uri, "http://") or strstr($uri, "https://"))
+            ? "Location: " . $uri
+            : "Location: {$default_scheme}://{$_SERVER['HTTP_HOST']}{$uri}";
+
+        header($location, $replace_prev_headers, $code);
         exit(0);
     }
 }
