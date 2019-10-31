@@ -10,7 +10,7 @@ $ENV = $ENV['DATABASE'];
 
 try {
     AppLogger::init('test', 0 );
-    AppLogger::addScope_legacy('mysql', [
+    AppLogger::addScope('mysql', [
         [ '_error.log', \Monolog\Logger::EMERGENCY ]
     ]);
 
