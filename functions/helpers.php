@@ -15,22 +15,32 @@ if (version_compare(PHP_VERSION, "7.3") < 0 && !function_exists("is_countable"))
 
 if (!function_exists('d')) {
     /**
-     * Dump and die
-     * @param $value
+     * Dump
      */
-    function d($value) {
-        echo '<pre>';
-        var_dump($value);
+    function d() {
+        if (php_sapi_name() !== "cli") echo '<pre>';
+        if (func_num_args()) {
+            foreach (func_get_args() as $arg) {
+                var_dump($arg);
+            }
+        }
+        if (php_sapi_name() !== "cli") echo '</pre>';
     }
 }
 
 if (!function_exists('dd')) {
     /**
      * Dump and die
-     * @param $value
      */
-    function dd($value) {
-        d($value);
+    function dd() {
+        if (php_sapi_name() !== "cli") echo '<pre>';
+        if (func_num_args()) {
+            foreach (func_get_args() as $arg) {
+                var_dump($arg);
+            }
+        }
+        if (php_sapi_name() !== "cli") echo '</pre>';
+
         die;
     }
 }
