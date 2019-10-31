@@ -77,6 +77,19 @@ if (!function_exists('Arris\setOption')) {
     }
 }
 
+if (!function_exists('Arris\setLocalOption')) {
+    /**
+     * @param array $options
+     * @param $key
+     * @param null $default_value
+     * @return mixed
+     */
+    function setLocalOption(array $options, $key, $default_value = null)
+    {
+        return array_key_exists($key, $options) ? $options[$key] : null;
+    }
+}
+
 if (!function_exists('Arris\mb_trim_text')) {
 
     /**

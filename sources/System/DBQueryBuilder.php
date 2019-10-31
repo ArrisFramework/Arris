@@ -1,10 +1,10 @@
 <?php
 
-
 namespace Arris\System;
 
+use Arris\DBQueryBuilderInterface;
 
-class DBQueryBuilder
+class DBQueryBuilder implements DBQueryBuilderInterface
 {
     /**
      * @var string
@@ -193,3 +193,5 @@ class DBQueryBuilder
 
 
 }
+
+# -eof-
