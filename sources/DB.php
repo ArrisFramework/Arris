@@ -19,9 +19,43 @@ interface DBConnectionInterface
 {
     const MYSQL_ERROR_DUPLICATE_ENTRY = 1062;
 
+    /**
+     * Predicted (early) initialization
+     *
+     * @param $suffix
+     * @param $config
+     * $config must have fields:
+     *  'driver' (default mysql)
+     *  'hostname' (default localhost)
+     *  'database' (default mysql)
+     *  'username' (default root)
+     *  'password' (default empty)
+     *  'port' (default 3306)
+     *
+     * optional:
+     *  'charset'
+     *  'charset_collate'
+     * @param Logger|null $logger
+     * @throws \Exception
+     */
     public static function init($suffix, $config, Logger $logger = null);
 
+    /**
+     * Get PDO connection
+     *
+     * @param null $suffix
+     * @return \PDO
+     * @throws \Exception
+     */
     public static function getConnection($suffix = NULL): \PDO;
+
+    /**
+     * Alias for get PDO connection
+     *
+     * @param null $suffix
+     * @return \PDO
+     * @throws \Exception
+     */
     public static function C($suffix = NULL): \PDO;
 
     public static function query($query, $suffix = NULL);
@@ -37,14 +71,11 @@ interface DBConnectionInterface
     public static function makeUpdateQuery($tablename, &$dataset, $where_condition = ''):string;
 
     public static function getRowCount($table, $suffix = NULL):int;
-    public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL):int;
 
     public static function getTablePrefix($suffix = NULL):string;
     public static function getInstance($suffix = NULL):\PDO;
 
     public static function getLastInsertId($suffix = NULL):int;
-
-    public static function checkTableExists($table = '', $suffix = NULL):bool;
 
     public static function getConfig($suffix = NULL): array;
     public static function setConfig(array $config, $suffix = NULL);
@@ -104,7 +135,8 @@ class DB implements DBConnectionInterface
             $db_port = $config['port'] ?? 3306;
 
             switch ($db_driver) {
-                case 'mysql': {
+                case 'mysql':
+                {
                     $dsl = sprintf("mysql:host=%s;port=%s;dbname=%s",
                         $db_host,
                         $db_port,
@@ -113,7 +145,8 @@ class DB implements DBConnectionInterface
 
                     break;
                 }
-                case 'pgsql': {
+                case 'pgsql':
+                {
                     $dsl = sprintf("pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
                         $db_host,
                         $db_port,
@@ -124,12 +157,14 @@ class DB implements DBConnectionInterface
                     $dbh = new \PDO($dsl);
                     break;
                 }
-                case 'sqlite': {
+                case 'sqlite':
+                {
                     $dsl = sprintf("sqlite:%s", realpath($db_host));
                     $dbh = new \PDO($dsl);
                     break;
                 }
-                default: {
+                default:
+                {
                     throw new \Exception('Unknown database driver : ' . $db_driver);
                     break;
                 }
@@ -153,7 +188,7 @@ class DB implements DBConnectionInterface
             $message = "Unable to connect `{$dsl}`, PDO CONNECTION ERROR: " . $e->getMessage() . "\r\n" . PHP_EOL;
 
             if ($logger instanceof Logger) {
-                $logger->emergency("Unable to connect DSL `{$dsl}`, PDO Connection error", [ $e->getMessage() , $e->getCode()] );
+                $logger->emergency("Unable to connect DSL `{$dsl}`, PDO Connection error", [$e->getMessage(), $e->getCode()]);
             }
 
             $connection_state->setState(TRUE, $message, $e->getCode());
@@ -164,7 +199,7 @@ class DB implements DBConnectionInterface
             self::$_configs[$config_key] = NULL;
 
             if ($logger instanceof Logger) {
-                $logger->emergency("Arris\\DB ERROR: ", [ $e->getMessage() , $e->getCode()] );
+                $logger->emergency("Arris\\DB ERROR: ", [$e->getMessage(), $e->getCode()]);
             }
         }
 
@@ -175,31 +210,11 @@ class DB implements DBConnectionInterface
         self::$_configs[$config_key] = $config;
     }
 
-    /**
-     * Predicted (early) initialization
-     *
-     * @param $suffix
-     * @param $config
-     * $config must have fields:
-     *  'driver' (default mysql)
-     *  'hostname' (default localhost)
-     *  'database' (default mysql)
-     *  'username' (default root)
-     *  'password' (default empty)
-     *  'port' (default 3306)
-     *
-     * optional:
-     *  'charset'
-     *  'charset_collate'
-
-     * @param Logger|null $logger
-     * @throws \Exception
-     */
     public static function init($suffix, $config, Logger $logger = null)
     {
         $config_key = self::getKey($suffix);
 
-        if (!is_array($config) || empty($config) ) {
+        if (!is_array($config) || empty($config)) {
             $message = __METHOD__
                 . ' can\'t use given data: '
                 . PHP_EOL . var_export($config, true) . PHP_EOL
@@ -213,13 +228,13 @@ class DB implements DBConnectionInterface
             throw new \Exception($message);
         }
 
-        self::$_loggers[ $config_key ]
+        self::$_loggers[$config_key]
             = $logger instanceof Logger
             ? $logger
             : (new Logger('null'))->pushHandler(new \Monolog\Handler\NullHandler());
 
         self::setConfig($config, $suffix);
-        self::$_instances[ $config_key ] = (new self($suffix))->getInstance($suffix);
+        self::$_instances[$config_key] = (new self($suffix))->getInstance($suffix);
     }
 
     /**
@@ -256,24 +271,11 @@ class DB implements DBConnectionInterface
         self::$_configs[$config_key] = $config;
     }
 
-    /**
-     * Alias: get PDO connection
-     *
-     * @param null $suffix
-     * @return \PDO
-     * @throws \Exception
-     */
     public static function getConnection($suffix = NULL): \PDO
     {
         return self::getInstance($suffix);
     }
 
-
-    /**
-     * @param null $suffix
-     * @return \PDO
-     * @throws \Exception
-     */
     public static function C($suffix = NULL): \PDO
     {
         return self::getConnection($suffix);
@@ -318,15 +320,15 @@ class DB implements DBConnectionInterface
      * @return \PDO
      * @throws \Exception
      */
-    public static function getInstance($suffix = NULL):\PDO
+    public static function getInstance($suffix = NULL): \PDO
     {
         $key = self::getKey($suffix);
         if (self::checkInstance($suffix)) {
-            return self::$_instances[ $key ];
+            return self::$_instances[$key];
         }
 
         new self($suffix);
-        return self::$_instances[ $key ];
+        return self::$_instances[$key];
     }
 
     /**
@@ -335,27 +337,30 @@ class DB implements DBConnectionInterface
      * @param null $suffix
      * @return null|string
      */
-    public static function getTablePrefix($suffix = NULL):string
+    public static function getTablePrefix($suffix = NULL): string
     {
         if (!self::checkInstance($suffix)) return NULL;
 
         $config_key = self::getKey($suffix);
 
         return
-            array_key_exists('table_prefix', self::$_configs[$config_key] )
+            array_key_exists('table_prefix', self::$_configs[$config_key])
                 ? self::$_configs[$config_key]['table_prefix']
                 : '';
     }
 
 
     /**
+     * Выполняет Query-запрос
+     *
      * @param $query
      * @param null $suffix
-     * @return bool|false|\PDOStatement
+     * @return false|\PDOStatement
+     * @throws \Exception
      */
     public static function query($query, $suffix = NULL)
     {
-        return DB::getConnection($suffix)->query($query);
+        return DB::C($suffix)->query($query);
     }
 
     /**
@@ -365,8 +370,9 @@ class DB implements DBConnectionInterface
      * @param string $field
      * @param $id
      * @return int
+     * @throws \Exception
      */
-    public static function queryDeleteRow(string $table, string $field, $id):int
+    public static function queryDeleteRow(string $table, string $field, $id): int
     {
         if (empty($table) or empty($field) or empty($id)) return false;
 
@@ -379,9 +385,10 @@ class DB implements DBConnectionInterface
      *
      * @param $table
      * @param null $suffix
-     * @return mixed|null
+     * @return int
+     * @throws \Exception
      */
-    public static function getRowCount($table, $suffix = NULL):int
+    public static function getRowCount($table, $suffix = NULL): int
     {
         if ($table == '') return null;
         $sth = self::getConnection($suffix)->query("SELECT COUNT(*) AS cnt FROM {$table}");
@@ -390,28 +397,19 @@ class DB implements DBConnectionInterface
     }
 
     /**
-     * Conditional getRowCount()
-     * Аналог rowcound, только дает возможность выбрать поле выборки и условие
+     * Возвращает инстанс враппера для указанного соединения и устанавливает текущее соединение.
      *
-     * @param $table
-     * @param string $field
-     * @param string $condition
      * @param null $suffix
-     * @return mixed|null
+     * @return mixed
      */
-    public static function getRowCountConditional($table, $field = '*', $condition = '', $suffix = NULL):int
+    public static function I($suffix = NULL)
     {
-        if ($table === '') return null;
-
-        $where = ($condition !== '') ? " WHERE {$condition} " : '';
-        $field = ($field !== '*') ? "`{$field}`" : "*";
-
-        $query = "SELECT COUNT({$field}) AS rowcount FROM {$table} {$where}";
-
-        $sth = self::getConnection($suffix)->query($query);
-
-        return ($sth) ? $sth->fetchColumn() : null;
+        $key = self::getKey($suffix);
+        self::$_current_connection = $key;
+        return self::$_instances[ $key ];
     }
+
+
 
     /**
      * get Last Insert ID
@@ -424,57 +422,7 @@ class DB implements DBConnectionInterface
         return self::getConnection($suffix)->lastInsertId();
     }
 
-    /**
-     * + Проверяет существование таблицы в БД
-     *
-     * @param string $table
-     * @param null $suffix
-     * @return bool
-     * @throws \Exception
-     */
-    public static function checkTableExists($table = '', $suffix = NULL):bool
-    {
-        if (empty($table)) throw new \Exception(__CLASS__ . "::" . __METHOD__ . " -> table param empty");
 
-        $db_settings = self::getConfig($suffix);
-
-        switch ($db_settings['driver']) {
-            case 'mysql': {
-                $query = "SELECT * FROM information_schema.tables WHERE table_name LIKE ':table' AND table_schema LIKE ':database' LIMIT 1 ";
-
-                $state = self::getConnection($suffix)->prepare($query);
-                $state->execute(["table" => $table, 'database'  =>  $db_settings['database']]);
-                $result = $state->fetchColumn(2);
-
-                break;
-            }
-            case 'pgsql': {
-                $query = "SELECT count(*) FROM pg_catalog.pg_tables WHERE tablename LIKE ':table' AND tableowner LIKE ':database'";
-
-                $state = self::getConnection($suffix)->prepare($query);
-                $state->execute(["table" => $table, 'database'  =>  $db_settings['database']]);
-                $result = $state->fetchColumn(2);
-
-                break;
-            }
-            case 'sqlite': {
-                $query = "SELECT name FROM sqlite_master WHERE type='table' AND name=':table' ";
-
-                $state = self::getConnection($suffix)->prepare($query);
-                $state->execute(["table" => $table ]);
-                $result = $state->fetchColumn(1);
-
-                break;
-            }
-            default: {
-                throw new \Exception('Unknown DB driver ' . $db_settings['driver']);
-                break;
-            }
-        }
-
-        if ($result && ($result === $table)) return true;
-        return false;
-    }
 
     /**
      * Строит INSERT-запрос на основе массива данных для указанной таблицы.

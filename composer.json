@@ -34,7 +34,7 @@
           "functions/helpers.php"
         ],
         "psr-4": {
-            "Arris\\"           : "sources"
+            "Arris\\"           : ["interfaces"]
         }
     }
 }
