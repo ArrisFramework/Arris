@@ -35,6 +35,12 @@ try {
 
     AppLogger::scope('usage')->debug('Usage', [0, 1, 2]);
 
+    AppLogger::scope('mysql')->emergency('MYSQL EMERGENCY');
+
+    AppLogger::scope('usage')->emergency('EMERGENCY USAGE');
+
+
+
 } catch (Exception $e) {
     var_dump($e->getMessage());
 }

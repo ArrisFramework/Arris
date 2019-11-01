@@ -27,6 +27,11 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
     private static $DEBUG = true;
 
     /**
+     * @var array $_instances \Monolog
+     */
+    public static $_instances = [];
+
+    /**
      * @var array
      */
     public static $_global_config = [];
@@ -40,16 +45,6 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
      * @var string
      */
     private static $instance;
-
-    /**
-     * @var string $app_instance
-     */
-    private static $app_instance;
-
-    /**
-     * @var array $_instances \Monolog
-     */
-    public static $_instances = [];
 
     /**
      * @var array
