@@ -39,6 +39,8 @@ class DB implements DBConnectionInterface
      */
     private static $_loggers = [];
 
+    public static $_db_requests_count = 0;
+
     /**
      * DB constructor.
      * @param $suffix
@@ -203,6 +205,7 @@ class DB implements DBConnectionInterface
 
     public static function getConnection($suffix = NULL): \PDO
     {
+        self::$_db_requests_count++;
         return self::getInstance($suffix);
     }
 
