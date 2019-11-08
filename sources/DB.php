@@ -39,7 +39,11 @@ class DB implements DBConnectionInterface
      */
     private static $_loggers = [];
 
+    private static $_collect_metrics = false;
+
     public static $_db_requests_count = 0;
+
+    public static $_db_requests_time = 0;
 
     /**
      * DB constructor.
@@ -142,9 +146,11 @@ class DB implements DBConnectionInterface
         self::$_configs[$config_key] = $config;
     }
 
-    public static function init($suffix, $config, Logger $logger = null)
+    public static function init($suffix, $config, Logger $logger = null, array $options = [])
     {
         $config_key = self::getKey($suffix);
+
+        self::$_collect_metrics = array_key_exists('collect_time', $options) && $options['collect_time'];
 
         if (!is_array($config) || empty($config)) {
             $message = __METHOD__
@@ -167,6 +173,19 @@ class DB implements DBConnectionInterface
 
         self::setConfig($config, $suffix);
         self::$_instances[$config_key] = (new self($suffix))->getInstance($suffix);
+    }
+
+    /**
+     * Отладочный метод, возвращает метрики использования
+     *
+     * @return array
+     */
+    public static function getMetrics()
+    {
+        return [
+            'count' =>  self::$_db_requests_count,
+            'time'  =>  self::$_db_requests_time
+        ];
     }
 
     /**

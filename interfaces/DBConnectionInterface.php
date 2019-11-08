@@ -16,9 +16,11 @@ interface DBConnectionInterface
     /**
      * Predicted (early) initialization
      *
+     *
      * @param $suffix
      * @param $config
      * $config must have fields:
+     * <code>
      *  'driver' (default mysql)
      *  'hostname' (default localhost)
      *  'database' (default mysql)
@@ -29,10 +31,13 @@ interface DBConnectionInterface
      * optional:
      *  'charset'
      *  'charset_collate'
+     * </code>
      * @param Logger|null $logger
+     * @param $options - options [optional]: 'collect_time' => false|true, 'collect_query => true
+     *
      * @throws \Exception
      */
-    public static function init($suffix, $config, Logger $logger = null);
+    public static function init($suffix, $config, Logger $logger = null, array $options = []);
 
     /**
      * Get PDO connection
