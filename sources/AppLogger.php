@@ -34,7 +34,17 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
     /**
      * @var array
      */
-    public static $_global_config = [];
+    public static $_global_config = [
+        'bubbling'                      =>  false,
+        'default_logfile_path'          =>  '',
+        'default_log_level'             =>  Logger::DEBUG,
+        'default_logfile_prefix'        =>  '',
+        'default_log_file'              =>  self::DEFAULT_LOG_FILENAME,
+        'default_handler'               =>  StreamHandler::class,
+        'add_scope_to_log'              =>  false,
+        'deferred_scope_creation'       =>  true,
+        'deferred_scope_separate_files' =>  true
+    ];
 
     /**
      * @var string
@@ -58,15 +68,15 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
 
         // Всплывание лога
         self::$_global_config['bubbling']
-            = setOption($options, 'bubbling', null, false);
+            = setLocalOption($options, 'bubbling', false);
 
         // Уровень логгирования по умолчанию
         self::$_global_config['default_log_level']
-            = setOption($options, 'default_log_level', null, Logger::DEBUG);
+            = setLocalOption($options, 'default_log_level', Logger::DEBUG);
 
         // дефолтные значения для всего AppLogger
         self::$_global_config['default_logfile_path']
-            = setOption($options, 'default_logfile_path', null, '');
+            = setLocalOption($options, 'default_logfile_path', '');
 
         if (!empty(self::$_global_config['default_logfile_path'])) {
             self::$_global_config['default_logfile_path']
@@ -74,24 +84,24 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
         }
 
         self::$_global_config['default_logfile_prefix']
-            = setOption($options, 'default_logfile_prefix', null, '');
+            = setLocalOption($options, 'default_logfile_prefix', '');
 
         self::$_global_config['default_log_file']
-            = setOption($options, 'default_log_file', null, self::DEFAULT_LOG_FILENAME);
+            = setLocalOption($options, 'default_log_file', self::DEFAULT_LOG_FILENAME);
 
         self::$_global_config['default_handler']
-            = setOption($options, 'handler', null, StreamHandler::class);
+            = setLocalOption($options, 'handler', StreamHandler::class);
 
         // добавлять ли скоуп к имени логгера в файле лога
         self::$_global_config['add_scope_to_log']
-            = setOption($options, 'add_scope_to_log', null, false);
+            = setLocalOption($options, 'add_scope_to_log', false);
 
         // опции Deferred-скоупов
         self::$_global_config['deferred_scope_creation']
-            = setOption($options, 'deferred_scope_creation', null, true);
+            = setLocalOption($options, 'deferred_scope_creation', true);
 
         self::$_global_config['deferred_scope_separate_files']
-            = setOption($options, 'deferred_scope_separate_files', null, true);
+            = setLocalOption($options, 'deferred_scope_separate_files', true);
     }
 
     public static function addScope($scope = null, $scope_levels = [], $scope_logging_enabled = true, $is_deferred_scope = false)
