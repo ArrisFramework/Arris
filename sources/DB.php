@@ -361,13 +361,12 @@ class DB implements DBConnectionInterface
         return self::$_instances[ $key ];
     }
 
-
-
     /**
      * get Last Insert ID
      *
      * @param null $suffix
      * @return int
+     * @throws \Exception
      */
     public static function getLastInsertId($suffix = NULL):int
     {

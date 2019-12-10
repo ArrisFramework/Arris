@@ -5,6 +5,8 @@ namespace Arris;
 interface ArrisFunctionsInterface {
 
     function setOption(array $options, $key, $env_key = null, $default_value = '');
+    function setLocalOption(array $options, $key, $default_value = null);
+
     function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL );
 
     function mb_trim_text($input, $length, $ellipses = true, $strip_html = true, $ellipses_text = '...'):string;

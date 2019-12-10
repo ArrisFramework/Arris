@@ -122,6 +122,7 @@ class CLIConsole implements CLIConsoleInterface
 
         if ($breakline === TRUE) $message .= PHP_EOL;
         echo $message;
+        return $message;
     }
 
     public static function echo_status($message = "", $breakline = TRUE)
@@ -132,6 +133,7 @@ class CLIConsole implements CLIConsoleInterface
             if ($breakline === TRUE) $message .= PHP_EOL . "<br/>\r\n";
             echo $message;
         }
+        return $message;
     }
 
 
