@@ -4,8 +4,8 @@ namespace Arris;
 
 interface ArrisFunctionsInterface {
 
-    function setOption(array $options, $key, $env_key = null, $default_value = '');
-    function setLocalOption(array $options, $key, $default_value = null);
+    function setOptionEnv(array $options, $key, $env_key = null, $default_value = '');
+    function setOption(array $options, $key, $default_value = null);
 
     function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL );
 
@@ -44,8 +44,7 @@ if (!function_exists('Arris\checkAllowedValue')) {
     }
 }
 
-if (!function_exists('Arris\setOption')) {
-
+if (!function_exists('Arris\setOptionEnv')) {
     /**
      * use:
      *
@@ -63,7 +62,7 @@ if (!function_exists('Arris\setOption')) {
      * @param string $default_value
      * @return string
      */
-    function setOption(array $options, $key, $env_key = null, $default_value = '')
+    function setOptionEnv(array $options, $key, $env_key = null, $default_value = '')
     {
         if (empty($options) || is_null($key) || !array_key_exists($key, $options)) {
             if (is_null($env_key)) {
@@ -79,16 +78,10 @@ if (!function_exists('Arris\setOption')) {
     }
 }
 
-if (!function_exists('Arris\setLocalOption')) {
-    /**
-     * @param array $options
-     * @param $key
-     * @param null $default_value
-     * @return mixed
-     */
-    function setLocalOption(array $options, $key, $default_value = null)
+if (!function_exists('Arris\setOption')) {
+    function setOption(array $options, $key, $default_value = null)
     {
-        return array_key_exists($key, $options) ? $options[$key] : null;
+        return array_key_exists($key, $options) ? $options[$key] : $default_value;
     }
 }
 

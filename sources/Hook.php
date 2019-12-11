@@ -24,7 +24,8 @@ class Hook implements HookInterface
         self::$emitter->on($eventName, $callBack, $priority);
     }
 
-    public static function run(string $eventName, array $arguments = [], callable $continueCallBack = null):bool {
+    public static function run(string $eventName, array $arguments = [], callable $continueCallBack = null):bool
+    {
         return self::$emitter->emit($eventName, $arguments, $continueCallBack);
     }
 

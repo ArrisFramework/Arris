@@ -24,8 +24,6 @@ use \Monolog\Handler\NullHandler;
  */
 class AppLogger implements AppLoggerInterface, AppLoggerConstants
 {
-    private static $DEBUG = true;
-
     /**
      * @var array $_instances \Monolog
      */
@@ -68,15 +66,15 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
 
         // Всплывание лога
         self::$_global_config['bubbling']
-            = setLocalOption($options, 'bubbling', false);
+            = setOption($options, 'bubbling', false);
 
         // Уровень логгирования по умолчанию
         self::$_global_config['default_log_level']
-            = setLocalOption($options, 'default_log_level', Logger::DEBUG);
+            = setOption($options, 'default_log_level', Logger::DEBUG);
 
         // дефолтные значения для всего AppLogger
         self::$_global_config['default_logfile_path']
-            = setLocalOption($options, 'default_logfile_path', '');
+            = setOption($options, 'default_logfile_path', '');
 
         if (!empty(self::$_global_config['default_logfile_path'])) {
             self::$_global_config['default_logfile_path']
@@ -84,24 +82,24 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
         }
 
         self::$_global_config['default_logfile_prefix']
-            = setLocalOption($options, 'default_logfile_prefix', '');
+            = setOption($options, 'default_logfile_prefix', '');
 
         self::$_global_config['default_log_file']
-            = setLocalOption($options, 'default_log_file', self::DEFAULT_LOG_FILENAME);
+            = setOption($options, 'default_log_file', self::DEFAULT_LOG_FILENAME);
 
         self::$_global_config['default_handler']
-            = setLocalOption($options, 'handler', StreamHandler::class);
+            = setOption($options, 'handler', StreamHandler::class);
 
         // добавлять ли скоуп к имени логгера в файле лога
         self::$_global_config['add_scope_to_log']
-            = setLocalOption($options, 'add_scope_to_log', false);
+            = setOption($options, 'add_scope_to_log', false);
 
         // опции Deferred-скоупов
         self::$_global_config['deferred_scope_creation']
-            = setLocalOption($options, 'deferred_scope_creation', true);
+            = setOption($options, 'deferred_scope_creation', true);
 
         self::$_global_config['deferred_scope_separate_files']
-            = setLocalOption($options, 'deferred_scope_separate_files', true);
+            = setOption($options, 'deferred_scope_separate_files', true);
     }
 
     public static function addScope($scope = null, $scope_levels = [], $scope_logging_enabled = true, $is_deferred_scope = false)
@@ -118,14 +116,14 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
             $logger = new Logger($logger_name);
 
             foreach ($scope_levels as $level) {
-                $filename = self::createLoggerFilename($scope, $level, $is_deferred_scope); // нужно как-то сообщить, что это создается DeferredScope
+                $filename = self::createLoggerFilename($scope, $level, $is_deferred_scope);
 
                 $loglevel = $level[ self::addScope_OPTION_LOGLEVEL ] ?? self::$_global_config['default_log_level'];
 
                 $level_options = array(
-                    'enable'    =>  setLocalOption($level, 'enable', $scope_logging_enabled),
-                    'bubbling'  =>  setLocalOption($level, 'bubbling', self::$_global_config['bubbling']),
-                    'handler'   =>  setLocalOption($level, 'handler', StreamHandler::class)
+                    'enable'    =>  setOption($level, 'enable', $scope_logging_enabled),
+                    'bubbling'  =>  setOption($level, 'bubbling', self::$_global_config['bubbling']),
+                    'handler'   =>  setOption($level, 'handler', StreamHandler::class)
                 );
 
                 // NullHandler если логгер так или иначе отключен
@@ -282,10 +280,6 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
 
         // если мы генерим имя файла для DeferredScope - префикс имени файла = scope, иначе ''
         // определить это мы вызовом метода не можем, придется передавать параметром
-        // хотя...
-        // $scope_key = self::getScopeKey($scope);
-        // $is_deferred = array_key_exists($scope_key, self::$_configs) && array_key_exists($level[ self::addScope_OPTION_LOGLEVEL ], self::$_configs[ $scope_key ]);
-        // нет, этот способ не работает, передавать придется прямо
 
         // вообще, проверим, пишется ли deferred-лог в разные файлы?
         $is_deferred = $is_deferred && self::$_global_config['deferred_scope_separate_files'];

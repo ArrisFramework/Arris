@@ -9,6 +9,7 @@
 
 namespace Arris;
 
+use Arris\System\AppStateHandler;
 use Arris\System\DBQueryBuilder;
 use Monolog\Logger;
 

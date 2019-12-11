@@ -31,8 +31,9 @@ class TimerStats implements TimerStatsInterface
     {
         $name = self::getTimerInternalName($name);
 
-        if (\array_key_exists($name, self::$timers))
+        if (\array_key_exists($name, self::$timers)) {
             unset( self::$timers[ $name ]);
+        }
 
         self::$timers[ $name ] = array(
             'name'      =>  $name,

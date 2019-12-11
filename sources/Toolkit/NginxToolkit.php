@@ -39,6 +39,17 @@ class NginxToolkit implements NginxToolkitInterface
      */
     private static $is_using_cache;
 
+    /**
+     * @param array $options
+     * - isLogging      ->env(NGINX.LOG_CACHE_CLEANING) ->default(false)
+     * - isUseCache     ->env(NGINX.CACHE_USE)          ->default(false)-
+     * - cache_root     ->env(NGINX.CACHE_PATH)         ->required()
+     * - cache_levels   ->env(NGINX.CACHE_LEVELS)       ->default('1:2')
+     * - cache_key_format env(NGINX.CACHE_KEY_FORMAT)   ->default('GET|||HOST|PATH')
+     *
+     * @param null $logger
+     * @throws \Exception
+     */
     public static function init($options = [], $logger = null)
     {
         if ($logger instanceof \Monolog\Logger) {
@@ -47,20 +58,20 @@ class NginxToolkit implements NginxToolkitInterface
             self::$LOGGER = AppLogger::addNullLogger();
         }
 
-        self::$is_logging = setOption($options, 'isLogging', 'NGINX.LOG_CACHE_CLEANING', false);
+        self::$is_logging = setOption($options, 'isLogging', false);
 
-        self::$is_using_cache = setOption($options, 'isUseCache', 'NGINX.CACHE_USE', false);
+        self::$is_using_cache = setOption($options, 'isUseCache', false);
 
-        self::$nginx_cache_root = setOption($options, 'cache_root', 'NGINX.CACHE_PATH');
-        self::$nginx_cache_root = rtrim(self::$nginx_cache_root, DIRECTORY_SEPARATOR);
-        if (empty(self::$nginx_cache_root)) {
-            throw new \Exception(__METHOD__ . ' throws error, NGINX.CACHE_PATH is empty');
+        self::$nginx_cache_root = setOption($options, 'cache_root', null);
+        if (is_null(self::$nginx_cache_root)) {
+            throw new \Exception(__METHOD__ . ': required option `cache_root` not defined!');
         }
+        self::$nginx_cache_root = rtrim(self::$nginx_cache_root, DIRECTORY_SEPARATOR);
 
-        self::$nginx_cache_levels = setOption($options, 'cache_levels', 'NGINX.CACHE_LEVELS', '1:2');
+        self::$nginx_cache_levels = setOption($options, 'cache_levels', '1:2');
         self::$nginx_cache_levels = explode(':', self::$nginx_cache_levels);
 
-        self::$nginx_cache_key = setOption($options, 'cache_key_format', 'NGINX.CACHE_KEY_FORMAT', 'GET|||HOST|PATH');
+        self::$nginx_cache_key = setOption($options, 'cache_key_format', 'GET|||HOST|PATH');
     }
 
     public static function clear_nginx_cache(string $url)
@@ -102,7 +113,6 @@ class NginxToolkit implements NginxToolkitInterface
         if (file_exists($cache_filepath)) {
             self::$LOGGER->info("NGINX Cache Force Cleaner: cached data present: ", [ $cache_filepath ]);
             $unlink_status = unlink($cache_filepath);
-
         } else {
             self::$LOGGER->info("NGINX Cache Force Cleaner: cached data not found: ", [ $cache_filepath ]);
             $unlink_status = true;

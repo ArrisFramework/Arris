@@ -1,9 +1,12 @@
 <?php
 
-namespace Arris;
+namespace Arris\System;
 
 /**
  * Class Option
+ *
+ * @todo: реализовать флаг $is_required для метода ->key()
+ * @todo: https://en.wikipedia.org/wiki/Fluent_interface
  *
  * @package Arris
  */
@@ -61,22 +64,32 @@ class Option
      * @param $key
      * @return mixed
      */
-    public static function key($key)
+    public static function key($key, bool $is_required = false)
     {
         self::$_key = $key;
 
+        $result = null;
+
         if (empty(self::$_options) || is_null(self::$_key)) {
             if (is_null(self::$_env)) {
-                return self::$_default;
+                $result = self::$_default;
+            } else {
+                $result = getenv(self::$_env);
             }
-            return getenv(self::$_env);
         } elseif (array_key_exists(self::$_key, self::$_options)) {
-            return self::$_options[self::$_key];
+            $result = self::$_options[self::$_key];
         } elseif (!is_null(self::$_env)) {
-            return getenv(self::$_env);
+            $result = getenv(self::$_env);
         } else {
-            return self::$_default;
+            $result = self::$_default;
         }
+
+        self::$_options = null;
+        self::$_key = null;
+        self::$_env = null;
+        self::$_default = null;
+
+        return $result;
     }
 
 }

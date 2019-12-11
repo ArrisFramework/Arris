@@ -47,23 +47,23 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
     public function setRebuildIndexOptions(array $options = []):array
     {
         // на самом деле разворачиваем опции с установкой дефолтов
-        $this->rai_options['chunk_length'] = setOption($options, 'chunk_length', null, 500);
+        $this->rai_options['chunk_length'] = setOption($options, 'chunk_length', 500);
 
-        $this->rai_options['log_rows_inside_chunk'] = setOption($options, 'log_rows_inside_chunk', null, true);
-        $this->rai_options['log_total_rows_found'] = setOption($options, 'log_total_rows_found', null, true);
+        $this->rai_options['log_rows_inside_chunk'] = setOption($options, 'log_rows_inside_chunk', true);
+        $this->rai_options['log_total_rows_found'] = setOption($options, 'log_total_rows_found', true);
 
-        $this->rai_options['log_before_chunk'] = setOption($options, 'log_before_chunk', null, true);
-        $this->rai_options['log_after_chunk'] = setOption($options, 'log_after_chunk', null, true);
+        $this->rai_options['log_before_chunk'] = setOption($options, 'log_before_chunk', true);
+        $this->rai_options['log_after_chunk'] = setOption($options, 'log_after_chunk', true);
 
-        $this->rai_options['sleep_after_chunk'] = setOption($options, 'sleep_after_chunk', null, true);
+        $this->rai_options['sleep_after_chunk'] = setOption($options, 'sleep_after_chunk', true);
 
-        $this->rai_options['sleep_time'] = setOption($options, 'sleep_time', null, 1);
+        $this->rai_options['sleep_time'] = setOption($options, 'sleep_time', 1);
         if ($this->rai_options['sleep_time'] == 0) {
             $this->rai_options['sleep_after_chunk'] = false;
         }
 
-        $this->rai_options['log_before_index'] = setOption($options, 'log_before_index', null, true);
-        $this->rai_options['log_after_index'] = setOption($options, 'log_after_index', null, true);
+        $this->rai_options['log_before_index'] = setOption($options, 'log_before_index', true);
+        $this->rai_options['log_after_index'] = setOption($options, 'log_after_index', true);
 
         return $this->rai_options;
     } // setRebuildIndexOptions
@@ -93,17 +93,17 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
         $total_updated = 0;
 
         if ($this->rai_options['log_before_index'])
-            CLIConsole::echo_status("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
+            CLIConsole::say("<font color='yellow'>[{$sphinx_index}]</font> index : ", false);
 
         if ($this->rai_options['log_total_rows_found'])
-            CLIConsole::echo_status("<font color='green'>{$total_count}</font> elements found for rebuild.");
+            CLIConsole::say("<font color='green'>{$total_count}</font> elements found for rebuild.");
 
         // iterate chunks
         for ($i = 0; $i < ceil($total_count / $chunk_size); $i++) {
             $offset = $i * $chunk_size;
 
             if ($this->rai_options['log_before_chunk'])
-                CLIConsole::echo_status("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
+                CLIConsole::say("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
 
             $query_chunk_data = "SELECT * FROM {$mysql_table} ";
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
@@ -114,7 +114,7 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
             // iterate inside chunk
             while ($item = $sth->fetch()) {
                 if ($this->rai_options['log_rows_inside_chunk'])
-                    CLIConsole::echo_status("{$mysql_table}: {$item['id']}");
+                    CLIConsole::say("{$mysql_table}: {$item['id']}");
 
                 $update_set = $make_updateset_method($item);
 
@@ -128,19 +128,19 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
             $breakline_after_chunk = !$this->rai_options['sleep_after_chunk'];
 
             if ($this->rai_options['log_after_chunk']) {
-                CLIConsole::echo_status("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
+                CLIConsole::say("Updated RT-index <font color='yellow'>{$sphinx_index}</font>.", $breakline_after_chunk);
             } else {
-                CLIConsole::echo_status("<strong>Ok</strong>", $breakline_after_chunk);
+                CLIConsole::say("<strong>Ok</strong>", $breakline_after_chunk);
             }
 
             if ($this->rai_options['sleep_after_chunk']) {
-                CLIConsole::echo_status("ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
+                CLIConsole::say("ZZZZzzz for {$this->rai_options['sleep_time']} second(s)... ", FALSE);
                 sleep($this->rai_options['sleep_time']);
-                CLIConsole::echo_status("I woke up!");
+                CLIConsole::say("I woke up!");
             }
         } // for
         if ($this->rai_options['log_after_index'])
-            CLIConsole::echo_status("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
+            CLIConsole::say("Total updated <strong>{$total_updated}</strong> elements for <font color='yellow'>{$sphinx_index}</font> RT-index. <br>");
 
         return $total_updated;
     } // rebuildAbstractIndex
@@ -314,24 +314,24 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
     {
         $opts = [
             // Строка, вставляемая перед ключевым словом. По умолчанию "<strong>".
-            'before_match'  =>  setOption($options, 'before_match', null, '<strong>'),
+            'before_match'  =>  setOption($options, 'before_match', '<strong>'),
 
             // Строка, вставляемая после ключевого слова. По умолчанию "</strong>".
-            'after_match'   =>  setOption($options, 'after_match', null, '</strong>'),
+            'after_match'   =>  setOption($options, 'after_match', '</strong>'),
             // Строка, вставляемая между частями фрагмента. по умолчанию "...".
             'chunk_separator' => '...',
 
             // НЕ РЕАЛИЗОВАНО: Максимальный размер фрагмента в символах. Integer, по умолчанию 256.
-            'limit'         =>  setOption($options, 'limit', null, 256),
+            'limit'         =>  setOption($options, 'limit', 256),
 
             // НЕ РЕАЛИЗОВАНО: Сколько слов необходимо выбрать вокруг каждого совпадающего с ключевыми словами блока. Integer, по умолчанию 5.
-            'around'         =>  setOption($options, 'around', null, 5),
+            'around'         =>  setOption($options, 'around', 5),
 
             // НЕ РЕАЛИЗОВАНО: Необходимо ли подсвечивать только точное совпадение с поисковой фразой, а не отдельные ключевые слова. Boolean, по умолчанию FALSE.
-            'exact_phrase'         =>  setOption($options, 'around', null, null),
+            'exact_phrase'         =>  setOption($options, 'around', null),
 
             // НЕ РЕАЛИЗОВАНО: Необходимо ли извлечь только единичный наиболее подходящий фрагмент. Boolean, по умолчанию FALSE.
-            'single_passage'         =>  setOption($options, 'single_passage', null, null),
+            'single_passage'         =>  setOption($options, 'single_passage', null),
 
         ];
 
@@ -374,23 +374,23 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
         self::$spql_connection_host = $sphinx_connection_host;
         self::$spql_connection_port = $sphinx_connection_port;
 
-        self::$rlo['chunk_length']          = setOption($options, 'chunk_length', null, 500);
+        self::$rlo['chunk_length']          = setOption($options, 'chunk_length', 500);
 
-        self::$rlo['log_rows_inside_chunk'] = setOption($options, 'log_rows_inside_chunk', null, true);
-        self::$rlo['log_total_rows_found']  = setOption($options, 'log_total_rows_found', null, true);
+        self::$rlo['log_rows_inside_chunk'] = setOption($options, 'log_rows_inside_chunk', true);
+        self::$rlo['log_total_rows_found']  = setOption($options, 'log_total_rows_found', true);
 
-        self::$rlo['log_before_chunk']      = setOption($options, 'log_before_chunk', null, true);
-        self::$rlo['log_after_chunk']       = setOption($options, 'log_after_chunk', null, true);
+        self::$rlo['log_before_chunk']      = setOption($options, 'log_before_chunk', true);
+        self::$rlo['log_after_chunk']       = setOption($options, 'log_after_chunk', true);
 
-        self::$rlo['sleep_after_chunk']     = setOption($options, 'sleep_after_chunk', null, true);
+        self::$rlo['sleep_after_chunk']     = setOption($options, 'sleep_after_chunk', true);
 
-        self::$rlo['sleep_time'] = setOption($options, 'sleep_time', null, 1);
+        self::$rlo['sleep_time'] = setOption($options, 'sleep_time', 1);
         if (self::$rlo['sleep_time'] == 0) {
             self::$rlo['sleep_after_chunk'] = false;
         }
 
-        self::$rlo['log_before_index']      = setOption($options, 'log_before_index', null, true);
-        self::$rlo['log_after_index']       = setOption($options, 'log_after_index', null, true);
+        self::$rlo['log_before_index']      = setOption($options, 'log_before_index', true);
+        self::$rlo['log_after_index']       = setOption($options, 'log_after_index', true);
     }
 
     public static function initConnection()

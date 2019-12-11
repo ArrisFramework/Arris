@@ -6,17 +6,17 @@ use Arris\AppLogger;
 use Arris\DB;
 
 $ENV = include '../_env.php';
-$ENV = $ENV['DATABASE'];
+$ENV = $ENV['DB:PGSQL'];
 
 try {
     AppLogger::init('test', 0 );
-    AppLogger::addScope('mysql', [
+    AppLogger::addScope('pgsql', [
         [ '_error.log', \Monolog\Logger::EMERGENCY ]
     ]);
 
-    DB::init(NULL, $ENV, AppLogger::scope('mysql'));
+    DB::init(NULL, $ENV, AppLogger::scope('pgsql'));
 
-    $n = DB::query("SELECT count(*) FROM articles")->fetchColumn();
+    $n = DB::query("SHOW TABLES;")->fetchAll(PDO::FETCH_COLUMN);
 
     var_dump($n);
 
@@ -26,7 +26,3 @@ try {
     echo $e->getTraceAsString();
     die;
 }
-
-// DB::buildQuery()->replace($table)->data($dataset)->where($where)->
-
-
