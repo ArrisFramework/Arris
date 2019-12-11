@@ -183,8 +183,10 @@ if (!function_exists('Arris\array_map_to_integer')) {
      * @param array $input
      * @return array
      */
-    function array_map_to_integer(array $input): array
+    function array_map_to_integer($input): array
     {
+        if (!is_array($input) || empty($input)) return [];
+
         return array_map(function ($i) {
             return intval($i);
         }, $input);

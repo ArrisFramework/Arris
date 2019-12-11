@@ -122,10 +122,10 @@ class DB implements DBConnectionInterface
             $connection_state->setState(FALSE);
 
         } catch (\PDOException $e) {
-            $message = "Unable to connect `{$dsl}`, PDO CONNECTION ERROR: " . $e->getMessage() . "\r\n" . PHP_EOL;
+            $message = "Unable to connect `{$db_driver}:{$db_name}@{$db_host}:{$db_port}`, PDO CONNECTION ERROR: " . $e->getMessage() . "\r\n" . PHP_EOL;
 
             if ($logger instanceof Logger) {
-                $logger->emergency("Unable to connect DSL `{$dsl}`, PDO Connection error", [$e->getMessage(), $e->getCode()]);
+                $logger->emergency("Unable to connect `{$db_driver}:{$db_name}@{$db_host}:{$db_port}`, PDO Connection error", [$e->getMessage(), $e->getCode()]);
             }
 
             $connection_state->setState(TRUE, $message, $e->getCode());
@@ -136,7 +136,7 @@ class DB implements DBConnectionInterface
             self::$_configs[$config_key] = NULL;
 
             if ($logger instanceof Logger) {
-                $logger->emergency("Arris\\DB ERROR: ", [$e->getMessage(), $e->getCode()]);
+                $logger->emergency(__CLASS__ . " Other error: ", [$e->getMessage(), $e->getCode()]);
             }
         }
 
