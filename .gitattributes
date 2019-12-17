@@ -4,9 +4,10 @@
 .git				export-ignore
 .gitattributes      export-ignore
 .gitignore          export-ignore
-/tests              export-ignore
-/vendor             export-ignore
-/docs/_deprecated	export-ignore
-/docs/_todo         export-ignore
-_deprecated         export-ignore
+_env.example.php    export-ignore
+tests               export-ignore
+vendor              export-ignore
+docs                export-ignore
+_deprecated	        export-ignore
+
 

@@ -15,6 +15,8 @@ use Foolz\SphinxQL\Exception\DatabaseException;
 use Foolz\SphinxQL\Helper;
 use Foolz\SphinxQL\SphinxQL;
 
+use PDO;
+use PDOException;
 use function Arris\setOption as setOption;
 use function Arris\mb_trim_text as mb_trim_text;
 use function Arris\mb_str_replace as mb_str_replace;
@@ -69,19 +71,14 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
     } // setRebuildIndexOptions
 
 
-    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int
+    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', bool $use_mva = false, array $mva_indexes_list = []):int
     {
         $mysql_connection = $this->mysql_connection;
         $sphinx_connection = $this->sphinx_connection;
 
-        $this->checkIndexExist($sphinx_index);
-
         // проверяем, существует ли индекс
-        $index_definition = $sphinx_connection->query("SHOW TABLES LIKE '{$sphinx_index}' ")->fetchAll();
-
-        if (count($index_definition) == 0 ) {
-            return -1;
-        }
+        if (!$this->checkIndexExist($sphinx_index))
+            throw new \Exception("`{$sphinx_index}` not present", 1);
 
         $chunk_size = $this->rai_options['chunk_length'];
 
@@ -118,7 +115,11 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
 
                 $update_set = $make_updateset_method($item);
 
-                $update_query = self::buildReplaceQuery($sphinx_index, $update_set);
+                if ($use_mva) {
+                    list($update_query, $update_set) = self::buildReplaceQueryMVA($sphinx_index, $update_set, $mva_indexes_list);
+                } else {
+                    $update_query = self::buildReplaceQuery($sphinx_index, $update_set);
+                }
 
                 $update_statement = $sphinx_connection->prepare($update_query);
                 $update_statement->execute($update_set);
@@ -154,11 +155,8 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
         $chunk_size = $this->rai_options['chunk_length'];
 
         // проверяем, существует ли индекс
-        $index_definition = $sphinx_connection->query("SHOW TABLES LIKE '{$sphinx_index}' ")->fetchAll();
-
-        if (count($index_definition) == 0 ) {
-            return -1;
-        }
+        if (!$this->checkIndexExist($sphinx_index))
+            throw new \Exception("`{$sphinx_index}` not present", 1);
 
         // truncate
         $sphinx_connection->query("TRUNCATE RTINDEX {$sphinx_index} ");
@@ -180,9 +178,9 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
             if ($this->rai_options['log_before_chunk'])
                 CLIConsole::say("Rebuilding elements from <font color='green'>{$offset}</font>, <font color='yellow'>{$chunk_size}</font> count... " , false);
 
-            $query_chunk_data = "SELECT * FROM {$mysql_table} ";
+            $query_chunk_data = " SELECT * FROM {$mysql_table} ";
             $query_chunk_data.= $condition != '' ? " WHERE {$condition} " : '';
-            $query_chunk_data.= "ORDER BY id DESC LIMIT {$offset}, {$chunk_size} ";
+            $query_chunk_data.= " ORDER BY id DESC LIMIT {$offset}, {$chunk_size} ";
 
             $sth = $mysql_connection->query($query_chunk_data);
 
@@ -288,17 +286,18 @@ class SphinxToolkit implements SphinxToolkitMysqliInterface, SphinxToolkitFoolzI
 
 
     /**
-     * @param \PDO $mysql
+     * @param PDO $pdo
      * @param string $table
      * @param string $condition
      * @return int
+     * @throws PDOException
      */
-    private function mysql_GetRowCount(\PDO $mysql, string $table, string $condition)
+    private function mysql_GetRowCount(\PDO $pdo, string $table, string $condition)
     {
         $query = "SELECT COUNT(*) AS cnt FROM {$table}";
         if ($condition != '') $query .= " WHERE {$condition}";
 
-        return $mysql->query($query)->fetchColumn();
+        return $pdo->query($query)->fetchColumn();
     } // mysql_GetRowCount
 
     public function checkIndexExist(string $sphinx_index)

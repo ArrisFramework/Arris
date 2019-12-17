@@ -32,16 +32,21 @@ interface SphinxToolkitMysqliInterface {
     /**
      * Перестраивает RT-индекс
      *
-     * @param string $mysql_table -- SQL-таблица исходник
-     * @param string $sphinx_index -- имя индекса (таблицы)
-     * @param Closure $make_updateset_method - замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
-     * @param string $condition -- условие выборки из исходной таблицы (без WHERE !!!)
-     * @return int -- количество обновленных записей в индексе
+     * @param string $mysql_table               -- SQL-таблица исходник
+     * @param string $sphinx_index              -- имя индекса (таблицы)
+     * @param Closure $make_updateset_method    -- замыкание, анонимная функция, преобразующая исходный набор данных в то, что вставляется в индекс
+     * @param string $condition                 -- условие выборки из исходной таблицы (без WHERE !!!)
+     *
+     * @param bool $use_mva                     -- используются ли MultiValued-атрибуты в наборе данных?
+     * @param array $mva_indexes_list           -- список MVA-индексов, значения которых не нужно биндить через плейсхолдеры
+     *
+     * @return int                              -- количество обновленных записей в индексе
+     * @throws \Exception
      */
-    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = ''):int;
+    public function rebuildAbstractIndex(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', bool $use_mva = false, array $mva_indexes_list = []):int;
 
     /**
-     *
+     * DEPRECATED
      *
      * @param string $mysql_table               -- SQL-таблица исходник
      * @param string $sphinx_index              -- имя индекса (таблицы)
@@ -50,6 +55,7 @@ interface SphinxToolkitMysqliInterface {
      * @param array $mva_indexes_list           -- список MVA-индексов, значения которых не нужно биндить через плейсхолдеры
      *
      * @return int
+     * @throws \Exception
      */
     public function rebuildAbstractIndexMVA(string $mysql_table, string $sphinx_index, Closure $make_updateset_method, string $condition = '', array $mva_indexes_list = []):int;
 

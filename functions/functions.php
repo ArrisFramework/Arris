@@ -22,6 +22,10 @@ interface ArrisFunctionsInterface {
     function pluralForm($number, $forms, string $glue = '|'):string;
 
     function GUID();
+
+    function float_to_fixed_string($value, $separator = '.');
+
+    function reArrangeFilesPOST($file_post);
 }
 
 if (!function_exists('Arris\checkAllowedValue')) {
@@ -329,6 +333,38 @@ if (!function_exists('Arris\GUID')) {
 
     }
 }
+
+// template function
+if (!function_exists('Arris\reArrangeFilesPOST')) {
+    /**
+     *
+     * @param $file_post
+     * @return array
+     */
+    function reArrangeFilesPOST($file_post)
+    {
+        $rearranged_files = [];
+        $file_count = count($file_post['name']);
+        $file_keys = array_keys($file_post);
+
+        for ($i = 0; $i < $file_count; $i++) {
+            foreach ($file_keys as $key) {
+                $rearranged_files[$i][$key] = $file_post[$key][$i];
+            }
+        }
+
+        return $rearranged_files;
+    }
+}
+
+if (!function_exists('Arris\float_to_fixed_string')) {
+    function float_to_fixed_string($value, $separator = '.')
+    {
+        return str_replace(',', $separator, (string)$value);
+    }
+}
+
+
 
 
 // template function
