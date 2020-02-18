@@ -1,6 +1,6 @@
 {
     "name": "karelwintersky/arris",
-    "description": "Karel Wintersky's Classes Collection",
+    "description": "Karel Wintersky's Application microframework",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -9,7 +9,7 @@
             "email": "karel.wintersky@gmail.com"
         }
     ],
-    "keywords": [ "logging", "database", "sphinx", "console", "hooks" ],
+    "keywords": [ "logging", "database", "sphinx", "console", "hooks", "routing" ],
     "config": {
         "optimize-autoloader": true
     },
@@ -25,7 +25,8 @@
         "foolz/sphinxql-query-builder": "^2.0",
         "sabre/event": "^5",
         "cmfcmf/openweathermap-php-api": "^2.4",
-        "php-curl-class/php-curl-class": "^8.6"
+        "php-curl-class/php-curl-class": "^8.6",
+        "nikic/fast-route": "^1.3"
     },
     "autoload": {
         "files": [
