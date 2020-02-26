@@ -69,6 +69,7 @@ class AppRouter
     }
 
     /**
+     * Helper method GET
      *
      * @param $route
      * @param $handler
@@ -84,6 +85,7 @@ class AppRouter
     }
 
     /**
+     * Helper method POST
      *
      * @param $route
      * @param $handler
@@ -99,6 +101,71 @@ class AppRouter
     }
 
     /**
+     * Helper method PUT
+     *
+     * @param $route
+     * @param $handler
+     */
+    public static function put($route, $handler)
+    {
+        self::$rules[] = [
+            'httpMethod'    =>  'PUT',
+            'route'         =>  $route,
+            'handler'       =>  $handler,
+            'namespace'     =>  self::$current_namespace
+        ];
+    }
+
+    /**
+     * Helper method PATCH
+     *
+     * @param $route
+     * @param $handler
+     */
+    public static function patch($route, $handler)
+    {
+        self::$rules[] = [
+            'httpMethod'    =>  'PATCH',
+            'route'         =>  $route,
+            'handler'       =>  $handler,
+            'namespace'     =>  self::$current_namespace
+        ];
+    }
+
+    /**
+     * Helper method DELETE
+     *
+     * @param $route
+     * @param $handler
+     */
+    public static function delete($route, $handler)
+    {
+        self::$rules[] = [
+            'httpMethod'    =>  'DELETE',
+            'route'         =>  $route,
+            'handler'       =>  $handler,
+            'namespace'     =>  self::$current_namespace
+        ];
+    }
+
+    /**
+     * Helper method HEAD
+     *
+     * @param $route
+     * @param $handler
+     */
+    public static function head($route, $handler)
+    {
+        self::$rules[] = [
+            'httpMethod'    =>  'HEAD',
+            'route'         =>  $route,
+            'handler'       =>  $handler,
+            'namespace'     =>  self::$current_namespace
+        ];
+    }
+
+    /**
+     * Add route method
      *
      * @param $httpMethod
      * @param $route
@@ -116,6 +183,12 @@ class AppRouter
         }
     }
 
+    /**
+     * Namespace grouping
+     *
+     * @param $namespace
+     * @param callable $callback
+     */
     public static function group($namespace, callable $callback)
     {
         self::$current_namespace = $namespace;
@@ -124,6 +197,8 @@ class AppRouter
     }
 
     /**
+     * Dispatch routing
+     *
      * @throws \Exception
      */
     public static function dispatch()
@@ -196,12 +271,6 @@ class AppRouter
         unset($state);
     }
 
-    /* ========================================== */
-
-    public static function __debug()
-    {
-        dd(self::$rules);
-    }
-
-
 }
+
+# -eof-
