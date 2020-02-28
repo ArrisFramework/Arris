@@ -1,3 +1,26 @@
+## DBQueryBuilder
+
+Не поддерживает конструкции вида:
+```
+$sql = (new DBQueryBuilder())
+            ->select("COUNT(*)")
+            ->from('articles_comments')
+            ->where(['item' => ':article_id', 'deleted' => 0 ])
+            ->build();
+```
+превращает их в:
+```sql
+SELECT  COUNT(*)  FROM articles_comments  WHERE :article_id AND 0
+```
+
+1. То есть интерпретирует аргументы where не более чем как массив строк, а не массив соотношений.
+
+2. Не понимает два `->where($field, $value, $condition = '=', $logic_operator = 'AND' )`
+
+
+
+## NB
+
 Рекомендуемый способ инициализации сторонних классов:
 
 ```
