@@ -6,7 +6,7 @@ use Monolog\Logger;
 use FastRoute;
 use Exception;
 
-class AppRouter
+class AppRouter implements AppRouterInterface
 {
     /**
      * @var FastRoute\Dispatcher
@@ -37,12 +37,7 @@ class AppRouter
 
     private static $uri;
 
-    /**
-     * Инициализирует статик-класс
-     *
-     * @param Logger $logger
-     */
-    public static function init($logger = null)
+    public static function init($logger = null, $options = [])
     {
         self::$logger
             = $logger instanceof Logger
@@ -57,23 +52,18 @@ class AppRouter
         }
         self::$uri = rawurldecode($uri);
 
+        if (array_key_exists('defaultNamespace', $options)) {
+            self::setDefaultNamespace($options['defaultNamespace']);
+        }
+
     }
 
-    /**
-     * @param string $namespace
-     */
     public static function setDefaultNamespace(string $namespace = '')
     {
         self::$default_namespace = $namespace;
         self::$current_namespace = $namespace;
     }
 
-    /**
-     * Helper method GET
-     *
-     * @param $route
-     * @param $handler
-     */
     public static function get($route, $handler)
     {
         self::$rules[] = [
@@ -84,12 +74,6 @@ class AppRouter
         ];
     }
 
-    /**
-     * Helper method POST
-     *
-     * @param $route
-     * @param $handler
-     */
     public static function post($route, $handler)
     {
         self::$rules[] = [
@@ -100,12 +84,6 @@ class AppRouter
         ];
     }
 
-    /**
-     * Helper method PUT
-     *
-     * @param $route
-     * @param $handler
-     */
     public static function put($route, $handler)
     {
         self::$rules[] = [
@@ -116,12 +94,6 @@ class AppRouter
         ];
     }
 
-    /**
-     * Helper method PATCH
-     *
-     * @param $route
-     * @param $handler
-     */
     public static function patch($route, $handler)
     {
         self::$rules[] = [
@@ -132,12 +104,6 @@ class AppRouter
         ];
     }
 
-    /**
-     * Helper method DELETE
-     *
-     * @param $route
-     * @param $handler
-     */
     public static function delete($route, $handler)
     {
         self::$rules[] = [
@@ -148,12 +114,6 @@ class AppRouter
         ];
     }
 
-    /**
-     * Helper method HEAD
-     *
-     * @param $route
-     * @param $handler
-     */
     public static function head($route, $handler)
     {
         self::$rules[] = [
@@ -164,13 +124,6 @@ class AppRouter
         ];
     }
 
-    /**
-     * Add route method
-     *
-     * @param $httpMethod
-     * @param $route
-     * @param $handler
-     */
     public static function addRoute($httpMethod, $route, $handler)
     {
         foreach ((array) $httpMethod as $method) {
@@ -183,24 +136,13 @@ class AppRouter
         }
     }
 
-    /**
-     * Namespace grouping
-     *
-     * @param $namespace
-     * @param callable $callback
-     */
-    public static function group($namespace, callable $callback)
+    public static function groupNamespace($namespace, callable $callback)
     {
         self::$current_namespace = $namespace;
         $callback();
         self::$current_namespace = self::$default_namespace;
     }
 
-    /**
-     * Dispatch routing
-     *
-     * @throws \Exception
-     */
     public static function dispatch()
     {
         $dispatcher = FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r) {
