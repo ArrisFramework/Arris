@@ -15,9 +15,13 @@ SELECT  COUNT(*)  FROM articles_comments  WHERE :article_id AND 0
 
 1. То есть интерпретирует аргументы where не более чем как массив строк, а не массив соотношений.
 
-2. Не понимает два `->where($field, $value, $condition = '=', $logic_operator = 'AND' )`
+2. Не понимает два `->where($field, $value)`
 
+3. Не понимает аргументы `->where($field, $value, $condition = '=', $logic_operator = 'AND' )`
 
+4. `->build()` метод должен очищать все имеющиеся значения. 
+
+5. Зачем всё это? Нужен лёгкий билдер запросов - и проверенный сообществом!
 
 ## NB
 
