@@ -9,7 +9,7 @@
  * Date: 10.04.2018, time: 6:14
  */
 
-namespace Arris;
+namespace Arris\Utils;
 
 /**
  * Class TimerStats
@@ -39,8 +39,8 @@ class TimerStats implements TimerStatsInterface
             'name'      =>  $name,
             'desc'      =>  $desc,
             'state'     =>  self::STATE_NEW,
-            'starttime' =>  0,
-            'totaltime' =>  0,
+            'time.start' =>  0,
+            'time.total' =>  0,
             'iterations'=>  0
         );
     }
@@ -50,12 +50,12 @@ class TimerStats implements TimerStatsInterface
         $name = self::getTimerInternalName($name);
 
         if (self::$timers[ $name ]['state'] == self::STATE_STOPPED) {
-            self::$timers[ $name ]['totaltime'] = 0;
+            self::$timers[ $name ]['time.total'] = 0;
             self::$timers[ $name ]['iterations'] = 0;
         }
 
         self::$timers[ $name ]['state'] = self::STATE_RUNNING;
-        self::$timers[ $name ]['starttime'] = microtime(true);
+        self::$timers[ $name ]['time.start'] = microtime(true);
         self::$timers[ $name ]['iterations']++;
     }
 
@@ -64,7 +64,7 @@ class TimerStats implements TimerStatsInterface
         $name = self::getTimerInternalName($name);
 
         self::$timers[ $name ]['state'] = self::STATE_PAUSED;
-        self::$timers[ $name ]['totaltime'] += ( \microtime(true) - self::$timers[ $name ]['starttime']);
+        self::$timers[ $name ]['time.total'] += ( \microtime(true) - self::$timers[ $name ]['time.start']);
     }
 
     public static function stop($name = null)
@@ -72,8 +72,8 @@ class TimerStats implements TimerStatsInterface
         $name = self::getTimerInternalName($name);
 
         self::$timers[ $name ]['state'] = self::STATE_STOPPED;
-        self::$timers[ $name ]['totaltime'] += ( \microtime(true) - self::$timers[ $name ]['starttime']);
-        return self::$timers[ $name ]['totaltime'];
+        self::$timers[ $name ]['time.total'] += ( \microtime(true) - self::$timers[ $name ]['time.start']);
+        return self::$timers[ $name ]['time.total'];
     }
 
     public static function stopAll()
@@ -85,7 +85,7 @@ class TimerStats implements TimerStatsInterface
             }
             if ((self::$timers[ $n ]['state'] != self::STATE_STOPPED) && (self::$timers[ $n ]['state'] != self::STATE_PAUSED))
             {
-                self::$timers[ $n ]['totaltime'] += ( \microtime(true) - self::$timers[ $n ]['starttime']);
+                self::$timers[ $n ]['time.total'] += ( \microtime(true) - self::$timers[ $n ]['time.start']);
                 self::$timers[ $n ]['state'] = self::STATE_STOPPED;
             }
         }
@@ -95,7 +95,7 @@ class TimerStats implements TimerStatsInterface
     {
         $name = self::getTimerInternalName($name);
 
-        return self::$timers[ $name ]['totaltime'];
+        return self::$timers[ $name ]['time.total'];
     }
 
     public static function destroy($name = null)
@@ -132,10 +132,10 @@ class TimerStats implements TimerStatsInterface
     {
         array_walk(self::$timers, function(&$item){
             unset($item['state']);
-            unset($item['starttime']);
+            unset($item['time.start']);
             unset($item['iterations']);
-            $item['time'] = $item['totaltime'];
-            unset($item['totaltime']);
+            $item['time'] = $item['time.total'];
+            unset($item['time.total']);
         });
         return self::$timers;
     }
