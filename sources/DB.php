@@ -147,6 +147,14 @@ class DB implements DBConnectionInterface
         self::$_configs[$config_key] = $config;
     }
 
+    /**
+     *
+     * @param $suffix
+     * @param $config
+     * @param Logger|null $logger
+     * @param array $options
+     * @throws \Exception
+     */
     public static function init($suffix, $config, Logger $logger = null, array $options = [])
     {
         $config_key = self::getKey($suffix);
@@ -415,31 +423,43 @@ class DB implements DBConnectionInterface
      *
      * @param $tablename
      * @param $dataset
-     * @param string $where_condition
+     * @param $where_condition
      * @return bool|string
      */
-    public static function makeUpdateQuery($tablename, &$dataset, $where_condition = ''):string
+    public static function makeUpdateQuery($tablename, &$dataset, $where_condition):string
     {
+        $crlf = ''; // '\r\n';
         $set = [];
 
-        if (empty($dataset))
+        if (empty($dataset)) {
             return false;
+        }
 
         $query = "UPDATE `{$tablename}` SET";
 
         foreach ($dataset as $index => $value) {
             if (strtoupper(trim($value)) === 'NOW()') {
-                $set[] = "\r\n `{$index}` = NOW()";
+                $set[] = "{$crlf} `{$index}` = NOW()";
                 unset($dataset[ $index ]);
                 continue;
             }
 
-            $set[] = "\r\n`{$index}` = :{$index}";
+            $set[] = "{$crlf}`{$index}` = :{$index}";
         }
 
         $query .= implode(', ', $set);
 
-        $query .= " \r\n" . $where_condition . " ;";
+        if (is_array($where_condition)) {
+            $where_condition = key($where_condition) . ' = ' . current($where_condition);
+        }
+        if ( is_string($where_condition ) && (false == strpos($where_condition, 'WHERE')) ) {
+            $where_condition = " WHERE {$where_condition}";
+        }
+        if (is_null($where_condition)) {
+            $where_condition = '';
+        }
+
+        $query .= " {$crlf} $where_condition ;";
 
         return $query;
     }
