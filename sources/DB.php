@@ -18,7 +18,7 @@ use Monolog\Logger;
  */
 class DB implements DBConnectionInterface
 {
-    const VERSION = "1.16";
+    const VERSION = "1.20";
 
     private static $_current_connection = null;
 
@@ -352,6 +352,7 @@ class DB implements DBConnectionInterface
     public static function getRowCount($table, $suffix = NULL): int
     {
         if ($table == '') return null;
+
         $sth = self::getConnection($suffix)->query("SELECT COUNT(*) AS cnt FROM {$table}");
 
         return ($sth) ? $sth->fetchColumn() : null;
@@ -389,19 +390,19 @@ class DB implements DBConnectionInterface
      * В массиве допустима конструкция 'key' => 'NOW()'
      * В этом случае она будет добавлена в запрос и удалена из набора данных (он пере).
      *
-     * @param $tablename    -- таблица
+     * @param $table    -- таблица
      * @param $dataset      -- передается по ссылке, мутабелен
      * @return string       -- результирующая строка запроса
      */
-    public static function makeInsertQuery($tablename, &$dataset):string
+    public static function makeInsertQuery(string $table, &$dataset):string
     {
         if (empty($dataset)) {
-            return "INSERT INTO {$tablename} () VALUES (); ";
+            return "INSERT INTO {$table} () VALUES (); ";
         }
 
         $set = [];
 
-        $query = "INSERT INTO `{$tablename}` SET ";
+        $query = "INSERT INTO `{$table}` SET ";
 
         foreach ($dataset as $index => $value) {
             if (strtoupper(trim($value)) === 'NOW()') {
@@ -426,7 +427,7 @@ class DB implements DBConnectionInterface
      * @param $where_condition
      * @return bool|string
      */
-    public static function makeUpdateQuery($tablename, &$dataset, $where_condition):string
+    public static function makeUpdateQuery(string $table, &$dataset, $where_condition):string
     {
         $crlf = ''; // '\r\n';
         $set = [];
@@ -435,7 +436,7 @@ class DB implements DBConnectionInterface
             return false;
         }
 
-        $query = "UPDATE `{$tablename}` SET";
+        $query = "UPDATE `{$table}` SET";
 
         foreach ($dataset as $index => $value) {
             if (strtoupper(trim($value)) === 'NOW()') {
@@ -460,6 +461,32 @@ class DB implements DBConnectionInterface
         }
 
         $query .= " {$crlf} $where_condition ;";
+
+        return $query;
+    }
+
+    public static function makeReplaceQuery(string $table, array &$dataset, string $where = '')
+    {
+        $fields = [];
+
+        if (empty($dataset))
+            return false;
+
+        $query = "REPLACE `{$table}` SET ";
+
+        foreach ($dataset as $index => $value) {
+            if (strtoupper(trim($value)) === 'NOW()') {
+                $fields[] = "`{$index}` = NOW()";
+                unset($dataset[ $index ]);
+                continue;
+            }
+
+            $fields[] = " `{$index}` = :{$index} ";
+        }
+
+        $query .= implode(', ', $fields);
+
+        $query .= " \r\n" . $where . " ;";
 
         return $query;
     }

@@ -5,7 +5,7 @@ namespace Arris;
 interface ArrisFunctionsInterface {
 
     function setOptionEnv(array $options, $key, $env_key = null, $default_value = '');
-    function setOption(array $options, $key, $default_value = null);
+    function setOption(array $options = [], $key = null, $default_value = null);
 
     function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL );
 
@@ -83,9 +83,13 @@ if (!function_exists('Arris\setOptionEnv')) {
 }
 
 if (!function_exists('Arris\setOption')) {
-    function setOption(array $options, $key, $default_value = null)
+    function setOption(array $options = [], $key = null, $default_value = null)
     {
-        return array_key_exists($key, $options) ? $options[$key] : $default_value;
+        if (!is_array($options)) return $default_value;
+
+        if (is_null($key)) return $default_value;
+
+        return array_key_exists($key, $options) ? $options[ $key ] : $default_value;
     }
 }
 
@@ -364,6 +368,50 @@ if (!function_exists('Arris\float_to_fixed_string')) {
     }
 }
 
+// template function
+if (!function_exists('Arris\getIP')) {
+
+    /**
+     *
+     * @return mixed|string|null
+     */
+    function getIP()
+    {
+        if (php_sapi_name() === 'cli') return '127.0.0.1';
+
+        if (!isset ($_SERVER['REMOTE_ADDR'])) {
+            return NULL;
+        }
+
+        if (array_key_exists("HTTP_X_FORWARDED_FOR", $_SERVER)) {
+            $http_x_forwared_for = explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);
+            $client_ip = trim(end($http_x_forwared_for));
+            if (filter_var($client_ip, FILTER_VALIDATE_IP)) {
+                return $client_ip;
+            }
+        }
+
+        return filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP) ? $_SERVER['REMOTE_ADDR'] : NULL;
+    }
+}
+
+// template function
+if (!function_exists('Arris\rmdir_tree')) {
+
+    /**
+     *
+     * @param $dir
+     * @return bool
+     */
+    function rmdir_tree($dir)
+    {
+        $files = array_diff(scandir($dir), array('.','..'));
+        foreach ($files as $file) {
+            (is_dir("$dir/$file")) ? rmdir_tree("$dir/$file") : unlink("$dir/$file");
+        }
+        return rmdir($dir);
+    }
+}
 
 
 

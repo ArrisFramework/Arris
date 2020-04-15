@@ -4,7 +4,9 @@
 namespace Arris;
 
 
+use Exception;
 use PDO;
+use PDOStatement;
 
 // DB::suffix('suffix')->config($config)->logger($logger)->options([])->init();
 
@@ -51,8 +53,8 @@ class DBC {
      *
      * @param $statement
      * @param array $driver_options
-     * @return bool|\PDOStatement
-     * @throws \Exception
+     * @return bool|PDOStatement
+     * @throws Exception
      */
     public static function prepare($statement, $driver_options = [])
     {
@@ -64,8 +66,8 @@ class DBC {
      * @param $mode
      * @param null $arg3
      * @param array $ctorargs
-     * @return false|\PDOStatement
-     * @throws \Exception
+     * @return false|PDOStatement
+     * @throws Exception
      */
     public static function query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array())
     {

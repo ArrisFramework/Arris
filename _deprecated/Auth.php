@@ -8,7 +8,7 @@
  * Date: 09.04.2018, time: 4:08
  */
 
-namespace Arris;
+namespace ArrisDeprecated;
 
 use PHPAuth\Config as PHPAuthConfig;
 use PHPAuth\Auth as PHPAuth;

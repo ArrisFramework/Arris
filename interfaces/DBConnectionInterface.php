@@ -66,8 +66,9 @@ interface DBConnectionInterface
 
     public static function makeQuery():DBQueryBuilder;
 
-    public static function makeInsertQuery($tablename, &$dataset):string;
-    public static function makeUpdateQuery($tablename, &$dataset, $where_condition):string;
+    public static function makeInsertQuery(string $table, &$dataset):string;
+    public static function makeUpdateQuery(string $table, &$dataset, $where_condition):string;
+    public static function makeReplaceQuery(string $table, array &$dataset, string $where = '');
 
     public static function getRowCount($table, $suffix = NULL):int;
 

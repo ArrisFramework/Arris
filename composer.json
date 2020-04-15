@@ -9,7 +9,7 @@
             "email": "karel.wintersky@gmail.com"
         }
     ],
-    "keywords": [ "logging", "database", "sphinx", "console", "hooks", "routing" ],
+    "keywords": [ "logging", "database", "console", "hooks", "routing" ],
     "config": {
         "optimize-autoloader": true
     },
@@ -22,11 +22,9 @@
         "ext-curl": "*",
         "ext-simplexml": "*",
         "monolog/monolog": "^1.23",
-        "foolz/sphinxql-query-builder": "^2.0",
         "sabre/event": "^5",
-        "cmfcmf/openweathermap-php-api": "^2.4",
-        "php-curl-class/php-curl-class": "^8.6",
-        "nikic/fast-route": "^1.3"
+        "nikic/fast-route": "^1.3",
+        "adbario/php-dot-notation": "^2.2"
     },
     "autoload": {
         "files": [

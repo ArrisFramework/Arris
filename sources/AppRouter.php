@@ -2,6 +2,7 @@
 
 namespace Arris;
 
+use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use FastRoute;
 use Exception;
@@ -37,12 +38,24 @@ class AppRouter implements AppRouterInterface
 
     private static $uri;
 
+    private static $backup_options = [
+        'prefix'        =>  '',
+        'namespace'     =>  '',
+        'middleware'    =>  \stdClass::class //@todo ???
+    ];
+
+    /**
+     * @var
+     */
+    private static $route_names;
+    private static $prefix_current;
+
     public static function init($logger = null, $options = [])
     {
         self::$logger
             = $logger instanceof Logger
             ? $logger
-            : (new Logger('null'))->pushHandler(new \Monolog\Handler\NullHandler());
+            : (new Logger('null'))->pushHandler(new NullHandler());
 
         self::$httpMethod = $_SERVER['REQUEST_METHOD'];
 
@@ -64,13 +77,14 @@ class AppRouter implements AppRouterInterface
         self::$current_namespace = $namespace;
     }
 
-    public static function get($route, $handler)
+    public static function get($route, $handler, $name)
     {
         self::$rules[] = [
             'httpMethod'    =>  'GET',
             'route'         =>  $route,
             'handler'       =>  $handler,
-            'namespace'     =>  self::$current_namespace
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
         ];
     }
 
@@ -143,13 +157,55 @@ class AppRouter implements AppRouterInterface
         self::$current_namespace = self::$default_namespace;
     }
 
+    public static function group($options, callable $callback)
+    {
+        $_setPrefix = array_key_exists('prefix', $options);
+        $_setNamespace = array_key_exists('namespace', $options);
+
+        if ($_setPrefix) {
+            self::$backup_options['prefix'] = self::$prefix_current;
+            self::$prefix_current = $options['prefix'];
+        }
+
+        if ($_setNamespace) {
+            self::$backup_options['namespace'] = self::$current_namespace;
+            self::$current_namespace = $options['namespace'];
+        }
+
+        $callback();
+
+        if ($_setNamespace) {
+            self::$current_namespace = self::$backup_options['namespace'];
+        }
+
+        if ($_setPrefix) {
+            self::$prefix_current = self::$backup_options['prefix'];
+        }
+    }
+
+    public static function getRouter($name = '')
+    {
+        if ($name === '') {
+            return '/';
+        }
+
+        if (array_key_exists($name, self::$route_names)) {
+            return self::$route_names[ $name ];
+        } else {
+            return '/';
+        }
+    }
+
     public static function dispatch()
     {
-        $dispatcher = FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r) {
+        self::$dispatcher = FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r) {
             foreach (self::$rules as $rule) {
                 $r->addRoute($rule['httpMethod'], $rule['route'], $rule['handler']);
+                // self::$route_names[ $rule['name'] ] = $rule['route'];
             }
         });
+
+        $dispatcher = self::$dispatcher;
 
         // Fetch method and URI from somewhere
         $routeInfo = $dispatcher->dispatch(self::$httpMethod, self::$uri);
@@ -164,9 +220,16 @@ class AppRouter implements AppRouterInterface
 
         list($state, $handler, $method_parameters) = $routeInfo;
 
-        $handler = (self::$default_namespace != '') ? self::$default_namespace . "\\{$handler}" : $handler;
+        $handler
+            = (
+            is_string($handler) && self::$default_namespace != '' )
+            ? self::$default_namespace . "\\{$handler}"
+            : $handler;
 
-        if (strpos($handler, '@') > 0) {
+
+        if ($handler instanceof \Closure) {
+            $actor = $handler;
+        } elseif (strpos($handler, '@') > 0) {
             // dynamic method
             list($class, $method) = explode('@', $handler, 2);
 

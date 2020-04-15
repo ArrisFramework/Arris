@@ -4,7 +4,7 @@
  * Date: 08.08.2018, time: 21:25
  */
 
-namespace Arris;
+namespace ArrisDeprecated;
 
 /**
  * Simple config-class.

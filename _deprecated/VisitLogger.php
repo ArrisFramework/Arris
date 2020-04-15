@@ -8,7 +8,7 @@
  * Date: 27.02.2018, time: 1:11
  */
 
-namespace Arris;
+namespace ArrisDeprecated;
 
 use Arris\App;
 use Arris\DB;

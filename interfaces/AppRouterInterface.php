@@ -27,8 +27,9 @@ interface AppRouterInterface
      *
      * @param $route
      * @param $handler
+     * @param $name - route internal name
      */
-    public static function get($route, $handler);
+    public static function get($route, $handler, $name);
 
     /**
      * Helper method POST

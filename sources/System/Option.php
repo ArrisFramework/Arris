@@ -62,6 +62,7 @@ class Option
      * FINAL: Возвращает значение опции, либо значение переменной окружения либо дефолтное значение, либо null
      *
      * @param $key
+     * @param bool $is_required
      * @return mixed
      */
     public static function key($key, bool $is_required = false)

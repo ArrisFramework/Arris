@@ -1,7 +1,6 @@
-.todo
-_experiments
 .idea
-composer.lock
 vendor
-_env*
 tests/*.log
+composer.lock
+_env*
+

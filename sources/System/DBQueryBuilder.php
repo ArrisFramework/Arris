@@ -41,6 +41,13 @@ class DBQueryBuilder implements DBQueryBuilderInterface
         return $this;
     }
 
+    public function delete($table)
+    {
+        $this->method = 'DELETE';
+        $this->table = $table;
+        return $this;
+    }
+
     public function select($fields = null)
     {
         $this->method = 'SELECT';
@@ -68,16 +75,8 @@ class DBQueryBuilder implements DBQueryBuilderInterface
             foreach ($where as $cond) {
                 $this->where[] = $cond;
             }
-            $this->where = implode(' AND ', $this->where);
-
-        } elseif (is_string($where)) {
-            $this->where = $where;
-        } else {
+        } elseif (is_null($where)) {
             $this->where = NULL;
-        }
-
-        if (!is_null($this->where)) {
-            $this->where = " WHERE {$this->where}";
         }
 
         return $this;
@@ -107,10 +106,25 @@ class DBQueryBuilder implements DBQueryBuilderInterface
                 break;
             }
             case 'SELECT': {
-                $sql = " SELECT {$this->select_fields} FROM {$this->table} {$this->where} ";
+                $sql = $this->buildSelectQuery($this->table, $this->select_fields, $this->where);
+                break;
+            }
+            case 'DELETE': {
+                $sql = $this->buildDeleteQuery($this->table, $this->where);
             }
         }
+
         return $sql;
+    }
+
+    private function buildSelectQuery($table, $fields, $where)
+    {
+        $where = '';
+        if (!is_null($this->where) && is_array($this->where)) {
+            $where = " WHERE " . implode(' AND ', $this->where);
+        }
+
+        return " SELECT {$fields} FROM {$table} $where ";
     }
 
 
@@ -189,6 +203,16 @@ class DBQueryBuilder implements DBQueryBuilderInterface
         $query .= " \r\n" . $where . " ;";
 
         return $query;
+    }
+
+    private function buildDeleteQuery($table, $where)
+    {
+        $where = '';
+        if (!is_null($this->where) && is_array($this->where)) {
+            $where = " WHERE " . implode(' AND ', $this->where);
+        }
+
+        return "DELETE FROM {$table} {$where}";
     }
 
 

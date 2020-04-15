@@ -2,7 +2,7 @@
 
 require_once __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
 
-use Arris\Option;
+use Arris\System\Option;
 
 putenv("zzzz=BAR");
 

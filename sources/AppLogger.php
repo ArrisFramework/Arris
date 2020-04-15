@@ -14,6 +14,7 @@
 
 namespace Arris;
 
+use Exception;
 use \Monolog\Logger;
 use \Monolog\Handler\StreamHandler;
 use \Monolog\Handler\NullHandler;
@@ -160,7 +161,7 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
             self::$_instances[ $internal_key ] = $logger;
             unset($logger);
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
         }
     }
@@ -181,7 +182,7 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
 
             return self::$_instances[ $internal_key ];
 
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             die(__METHOD__ . ' died at line ' .$e->getLine() . ' With exception ' . $e->getMessage() . ' code = ' . $e->getCode() );
         }
     }

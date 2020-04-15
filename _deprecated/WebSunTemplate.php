@@ -8,7 +8,7 @@
  * Date: 26.02.2018, time: 23:26
  */
 
-namespace Arris;
+namespace ArrisDeprecated;
 
 use Websun\websun as websun;
 
