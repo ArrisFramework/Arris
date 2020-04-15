@@ -77,7 +77,7 @@ class AppRouter implements AppRouterInterface
         self::$current_namespace = $namespace;
     }
 
-    public static function get($route, $handler, $name)
+    public static function get($route, $handler, $name = null)
     {
         self::$rules[] = [
             'httpMethod'    =>  'GET',
