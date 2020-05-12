@@ -15,10 +15,12 @@ class AppConfig implements AppConfigInterface
     /**
      *
      * @param Dot $instance
+     * @return Dot
      */
     public static function init(Dot &$instance)
     {
         self::$instance = $instance;
+        return $instance;
     }
 
     /**
