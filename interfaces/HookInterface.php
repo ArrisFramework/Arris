@@ -28,7 +28,7 @@ interface HookInterface {
      * @param string $eventName -- событие
      * @param array $arguments   -- аргументы
      * @param callable|null $continueCallBack -- @todo
-     * @return bool
+     * @return bool|null
      */
-    public static function run(string $eventName, array $arguments = [], callable $continueCallBack = null):bool;
+    public static function run(string $eventName, array $arguments = [], callable $continueCallBack = null);
 }

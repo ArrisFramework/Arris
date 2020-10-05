@@ -31,3 +31,31 @@ Hook::run('create');
 Hook::run('example');
 
 ```
+
+Как использовать в шаблонах Smarty:
+```
+{assign var=foo value=Arris\Hook::run('')}
+```
+https://www.smarty.net/docs/en/advanced.features.static.classes.tpl
+
+или подключить класс: https://www.smarty.net/docs/en/api.register.class.tpl
+
+```
+<?php
+namespace my\php\application {
+  class Bar {
+    $property = "hello world";
+  }
+}
+
+$smarty = new Smarty();
+$smarty->registerClass("Foo", "\my\php\application\Bar");
+```
+...
+```
+{* Foo translates to the real class \my\php\application\Bar *}
+{Foo::$property}
+```
+
+
+

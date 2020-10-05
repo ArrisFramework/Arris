@@ -29,64 +29,77 @@ interface AppRouterInterface
      * @param $handler
      * @param $name - route internal name
      */
-    public static function get($route, $handler, $name);
-
+    public static function get($route, $handler, $name = null);
+    
     /**
      * Helper method POST
      *
      * @param $route
      * @param $handler
+     * @param null $name
      */
-    public static function post($route, $handler);
-
+    public static function post($route, $handler, $name = null);
+    
     /**
      * Helper method PUT
      *
      * @param $route
      * @param $handler
+     * @param null $name
      */
-    public static function put($route, $handler);
-
+    public static function put($route, $handler, $name = null);
+    
     /**
      * Helper method PATCH
      *
      * @param $route
      * @param $handler
+     * @param null $name
      */
-    public static function patch($route, $handler);
-
+    public static function patch($route, $handler, $name = null);
+    
     /**
      * Helper method DELETE
      *
      * @param $route
      * @param $handler
+     * @param null $name
      */
-    public static function delete($route, $handler);
-
+    public static function delete($route, $handler, $name = null);
+    
     /**
      * Helper method HEAD
      *
      * @param $route
      * @param $handler
+     * @param null $name
      */
-    public static function head($route, $handler);
-
+    public static function head($route, $handler, $name = null);
+    
     /**
      * Add route method
      *
      * @param $httpMethod
      * @param $route
      * @param $handler
+     * @param null $name
      */
-    public static function addRoute($httpMethod, $route, $handler);
+    public static function addRoute($httpMethod, $route, $handler, $name = null);
 
     /**
-     * Namespace grouping (BAD NAME)
+     * Namespace grouping
      *
      * @param $namespace
      * @param callable $callback
      */
     public static function groupNamespace($namespace, callable $callback);
+    
+    /**
+     * @param $options
+     * @param callable $callback
+     * @return mixed
+     */
+    public static function group(array $options, callable $callback);
 
     /**
      * Dispatch routing

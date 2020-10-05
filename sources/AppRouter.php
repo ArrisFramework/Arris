@@ -2,6 +2,7 @@
 
 namespace Arris;
 
+use FastRoute\RouteCollector;
 use Monolog\Handler\NullHandler;
 use Monolog\Logger;
 use FastRoute;
@@ -88,64 +89,70 @@ class AppRouter implements AppRouterInterface
         ];
     }
 
-    public static function post($route, $handler)
+    public static function post($route, $handler, $name = null)
     {
         self::$rules[] = [
             'httpMethod'    =>  'POST',
             'route'         =>  $route,
             'handler'       =>  $handler,
-            'namespace'     =>  self::$current_namespace
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
         ];
     }
 
-    public static function put($route, $handler)
+    public static function put($route, $handler, $name = null)
     {
         self::$rules[] = [
             'httpMethod'    =>  'PUT',
             'route'         =>  $route,
             'handler'       =>  $handler,
-            'namespace'     =>  self::$current_namespace
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
         ];
     }
 
-    public static function patch($route, $handler)
+    public static function patch($route, $handler, $name = null)
     {
         self::$rules[] = [
             'httpMethod'    =>  'PATCH',
             'route'         =>  $route,
             'handler'       =>  $handler,
-            'namespace'     =>  self::$current_namespace
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
         ];
     }
 
-    public static function delete($route, $handler)
+    public static function delete($route, $handler, $name = null)
     {
         self::$rules[] = [
             'httpMethod'    =>  'DELETE',
             'route'         =>  $route,
             'handler'       =>  $handler,
-            'namespace'     =>  self::$current_namespace
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
         ];
     }
 
-    public static function head($route, $handler)
+    public static function head($route, $handler, $name = null)
     {
         self::$rules[] = [
             'httpMethod'    =>  'HEAD',
             'route'         =>  $route,
             'handler'       =>  $handler,
-            'namespace'     =>  self::$current_namespace
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
         ];
     }
 
-    public static function addRoute($httpMethod, $route, $handler)
+    public static function addRoute($httpMethod, $route, $handler, $name = null)
     {
         foreach ((array) $httpMethod as $method) {
             self::$rules[] = [
                 'httpMethod'    =>  $method,
                 'route'         =>  $route,
                 'handler'       =>  $handler,
-                'namespace'     =>  self::$current_namespace
+                'namespace'     =>  self::$current_namespace,
+                'name'          =>  $name
             ];
         }
     }
@@ -157,7 +164,7 @@ class AppRouter implements AppRouterInterface
         self::$current_namespace = self::$default_namespace;
     }
 
-    public static function group($options, callable $callback)
+    public static function group(array $options, callable $callback)
     {
         $_setPrefix = array_key_exists('prefix', $options);
         $_setNamespace = array_key_exists('namespace', $options);
@@ -198,17 +205,22 @@ class AppRouter implements AppRouterInterface
 
     public static function dispatch()
     {
-        self::$dispatcher = FastRoute\simpleDispatcher(function (\FastRoute\RouteCollector $r) {
+        self::$dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $r) {
             foreach (self::$rules as $rule) {
-                $r->addRoute($rule['httpMethod'], $rule['route'], $rule['handler']);
-                // self::$route_names[ $rule['name'] ] = $rule['route'];
+                $handler
+                    = (is_string($rule['handler']) && !empty($rule['namespace']))
+                    ? "{$rule['namespace']}\\{$rule['handler']}"
+                    : $rule['handler'];
+                
+                $r->addRoute($rule['httpMethod'], $rule['route'], $handler);
+                
+                if (!is_null($rule['name']))
+                    self::$route_names[ $rule['name'] ] = $rule['route'];
             }
         });
 
-        $dispatcher = self::$dispatcher;
-
         // Fetch method and URI from somewhere
-        $routeInfo = $dispatcher->dispatch(self::$httpMethod, self::$uri);
+        $routeInfo = (self::$dispatcher)->dispatch(self::$httpMethod, self::$uri);
 
         // dispatch errors
 
@@ -220,11 +232,12 @@ class AppRouter implements AppRouterInterface
 
         list($state, $handler, $method_parameters) = $routeInfo;
 
-        $handler
+        /*$handler
             = (
             is_string($handler) && self::$default_namespace != '' )
             ? self::$default_namespace . "\\{$handler}"
             : $handler;
+        */
 
 
         if ($handler instanceof \Closure) {

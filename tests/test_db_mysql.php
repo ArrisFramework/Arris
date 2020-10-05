@@ -10,7 +10,7 @@ $ENV = $ENV['DB:MYSQL'];
 
 try {
     AppLogger::init('test', 0 );
-    AppLogger::addScope('pgsql', [
+    AppLogger::addScope('mysql', [
         [ '_error.log', \Monolog\Logger::EMERGENCY ]
     ]);
 

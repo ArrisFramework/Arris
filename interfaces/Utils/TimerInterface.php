@@ -1,9 +1,8 @@
 <?php
 
-
 namespace Arris\Utils;
 
-interface TimerStatsInterface {
+interface TimerInterface {
 
     /**
      * Создает таймер с указанным идентификатором и описанием.
@@ -14,6 +13,16 @@ interface TimerStatsInterface {
      * @param string $desc
      */
     public static function init($name = null, $desc = null);
+
+    /**
+     * Создает таймер и запускает с указанным идентификатором и описанием.
+     * Если не указать имя - будет использован таймер по умолчанию - default.
+     * Если такой таймер уже существует - он будет уничтожен (и пересоздан)
+     *
+     * @param null $name
+     * @param null $desc
+     */
+    public static function start($name = null, $desc = null);
 
     /**
      * Запускает таймер с указанным идентификатором

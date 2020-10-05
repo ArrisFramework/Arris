@@ -2,7 +2,7 @@
 
 namespace Arris\System;
 
-use Arris\DBQueryBuilderInterface;
+use Arris\System\DBQueryBuilderInterface;
 
 class DBQueryBuilder implements DBQueryBuilderInterface
 {
@@ -10,41 +10,42 @@ class DBQueryBuilder implements DBQueryBuilderInterface
      * @var string
      */
     private $method;
-    private $table;
+    private $table = null;
     private $where;
     private $dataset;
     private $select_fields;
 
-    public function __construct()
+    public function __construct($table = null)
     {
+        if ( func_num_args()) $this->table = $table;
         return $this;
     }
 
-    public function insert($table)
+    public function insert($table = null)
     {
         $this->method = 'INSERT';
-        $this->table = $table;
+        if ( func_num_args()) $this->table = $table;
         return $this;
     }
 
-    public function replace($table)
+    public function replace($table = null)
     {
         $this->method = 'REPLACE';
-        $this->table = $table;
+        if ( func_num_args()) $this->table = $table;
         return $this;
     }
 
-    public function update($table)
+    public function update($table = null)
     {
         $this->method = 'UPDATE';
-        $this->table = $table;
+        if ( func_num_args()) $this->table = $table;
         return $this;
     }
 
-    public function delete($table)
+    public function delete($table = null)
     {
         $this->method = 'DELETE';
-        $this->table = $table;
+        if ( func_num_args()) $this->table = $table;
         return $this;
     }
 
@@ -82,15 +83,18 @@ class DBQueryBuilder implements DBQueryBuilderInterface
         return $this;
     }
 
-    public function data($data)
+    public function data($data, $exclude = [])
     {
         $this->dataset = $data;
+        foreach ($exclude as $value) unset($this->dataset[ $value ]);
         return $this;
     }
 
     public function build()
     {
         $sql = '';
+
+        if (is_null($this->table)) throw new \Exception(self::class . ' => no given any table for build() method');
 
         switch ($this->method) {
             case 'INSERT': {

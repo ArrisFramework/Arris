@@ -1,6 +1,6 @@
 {
     "name": "karelwintersky/arris",
-    "description": "Karel Wintersky's Application microframework",
+    "description": "Karel Wintersky's Application µFramework",
     "type": "library",
     "license": "MIT",
     "authors": [
@@ -27,9 +27,9 @@
         "adbario/php-dot-notation": "^2.2"
     },
     "suggest": {
-        "php-curl-class/php-curl-class": "^8.7",
-        "spatie/regex": "^1.4",
-        "gumlet/php-image-resize": "^1.9"
+        "php-curl-class/php-curl-class": "PHP Curl Class makes it easy to send HTTP requests and integrate with web APIs.",
+        "spatie/regex": "A sane interface for php's built in preg_* functions",
+        "gumlet/php-image-resize": "PHP class to re-size and scale images"
     },
     "autoload": {
         "files": [

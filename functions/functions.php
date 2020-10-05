@@ -93,6 +93,9 @@ if (!function_exists('Arris\setOption')) {
     }
 }
 
+/**
+ * См: Str::trim()
+ */
 if (!function_exists('Arris\mb_trim_text')) {
 
     /**
@@ -184,6 +187,7 @@ if (!function_exists('Arris\mb_str_replace')) {
     }
 }
 
+// Arr::map_to_integer
 if (!function_exists('Arris\array_map_to_integer')) {
     /**
      * Хелпер преобразования всех элементов массива к типу integer
@@ -201,6 +205,7 @@ if (!function_exists('Arris\array_map_to_integer')) {
     }
 }
 
+// Arr::fill_like_list
 if (!function_exists('Arris\array_fill_like_list')) {
     /**
      *
@@ -323,7 +328,7 @@ if (!function_exists('Arris\GUID')) {
     function GUID()
     {
         if (function_exists('\com_create_guid') === true) {
-            return trim(\com_create_guid(), '{}');
+            return trim(com_create_guid(), '{}');
         }
 
         if (function_exists('openssl_random_pseudo_bytes') === true) {
@@ -334,7 +339,6 @@ if (!function_exists('Arris\GUID')) {
         }
 
         return sprintf('%04X%04X-%04X-%04X-%04X-%04X%04X%04X', mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(16384, 20479), mt_rand(32768, 49151), mt_rand(0, 65535), mt_rand(0, 65535), mt_rand(0, 65535));
-
     }
 }
 
@@ -395,7 +399,7 @@ if (!function_exists('Arris\getIP')) {
     }
 }
 
-// template function
+// FS::rmdir
 if (!function_exists('Arris\rmdir_tree')) {
 
     /**

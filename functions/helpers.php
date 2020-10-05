@@ -45,4 +45,34 @@ if (!function_exists('dd')) {
     }
 }
 
+if (!function_exists('__env')) {
+    /**
+     * Возвращает переменную окружения либо (если её нет) - значение по умолчанию (null)
+     *
+     * @param $key
+     * @param null $value
+     * @return array|false|string|null
+     */
+    function __env($key, $value = null)
+    {
+        return array_key_exists($key, getenv()) ? getenv($key) : $value;
+    }
+}
+
+if (!function_exists('__envPath')) {
+    /**
+     * Возвращает значение пути (path) из окружения (env), возможно, с заключительным слэшэм
+     *
+     * @param $key
+     * @param bool $with_tailing_slash (false)
+     * @return string
+     */
+    function __envPath($key, $with_tailing_slash = false)
+    {
+        return $with_tailing_slash
+            ? rtrim(getenv($key), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
+            : rtrim(getenv($key), DIRECTORY_SEPARATOR);
+    }
+}
+
 # -eof-

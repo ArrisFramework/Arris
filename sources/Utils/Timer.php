@@ -11,12 +11,14 @@
 
 namespace Arris\Utils;
 
+use Arris\Utils\TimerInterface;
+
 /**
- * Class TimerStats
+ * Class Timer
  *
  * @package Arris
  */
-class TimerStats implements TimerStatsInterface
+class Timer implements TimerInterface
 {
     const DEFAULT_INTERNAL_NAME = 'default';
 
@@ -27,7 +29,7 @@ class TimerStats implements TimerStatsInterface
 
     public static $timers = array();
 
-    public static function init($name = null, $desc = null)
+    public static function init($name = null, $desc = null, $round = 6)
     {
         $name = self::getTimerInternalName($name);
 
@@ -36,44 +38,59 @@ class TimerStats implements TimerStatsInterface
         }
 
         self::$timers[ $name ] = array(
-            'name'      =>  $name,
-            'desc'      =>  $desc,
-            'state'     =>  self::STATE_NEW,
-            'time.start' =>  0,
-            'time.total' =>  0,
-            'iterations'=>  0
+            'name'          =>  $name,
+            'desc'          =>  $desc,
+            'state'         =>  self::STATE_NEW,
+            'time.start'    =>  0,
+            'time.total'    =>  0,
+            'iterations'    =>  0,
+            'round'         =>  (int)$round
         );
+    }
+
+    /**
+     *
+     * @param null $name
+     * @param null $desc
+     */
+    public static function start($name = null, $desc = null, $round = 6)
+    {
+        self::init($name, $desc, $round);
+        self::go($name);
     }
 
     public static function go($name = null)
     {
         $name = self::getTimerInternalName($name);
+        $timer = &self::$timers[ $name ];
 
-        if (self::$timers[ $name ]['state'] == self::STATE_STOPPED) {
-            self::$timers[ $name ]['time.total'] = 0;
-            self::$timers[ $name ]['iterations'] = 0;
+        if ($timer['state'] == self::STATE_STOPPED) {
+            $timer['time.total'] = 0;
+            $timer['iterations'] = 0;
         }
 
-        self::$timers[ $name ]['state'] = self::STATE_RUNNING;
-        self::$timers[ $name ]['time.start'] = microtime(true);
-        self::$timers[ $name ]['iterations']++;
+        $timer['state'] = self::STATE_RUNNING;
+        $timer['time.start'] = microtime(true);
+        $timer['iterations']++;
     }
 
     public static function pause($name = null)
     {
         $name = self::getTimerInternalName($name);
+        $timer = &self::$timers[ $name ];
 
-        self::$timers[ $name ]['state'] = self::STATE_PAUSED;
-        self::$timers[ $name ]['time.total'] += ( \microtime(true) - self::$timers[ $name ]['time.start']);
+        $timer['state'] = self::STATE_PAUSED;
+        $timer['time.total'] += ( \microtime(true) - $timer['time.start']);
     }
 
     public static function stop($name = null)
     {
         $name = self::getTimerInternalName($name);
+        $timer = &self::$timers[ $name ];
 
-        self::$timers[ $name ]['state'] = self::STATE_STOPPED;
-        self::$timers[ $name ]['time.total'] += ( \microtime(true) - self::$timers[ $name ]['time.start']);
-        return self::$timers[ $name ]['time.total'];
+        $timer['state'] = self::STATE_STOPPED;
+        $timer['time.total'] += ( \microtime(true) - $timer['time.start']);
+        return round($timer['time.total'], $timer['round']);
     }
 
     public static function stopAll()

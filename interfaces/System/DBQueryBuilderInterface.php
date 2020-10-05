@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris;
+namespace Arris\System;
 
 interface DBQueryBuilderInterface {
     public function __construct();
@@ -10,6 +10,6 @@ interface DBQueryBuilderInterface {
     public function select($fields = null);
     public function from($table);
     public function where($where);
-    public function data($data);
+    public function data($data, $exclude = []);
     public function build();
 }

@@ -16,7 +16,7 @@ use Monolog\Logger;
 /**
  * Class DB
  */
-class DB implements DBConnectionInterface
+class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
 {
     const VERSION = "1.20";
 
@@ -203,7 +203,7 @@ class DB implements DBConnectionInterface
      * @param null $suffix
      * @return mixed|null
      */
-    public static function getConfig($suffix = NULL): array
+    public static function getConfig($suffix = NULL)
     {
         $config_key = self::getKey($suffix);
         return array_key_exists($config_key, self::$_configs) ? self::$_configs[$config_key] : NULL;
@@ -293,25 +293,6 @@ class DB implements DBConnectionInterface
     }
 
     /**
-     * Get tables prefix for given connection
-     *
-     * @param null $suffix
-     * @return null|string
-     */
-    public static function getTablePrefix($suffix = NULL): string
-    {
-        if (!self::checkInstance($suffix)) return NULL;
-
-        $config_key = self::getKey($suffix);
-
-        return
-            array_key_exists('table_prefix', self::$_configs[$config_key])
-                ? self::$_configs[$config_key]['table_prefix']
-                : '';
-    }
-
-
-    /**
      * Выполняет Query-запрос
      *
      * @param $query
@@ -349,7 +330,7 @@ class DB implements DBConnectionInterface
      * @return int
      * @throws \Exception
      */
-    public static function getRowCount($table, $suffix = NULL): int
+    public function getRowCount($table, $suffix = NULL)
     {
         if ($table == '') return null;
 
@@ -625,6 +606,11 @@ class DB implements DBConnectionInterface
 function DBC($suffix = null)
 {
     return DB::C($suffix);
+}
+
+function DBI($suffix = null)
+{
+    return DB::I($suffix);
 }
 
 # -eof-
