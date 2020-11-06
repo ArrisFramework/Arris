@@ -17,7 +17,7 @@
  *
  */
 
-namespace Arris;
+namespace ArrisDeprecated;
 
 class AppStateHandler {
     public $owner      = NULL;

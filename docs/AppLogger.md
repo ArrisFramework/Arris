@@ -86,6 +86,21 @@ AppLogger::scope('usage')->emergency('EMERGENCY USAGE');
 
 *NB:* Если при инициализации обычного скоупа методом `addScope()` передан пустой массив опций логгеров - будет применен механизм инициализации deferred-скоупа.
 
+# Примечания (usage hints)
+
+## Один файл для нескольких уровней логгирования
+
+Указываем наименьший используемый уровень логгирования (`Logger::NOTICE`) 
+```
+AppLogger::addScope('log.selectel', [ [ '_selectel_upload.log', Logger::NOTICE ]  ]);
+```
+
+Теперь вот эти два вызова запишут в файл 2 строчки 
+```
+AppLogger::scope('log.selectel')->error('Error');
+AppLogger::scope('log.selectel')->notice('Notice');
+```
+
 
 
 

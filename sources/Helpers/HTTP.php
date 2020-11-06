@@ -15,23 +15,7 @@ class HTTP
         return preg_match('#((https?|ftp)://(\S*?\.\S*?))([\s)\[\]{},;"\':<]|\.\s|$)#i', $url);
     }
     
-    /**
-     *
-     * @return string
-     */
-    public function getIP_1():string
-    {
-        return
-            isset($_SERVER['HTTP_CLIENT_IP'])
-                ? $_SERVER['HTTP_CLIENT_IP']
-                : (
-            isset($_SERVER['HTTP_X_FORWARDED_FOR'])
-                ? $_SERVER['HTTP_X_FORWARDED_FOR']
-                : $_SERVER['REMOTE_ADDR']
-            );
-    }
-    
-    public function getIP_2()
+    public function getIP()
     {
         if (php_sapi_name() === 'cli') return '127.0.0.1';
         

@@ -2,7 +2,7 @@
 
 namespace Arris;
 
-interface HTTPCodes
+interface HTTPCodesInterface
 {
     /*
     * HTTP Status Codes & their meaning

@@ -18,12 +18,12 @@ final class App
     
     /**
      *
-     * @param Dot $instance
+     * @param array $items
      * @return Dot
      */
-    public static function init()
+    public static function init($items = [])
     {
-        self::$registry = new Dot();
+        self::$registry = new Dot($items);
         return self::$registry;
     }
     
