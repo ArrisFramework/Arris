@@ -122,9 +122,9 @@ class Timer implements TimerInterface
         if (\array_key_exists($name, self::$timers)) {
             unset( self::$timers[ $name ]);
             return true;
-        } else {
-            return false;
         }
+    
+        return false;
     }
 
     public static function is_exists($name = null)
@@ -140,9 +140,9 @@ class Timer implements TimerInterface
 
         if (array_key_exists($name, self::$timers)) {
             return self::$timers[ $name ]['state'];
-        } else {
-            return false;
         }
+    
+        return false;
     }
 
     public static function get_all_timers()

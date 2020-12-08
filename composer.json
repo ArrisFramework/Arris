@@ -14,7 +14,7 @@
         "optimize-autoloader": true
     },
     "require": {
-        "php": ">=7",
+        "php": ">=7.2",
         "ext-pdo": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
