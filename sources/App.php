@@ -5,16 +5,21 @@ namespace Arris;
 use Adbar\Dot;
 
 /**
- * Выполняет функцию реестра.
+ * Реестр
  *
- * Хранит инстансы модулей - DB, Smarty, PHPAuth итп
+ * App::init([ options ]);
+ * App::set(key, value);
+ * App::get(key, default);
  *
  * Class App
  * @package Arris
  */
 final class App
 {
-    protected static $registry = [];
+    /**
+     * @var Dot
+     */
+    protected static $registry = null;
     
     /**
      *
@@ -30,30 +35,37 @@ final class App
     /**
      *
      * @param null $key
-     * @return array|Dot|bool
+     * @return mixed
      */
-    public static function get($key = null): Dot
+    public static function get($key = null, $default = null)
     {
         if (is_null($key)) {
             return self::$registry;
         }
         
-        if (array_key_exists($key, self::$registry)) {
-            return self::$registry[ $key ];
+        return self::$registry->get($key, $default);
+    }
+    
+    /**
+     * @param null $key
+     * @param null $data
+     *
+     * @return bool
+     */
+    public static function set($key = null, $data = null)
+    {
+        if (is_null(self::$registry)) {
+            self::$registry = new Dot();
+        }
+        
+        if (!is_null($key)) {
+            self::$registry->set($key, $data);
+            return true;
         }
         
         return false;
     }
     
-    public static function set($key = null, $data = null)
-    {
-        if (!is_null($key)) {
-            self::$registry[ $key ] = $data;
-        }
-    }
-    
 }
 
-/*App::set(DB::class, DB::C());
-App::set(PHPAuth::class, new PHPAuth(DB::C(), (new PHPAuthConfig())->loadENV('_env')->getConfig() ));
-$dbc = App::get(DB::class);*/
+# -eof-
