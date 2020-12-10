@@ -2,7 +2,7 @@
 
 namespace Arris;
 
-use Adbar\Dot;
+use Arris\Core\Dot;
 
 interface AppConfigInterface
 {
