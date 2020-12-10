@@ -1,11 +1,11 @@
 <?php
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Arris\AppLogger;
 use Arris\DB;
 
-$ENV = include '../_env.php';
+$ENV = include '../../_env.php';
 $ENV = $ENV['DB:PGSQL'];
 
 try {
