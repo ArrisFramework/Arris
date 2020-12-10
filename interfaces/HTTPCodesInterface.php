@@ -7,7 +7,6 @@ interface HTTPCodesInterface
     /*
     * HTTP Status Codes & their meaning
     * Source: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
-    * By: Yentel Hollebeke - https://github.com/yentel
     * TODO: add remaining comments with code descriptions
     */
 
