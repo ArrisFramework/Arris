@@ -24,7 +24,8 @@
         "monolog/monolog": "^1.23",
         "sabre/event": "^5",
         "nikic/fast-route": "^1.3",
-        "adbario/php-dot-notation": "^2.2"
+        "adbario/php-dot-notation": "^2.2",
+        "psr/log": "^1.1"
     },
     "suggest": {
         "php-curl-class/php-curl-class": "PHP Curl Class makes it easy to send HTTP requests and integrate with web APIs.",
@@ -37,7 +38,7 @@
           "functions/helpers.php"
         ],
         "psr-4": {
-            "Arris\\"           : ["interfaces", "sources"]
+            "Arris\\"           : ["interfaces", "sources", "traits"]
         }
     }
 }
