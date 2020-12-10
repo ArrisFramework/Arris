@@ -3,7 +3,7 @@
 /**
  * User: Karel Wintersky
  *
- * Trait Traits\Singleton
+ * Trait Traits\SingletonOptions
  * Namespace: Arris
  *
  * Library: https://github.com/KarelWintersky/Arris
@@ -14,12 +14,12 @@
 
 namespace Arris\Traits;
 
-if (!trait_exists( 'Singleton' )) {
+if (!trait_exists( 'SingletonOptions' )) {
     
-    trait Singleton
+    trait SingletonOptions
     {
         /**
-         * @var Singleton ссылка на инстанс
+         * @var SingletonOptions ссылка на инстанс
          */
         private static $instance;
         
@@ -29,24 +29,24 @@ if (!trait_exists( 'Singleton' )) {
          *
          * @return self
          */
-        final public static function getInstance()
+        final public static function getInstance($options = null)
         {
-            return static::$instance ?? (static::$instance = new static());
+            return static::$instance ?? (static::$instance = new static($options));
         }
     
         /**
          * Singleton constructor.
          * Конструктор.
          */
-        final private function __construct()
+        final private function __construct($options = null)
         {
-            $this->init();
+            $this->init($options);
         }
     
         /**
          * Метод инициализации. Может быть переопределен в классе, использующем трейт.
          */
-        protected function init()
+        protected function init($options = null)
         {
         }
         
