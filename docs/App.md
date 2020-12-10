@@ -5,12 +5,20 @@
 Пример использования:
 
 ```
-App::set(DB::class, DB::C());
-App::set(PHPAuth::class, new PHPAuth(DB::C(), (new PHPAuthConfig())->loadENV('_env')->getConfig() ));
+$app = App::access();  // or ::handle()
+
+$app->set(DB::class, DB::C());
+$app->set(PHPAuth::class, new PHPAuth(DB::C(), (new PHPAuthConfig())->loadENV('_env')->getConfig() ));
 ```
 
 ```
-$dbc = App::get(DB::class);
+$app = App::access(); // or ::handle()
 
-$auth = App::get(PHPAuth::class);
+$dbc = $app->get(DB::class);
+
+// or
+
+$dbc = (App::access())->get(DB::class); 
+
+$auth = $app->get(PHPAuth::class);
 ```
