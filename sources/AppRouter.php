@@ -198,9 +198,9 @@ class AppRouter implements AppRouterInterface
 
         if (array_key_exists($name, self::$route_names)) {
             return self::$route_names[ $name ];
-        } else {
-            return '/';
         }
+    
+        return '/';
     }
 
     public static function dispatch()

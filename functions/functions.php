@@ -40,11 +40,11 @@ if (!function_exists('Arris\checkAllowedValue')) {
     {
         if (empty($value)) {
             return $invalid_value;
-        } else {
-            $key = array_search( $value, $allowed_values_array);
-
-            return ($key !== FALSE) ? $allowed_values_array[ $key ] : $invalid_value;
         }
+    
+        $key = array_search( $value, $allowed_values_array);
+    
+        return ($key !== FALSE) ? $allowed_values_array[ $key ] : $invalid_value;
     }
 }
 
@@ -76,9 +76,9 @@ if (!function_exists('Arris\setOptionEnv')) {
                 return $default_value;
             }
             return getenv($env_key);
-        } else {
-            return $options[$key];
         }
+    
+        return $options[$key];
     }
 }
 
@@ -200,7 +200,7 @@ if (!function_exists('Arris\array_map_to_integer')) {
         if (!is_array($input) || empty($input)) return [];
 
         return array_map(function ($i) {
-            return intval($i);
+            return (int)$i;
         }, $input);
     }
 }
@@ -286,7 +286,7 @@ if (!function_exists('Arris\http_redirect')) {
         $default_scheme = $scheme ?: getenv('HTTP.REDIRECT_SCHEME') ?: 'http';
 
         $location
-            = (strstr($uri, "http://") or strstr($uri, "https://"))
+            = (strpos( $uri, "http://" ) !== false || strpos( $uri, "https://" ) !== false)
             ? "Location: " . $uri
             : "Location: {$default_scheme}://{$_SERVER['HTTP_HOST']}{$uri}";
 
@@ -420,12 +420,14 @@ if (!function_exists('Arris\rmdir_tree')) {
 
 
 // template function
+/*
 if (!function_exists('Arris\__template__')) {
     function __template__()
     {
 
     }
 }
+*/
 
 
 # -eof-

@@ -29,6 +29,11 @@ final class App implements AppInterface
      */
     private $repo = null;
     
+    final public static function factory($options = null)
+    {
+        return self::getInstance($options);
+    }
+    
     final public static function access($options = null)
     {
         return self::getInstance($options);

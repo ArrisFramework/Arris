@@ -27,9 +27,10 @@
         "psr/log": "^1.1"
     },
     "suggest": {
+        "karelwintersky/arris.helpers": "Arris µFramework helpers",
+        "ajur-media/php-image-resize": "PHP class to re-size and scale images",
         "php-curl-class/php-curl-class": "PHP Curl Class makes it easy to send HTTP requests and integrate with web APIs.",
         "spatie/regex": "A sane interface for php's built in preg_* functions",
-        "ajur-media/php-image-resize": "PHP class to re-size and scale images",
         "adbario/php-dot-notation": "PHP dot notation access to arrays"
     },
     "autoload": {

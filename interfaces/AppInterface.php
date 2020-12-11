@@ -6,19 +6,19 @@ interface AppInterface
 {
     /**
      * Возвращает инстанс синглтона App (wrapper)
-     * Alias: handle()
      *
      * @param null $options
      * @return App
      */
+    public static function factory($options = null);
+    
+    /**
+     * Alias of factory
+     */
     public static function access($options = null);
     
     /**
-     * Возвращает инстанс синглтона App (wrapper)
-     * Alias: access()
-     *
-     * @param null $options
-     * @return App
+     * Alias of factory
      */
     public static function handle($options = null);
     
@@ -58,3 +58,5 @@ interface AppInterface
      */
     public function __invoke($key = null, $data = null);
 }
+
+# -eof-

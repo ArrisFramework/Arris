@@ -99,9 +99,12 @@ class CLIConsole implements CLIConsoleInterface
         // replace <font>
         $pattern_font = '#(?<Full>\<font[\s]+color=[\\\'\"](?<Color>[\D]+)[\\\'\"]\>(?<Content>.*)\<\/font\>)#U';
         $message = preg_replace_callback($pattern_font, function ($matches) use ($fgcolors) {
+            $color = $fgcolors[$matches['Color']] ?? $fgcolors['white '];
+            /*
             $color = (PHP_VERSION_ID < 70000)
                 ? isset($fgcolors[$matches['Color']]) ? $fgcolors[$matches['Color']] : $fgcolors['white']    // php below 7.0
                 : $fgcolors[$matches['Color']] ?? $fgcolors['white '];                                           // php 7.0+
+            */
             return "\033[{$color}m{$matches['Content']}\033[0m";
         }, $message);
 

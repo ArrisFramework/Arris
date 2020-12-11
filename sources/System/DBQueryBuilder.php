@@ -18,7 +18,6 @@ class DBQueryBuilder implements DBQueryBuilderInterface
     public function __construct($table = null)
     {
         if ( func_num_args()) $this->table = $table;
-        return $this;
     }
 
     public function insert($table = null)
@@ -121,9 +120,8 @@ class DBQueryBuilder implements DBQueryBuilderInterface
         return $sql;
     }
 
-    private function buildSelectQuery($table, $fields, $where)
+    private function buildSelectQuery($table, $fields, $where = '')
     {
-        $where = '';
         if (!is_null($this->where) && is_array($this->where)) {
             $where = " WHERE " . implode(' AND ', $this->where);
         }
@@ -209,9 +207,8 @@ class DBQueryBuilder implements DBQueryBuilderInterface
         return $query;
     }
 
-    private function buildDeleteQuery($table, $where)
+    private function buildDeleteQuery($table, $where = '')
     {
-        $where = '';
         if (!is_null($this->where) && is_array($this->where)) {
             $where = " WHERE " . implode(' AND ', $this->where);
         }

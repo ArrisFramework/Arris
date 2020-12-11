@@ -27,14 +27,14 @@ Class collection for some my projects
 ## App - Реестр
 
 ```
-$app = App::access();  // or ::handle()
+$app = App::factory();  // or ::handle()
 
 $app->set(DB::class, DB::C());
 $app->set(PHPAuth::class, new PHPAuth(DB::C(), (new PHPAuthConfig())->loadENV('_env')->getConfig() ));
 ```
 
 ```
-$app = App::access(); // or ::handle()
+$app = App::factory(); // or ::handle()
 
 $dbc = $app->get(DB::class);
 

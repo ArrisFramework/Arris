@@ -51,10 +51,10 @@ class Option
     {
         if (empty(self::$_options)) {
             return getenv($key);
-        } else {
-            self::$_env = $key;
         }
-
+    
+        self::$_env = $key;
+    
         return new static;
     }
 
