@@ -3,6 +3,7 @@
 /**
  * User: Karel Wintersky
  * Date: 01.03.2019, Version 2.3/Arris
+ * Date: 09.06.2021, Version 2.4/Arris
  *
  * Library: https://github.com/KarelWintersky/Arris
  */
@@ -18,7 +19,7 @@ use Monolog\Logger;
  */
 class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
 {
-    const VERSION = "1.20";
+    const VERSION = "2.4/Arris";
 
     private static $_current_connection = null;
 
@@ -102,16 +103,17 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
                 }
                 default:
                 {
-                    throw new \Exception('Unknown database driver : ' . $db_driver);
+                    throw new \RuntimeException('Unknown database driver : ' . $db_driver);
                     break;
                 }
             } // switch
-
-
-            if (isset($config['charset']) && isset($config['charset_collate'])) {
-                $dbh->exec("SET NAMES {$config['charset']} COLLATE {$config['charset_collate']}");
-            } elseif (isset($config['charset'])) {
-                $dbh->exec("SET NAMES {$config['charset']}");
+            
+            if (isset($config['charset'])) {
+                $sql = "SET NAMES {$config['charset']}";
+                if (isset($config['charset_collate'])) {
+                    $sql .= " COLLATE {$config['charset_collate']}";
+                }
+                $dbh->exec($sql);
             }
 
             $dbh->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
@@ -130,7 +132,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
 
             $connection_state->setState(TRUE, $message, $e->getCode());
 
-        } catch (\Exception $e) {
+        } catch (\RuntimeException $e) {
             $connection_state->setState(TRUE, $e->getMessage(), $e->getCode());
 
             self::$_configs[$config_key] = NULL;
@@ -140,7 +142,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
             }
         }
 
-        if ($connection_state->error == true) {
+        if ($connection_state->error === true) {
             throw new \Exception($connection_state->errorMsg, $connection_state->errorCode);
         }
 
@@ -216,7 +218,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
     public static function getLogger($suffix = NULL)
     {
         $config_key = self::getKey($suffix);
-        return array_key_exists($config_key, self::$_loggers) ? self::$_loggers[$config_key] : NULL;
+        return self::$_loggers[ $config_key ] ?? NULL;
     }
 
     /**
@@ -302,7 +304,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      */
     public static function query($query, $suffix = NULL)
     {
-        return DB::C($suffix)->query($query);
+        return self::C($suffix)->query($query);
     }
 
     /**
@@ -318,7 +320,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
     {
         if (empty($table) or empty($field) or empty($id)) return false;
 
-        $state = DB::getConnection()->prepare("DELETE FROM {$table} WHERE {$field} = :id");
+        $state = self::getConnection()->prepare("DELETE FROM {$table} WHERE {$field} = :id");
         return $state->execute(['id' => $id]);
     }
 
@@ -332,7 +334,9 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      */
     public function getRowCount($table, $suffix = NULL)
     {
-        if ($table == '') return null;
+        if ($table == '') {
+            return null;
+        }
 
         $sth = self::getConnection($suffix)->query("SELECT COUNT(*) AS cnt FROM {$table}");
 

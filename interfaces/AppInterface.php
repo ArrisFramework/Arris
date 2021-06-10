@@ -23,6 +23,16 @@ interface AppInterface
     public static function handle($options = null);
     
     /**
+     * Инстанциирует App и возвращает значение по ключу.
+     * Краткая форма, не требует предварительного вызова App::factory()
+     *
+     * @param $key
+     * @param $default
+     * @return mixed
+     */
+    public static function key($key, $default);
+    
+    /**
      * Добавляет значение в репозиторий по ключу
      *
      * @param $keys
@@ -57,6 +67,22 @@ interface AppInterface
      * @return array|mixed|void|null
      */
     public function __invoke($key = null, $data = null);
+    
+    /**
+     * Устанавливает конфиг для приложения (array или Dot)
+     *
+     * @param $config
+     * @return mixed
+     */
+    public function setConfig($config);
+    
+    /**
+     * Возвращает весь конфиг или ключ
+     *
+     * @param null $key
+     * @return mixed
+     */
+    public function getConfig($key = null);
 }
 
 # -eof-

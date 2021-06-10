@@ -29,6 +29,11 @@ final class App implements AppInterface
      */
     private $repo = null;
     
+    /**
+     * @var
+     */
+    private $config = null;
+    
     final public static function factory($options = null)
     {
         return self::getInstance($options);
@@ -42,6 +47,22 @@ final class App implements AppInterface
     final public static function handle($options = null)
     {
         return self::getInstance($options);
+    }
+    
+    final public static function key($key, $default)
+    {
+        return (self::getInstance())->get($key, $default);
+    }
+    
+    /**
+     * @todo: isCorrect? isUsable?
+     *
+     * @param $key
+     * @return mixed
+     */
+    final public static function config($key)
+    {
+        return (self::getInstance())->getConfig($key);
     }
     
     /**
@@ -83,6 +104,18 @@ final class App implements AppInterface
     public function get($key = null, $default = null)
     {
         return $this->repo->get($key, $default);
+    }
+
+    // @todo: isCorrect? isUsable?
+    public function getConfig($key = null)
+    {
+        return $this->config[$key];
+    }
+    
+    // @todo: isCorrect? isUsable?
+    public function setConfig($config)
+    {
+        $this->config = $config;
     }
     
     /**

@@ -16,7 +16,11 @@ try {
 
     DB::init(NULL, $ENV, AppLogger::scope('pgsql'));
 
-    $n = DB::query("SHOW TABLES;")->fetchAll(PDO::FETCH_COLUMN);
+DB::query("INSERT INTO t1 (code, name) VALUES (1, '55555')");
+
+    $n = DB::query("SELECT * FROM t1;")->fetchAll();
+
+
 
     var_dump($n);
 

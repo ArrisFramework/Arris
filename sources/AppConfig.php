@@ -5,6 +5,10 @@ namespace Arris;
 use Arris\Core\Dot;
 
 /**
+ * Заготовка для общего класса конфигурации.
+ *
+ * Реализован некорректно, не используется
+ *
  * Class AppConfig
  * @package Arris
  */

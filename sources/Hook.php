@@ -2,21 +2,22 @@
 
 namespace Arris;
 
-use Sabre\Event\EmitterInterface;
-use Sabre\Event\WildcardEmitter;
+// use Sabre\Event\EmitterInterface;
+// use Sabre\Event\WildcardEmitter;
 
-
+use \Arris\Core\EventEmitter;
+use \Arris\Core\EventEmitterInterface;
 
 class Hook implements HookInterface
 {
     /**
-     * @var EmitterInterface
+     * @var EventEmitterInterface
      */
     private static $emitter;
 
     public static function init()
     {
-        self::$emitter = new WildcardEmitter();
+        self::$emitter = new EventEmitter();
     }
 
     public static function register(string $eventName, callable $callBack, int $priority = 100)
