@@ -268,34 +268,6 @@ if (!function_exists('Arris\array_sort_in_given_order')) {
     }
 } // sort_array_in_given_order
 
-if (!function_exists('Arris\http_redirect')) {
-
-    /**
-     * HTTP-редирект
-     *
-     * @param $uri
-     * @param bool $replace_prev_headers
-     * @param int $code
-     * @param string $scheme
-     */
-    function http_redirect($uri, $replace_prev_headers = true, $code = 302, $scheme = '')
-    {
-        $scheme = $scheme ?: 'http';
-        preg_replace('#https?(://)?#', '\{1}', $scheme);
-        
-        
-        
-
-        $location
-            = (strpos( $uri, "http://" ) !== false || strpos( $uri, "https://" ) !== false)
-            ? "Location: " . $uri
-            : "Location: {$scheme}://{$_SERVER['HTTP_HOST']}{$uri}";
-
-        header($location, $replace_prev_headers, $code);
-        exit(0);
-    }
-}
-
 if (!function_exists('Arris\pluralForm')) {
     /**
      *
