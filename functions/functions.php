@@ -17,8 +17,6 @@ interface ArrisFunctionsInterface {
     function array_search_callback(array $a, callable $callback);
     function array_sort_in_given_order(array $array, array $order, $sort_key):array;
 
-    function http_redirect($uri, $replace_prev_headers = false, $code = 302, $scheme = '');
-
     function pluralForm($number, $forms, string $glue = '|'):string;
 
     function GUID();
@@ -273,22 +271,25 @@ if (!function_exists('Arris\array_sort_in_given_order')) {
 if (!function_exists('Arris\http_redirect')) {
 
     /**
-     * HTTP-редирект.
-     * Scheme редиректа определяется так: ENV->HTTP.REDIRECT_SCHEME > $scheme > 'http'
+     * HTTP-редирект
      *
      * @param $uri
      * @param bool $replace_prev_headers
      * @param int $code
      * @param string $scheme
      */
-    function http_redirect($uri, $replace_prev_headers = false, $code = 302, $scheme = '')
+    function http_redirect($uri, $replace_prev_headers = true, $code = 302, $scheme = '')
     {
-        $default_scheme = $scheme ?: getenv('HTTP.REDIRECT_SCHEME') ?: 'http';
+        $scheme = $scheme ?: 'http';
+        preg_replace('#https?(://)?#', '\{1}', $scheme);
+        
+        
+        
 
         $location
             = (strpos( $uri, "http://" ) !== false || strpos( $uri, "https://" ) !== false)
             ? "Location: " . $uri
-            : "Location: {$default_scheme}://{$_SERVER['HTTP_HOST']}{$uri}";
+            : "Location: {$scheme}://{$_SERVER['HTTP_HOST']}{$uri}";
 
         header($location, $replace_prev_headers, $code);
         exit(0);

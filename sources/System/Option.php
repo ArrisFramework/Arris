@@ -8,6 +8,8 @@ namespace Arris\System;
  * @todo: реализовать флаг $is_required для метода ->key()
  * @todo: https://en.wikipedia.org/wiki/Fluent_interface
  *
+ * @todo: сделать метод IMMUTABLE+Factory
+ *
  * @package Arris
  */
 class Option
