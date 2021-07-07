@@ -57,20 +57,19 @@ if (!function_exists('Arris\setOptionEnv')) {
 if (!function_exists('Arris\setOption')) {
     function setOption(array $options = [], $key = null, $default_value = null)
     {
-        if (!is_array($options)) return $default_value;
+        if (!is_array($options)) {
+            return $default_value;
+        }
 
-        if (is_null($key)) return $default_value;
+        if (is_null($key)) {
+            return $default_value;
+        }
 
         return array_key_exists($key, $options) ? $options[ $key ] : $default_value;
     }
 }
 
-if (!function_exists('Arris\float_to_fixed_string')) {
-    function float_to_fixed_string($value, $separator = '.')
-    {
-        return str_replace(',', $separator, (string)$value);
-    }
-}
+
 
 
 

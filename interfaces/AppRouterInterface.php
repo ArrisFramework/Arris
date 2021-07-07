@@ -3,6 +3,7 @@
 namespace Arris;
 
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 interface AppRouterInterface
 {
@@ -12,7 +13,7 @@ interface AppRouterInterface
      *
      * @param Logger $logger
      */
-    public static function init($logger = null, $options = []);
+    public static function init(LoggerInterface $logger = null, $options = []);
 
     /**
      * Устанавливает namespace по умолчанию.

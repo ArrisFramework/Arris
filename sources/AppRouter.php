@@ -2,11 +2,13 @@
 
 namespace Arris;
 
-use FastRoute\RouteCollector;
-use Monolog\Handler\NullHandler;
-use Monolog\Logger;
+use Arris\Exceptions\AppRouterException;
+
 use FastRoute;
-use Exception;
+use FastRoute\RouteCollector;
+
+use Psr\Log\LoggerInterface;
+use Psr\Log\NullLogger;
 
 class AppRouter implements AppRouterInterface
 {
@@ -31,7 +33,7 @@ class AppRouter implements AppRouterInterface
     private static $current_namespace = '';
 
     /**
-     * @var Logger
+     * @var LoggerInterface
      */
     private static $logger;
 
@@ -50,13 +52,13 @@ class AppRouter implements AppRouterInterface
      */
     private static $route_names;
     private static $prefix_current;
-
-    public static function init($logger = null, $options = [])
+    
+    public static function init(LoggerInterface $logger = null, $options = [])
     {
         self::$logger
-            = $logger instanceof Logger
+            = (!is_null($logger) && $logger instanceof LoggerInterface)
             ? $logger
-            : (new Logger('null'))->pushHandler(new NullHandler());
+            : new NullLogger();
 
         self::$httpMethod = $_SERVER['REQUEST_METHOD'];
 
@@ -225,10 +227,10 @@ class AppRouter implements AppRouterInterface
         // dispatch errors
 
         if ($routeInfo[0] === FastRoute\Dispatcher::NOT_FOUND)
-            throw new Exception("URL " . self::$uri. " not found", 404);
+            throw new AppRouterException("URL " . self::$uri. " not found", 404);
 
         if ($routeInfo[0] === FastRoute\Dispatcher::METHOD_NOT_ALLOWED)
-            throw new Exception("Method not allowed, valid methods are: " . implode(',', $routeInfo[1]), 405);
+            throw new AppRouterException("Method not allowed, valid methods are: " . implode(',', $routeInfo[1]), 405);
 
         list($state, $handler, $method_parameters) = $routeInfo;
 
@@ -248,12 +250,12 @@ class AppRouter implements AppRouterInterface
 
             if (!class_exists($class)) {
                 self::$logger->error("Class {$class} not defined.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new Exception("Class {$class} not defined.", 500);
+                throw new AppRouterException("Class {$class} not defined.", 500);
             }
 
             if (!method_exists($class, $method)) {
                 self::$logger->err("Method {$method} not declared at {$class} class.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new Exception("Method {$method} not declared at {$class} class", 500);
+                throw new AppRouterException("Method {$method} not declared at {$class} class", 500);
             }
 
             $actor = [ new $class, $method ];
@@ -264,12 +266,12 @@ class AppRouter implements AppRouterInterface
 
             if (!class_exists($class)){
                 self::$logger->error("Class {$class} not defined.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new Exception("Class {$class} not defined.", 500);
+                throw new AppRouterException("Class {$class} not defined.", 500);
             }
 
             if (!method_exists($class, $method)){
                 self::$logger->error("Method {$method} not declared at {$class} class", [ self::$uri, self::$httpMethod, $class ]);
-                throw new Exception("Method {$method} not declared at {$class} class", 500);
+                throw new AppRouterException("Method {$method} not declared at {$class} class", 500);
             }
 
             $actor = [ $class, $method ];
@@ -278,7 +280,7 @@ class AppRouter implements AppRouterInterface
             // function
             if (!function_exists($handler)){
                 self::$logger->error("Handler function {$handler} not found", [ self::$uri, self::$httpMethod, $handler ]);
-                throw new Exception("Handler function {$handler} not found", 500);
+                throw new AppRouterException("Handler function {$handler} not found", 500);
             }
 
             $actor = $handler;

@@ -16,8 +16,9 @@ namespace Arris;
 
 use Arris\Core\Dot;
 use Exception;
+use RuntimeException;
 
-final class App implements AppInterface
+class App implements AppInterface
 {
     /**
      * @var App ссылка на инстанс
@@ -27,29 +28,29 @@ final class App implements AppInterface
     /**
      * @var Dot
      */
-    private $repo = null;
+    private $repository = null;
     
     /**
      * @var
      */
     private $config = null;
     
-    final public static function factory($options = null)
+    public static function factory($options = null)
     {
         return self::getInstance($options);
     }
     
-    final public static function access($options = null)
+    public static function access($options = null)
     {
         return self::getInstance($options);
     }
     
-    final public static function handle($options = null)
+    public static function handle($options = null)
     {
         return self::getInstance($options);
     }
     
-    final public static function key($key, $default)
+    public static function key($key, $default)
     {
         return (self::getInstance())->get($key, $default);
     }
@@ -60,7 +61,7 @@ final class App implements AppInterface
      * @param $key
      * @return mixed
      */
-    final public static function config($key)
+    public static function config($key)
     {
         return (self::getInstance())->getConfig($key);
     }
@@ -71,7 +72,7 @@ final class App implements AppInterface
      * @param null $options
      * @return App
      */
-    final private static function getInstance($options = null)
+    private static function getInstance($options = null)
     {
         if (!self::$instance) {
             self::$instance = new self($options);
@@ -82,28 +83,28 @@ final class App implements AppInterface
         return self::$instance;
     }
     
-    final private function __construct($options = null)
+    private function __construct($options = null)
     {
-        if (is_null($this->repo)) {
-            $this->repo = new Dot($options);
+        if (is_null($this->repository)) {
+            $this->repository = new Dot($options);
         } else if (!empty($options)) {
-            $this->repo->add($options);
+            $this->repository->add($options);
         }
     }
     
-    public function add($keys, $value = null)
+    function add($keys, $value = null)
     {
-        $this->repo->add($keys, $value);
+        $this->repository->add($keys, $value);
     }
     
     public function set($key, $data = null)
     {
-        $this->repo->set($key, $data);
+        $this->repository->set($key, $data);
     }
     
     public function get($key = null, $default = null)
     {
-        return $this->repo->get($key, $default);
+        return $this->repository->get($key, $default);
     }
 
     // @todo: isCorrect? isUsable?
@@ -126,6 +127,7 @@ final class App implements AppInterface
      */
     final private function __clone()
     {
+        throw new RuntimeException("Cannot serialize an App");
     }
     
     /**
@@ -137,15 +139,15 @@ final class App implements AppInterface
      */
     final private function __wakeup()
     {
-        throw new Exception("Cannot unserialize an App");
+        throw new RuntimeException("Cannot unserialize an App");
     }
     
     public function __invoke($key = null, $data = null)
     {
         return
             is_null($data)
-            ? $this->repo->get($key)
-            : $this->repo->set($key, $data);
+            ? $this->repository->get($key)
+            : $this->repository->set($key, $data);
     }
     
 }

@@ -60,11 +60,11 @@ class CLIConsole implements CLIConsoleInterface
     ];
 
 
-    public static function readline($prompt, $allowed_pattern = '/.*/', $strict_mode = FALSE)
+    public static function readline($prompt, $allowed_pattern = '/.*/', $strict_mode = false)
     {
         if ($strict_mode) {
             if ((substr($allowed_pattern, 0, 1) !== '/') || (substr($allowed_pattern, -1, 1) !== '/')) {
-                return FALSE;
+                return false;
             }
         } else {
             if (substr($allowed_pattern, 0, 1) !== '/')
@@ -80,7 +80,7 @@ class CLIConsole implements CLIConsoleInterface
         return $result;
     }
 
-    public static function echo_status_cli($message = "", $breakline = TRUE)
+    public static function echo_status_cli($message = "", $breakline = true)
     {
         $fgcolors = self::FOREGROUND_COLORS;
 
@@ -100,11 +100,6 @@ class CLIConsole implements CLIConsoleInterface
         $pattern_font = '#(?<Full>\<font[\s]+color=[\\\'\"](?<Color>[\D]+)[\\\'\"]\>(?<Content>.*)\<\/font\>)#U';
         $message = preg_replace_callback($pattern_font, function ($matches) use ($fgcolors) {
             $color = $fgcolors[$matches['Color']] ?? $fgcolors['white '];
-            /*
-            $color = (PHP_VERSION_ID < 70000)
-                ? isset($fgcolors[$matches['Color']]) ? $fgcolors[$matches['Color']] : $fgcolors['white']    // php below 7.0
-                : $fgcolors[$matches['Color']] ?? $fgcolors['white '];                                           // php 7.0+
-            */
             return "\033[{$color}m{$matches['Content']}\033[0m";
         }, $message);
 
@@ -123,24 +118,24 @@ class CLIConsole implements CLIConsoleInterface
         if (self::$echo_status_cli_flags['decode_entities'])
             $message = htmlspecialchars_decode($message, ENT_QUOTES | ENT_HTML5);
 
-        if ($breakline === TRUE) $message .= PHP_EOL;
+        if ($breakline === true) $message .= PHP_EOL;
         echo $message;
         return $message;
     }
 
-    public static function echo_status($message = "", $breakline = TRUE)
+    public static function echo_status($message = "", $breakline = true)
     {
         if (php_sapi_name() === "cli") {
             self::echo_status_cli($message, $breakline);
         } else {
-            if ($breakline === TRUE) $message .= PHP_EOL . "<br/>\r\n";
+            if ($breakline === true) $message .= PHP_EOL . "<br/>\r\n";
             echo $message;
         }
         return $message;
     }
 
 
-    public static function echo_status_setmode($will_strip = FALSE, $will_decode = FALSE)
+    public static function echo_status_setmode($will_strip = false, $will_decode = false)
     {
         self::$echo_status_cli_flags = array(
             'strip_tags'        => $will_strip,
@@ -148,7 +143,7 @@ class CLIConsole implements CLIConsoleInterface
         );
     }
 
-    public static function say($message = "", $breakline = TRUE)
+    public static function say($message = "", $breakline = true)
     {
         self::echo_status($message, $breakline);
     }
