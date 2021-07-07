@@ -332,7 +332,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @return int
      * @throws \Exception
      */
-    public function getRowCount($table, $suffix = NULL)
+    public function getRowCount($table, $suffix = null)
     {
         if ($table == '') {
             return null;
@@ -349,7 +349,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @param null $suffix
      * @return mixed
      */
-    public static function I($suffix = NULL)
+    public static function I($suffix = null)
     {
         $key = self::getKey($suffix);
         self::$_current_connection = $key;
@@ -363,7 +363,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @return int
      * @throws \Exception
      */
-    public static function getLastInsertId($suffix = NULL):int
+    public static function getLastInsertId($suffix = null):int
     {
         return self::getConnection($suffix)->lastInsertId();
     }

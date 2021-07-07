@@ -146,6 +146,9 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
                 } elseif ( in_array('Monolog\Handler\HandlerInterface', class_implements($level_options['handler'])) ) {
 
                     // via HandlerInterface
+                    /**
+                     * @param \Monolog\Handler\HandlerInterface $level_options[]
+                     */
                     $logger->pushHandler( /** @param \Monolog\Handler\HandlerInterface */ $level_options['handler'] );
 
                 } else {

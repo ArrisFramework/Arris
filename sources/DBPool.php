@@ -19,12 +19,12 @@ class DBPool {
     /**
      * @var string
      */
-    private $db_table = '';
+    private $db_table;
 
     /**
      * @var array
      */
-    private $db_columns = [];
+    private $db_columns;
 
     /**
      * @var PDO
@@ -66,7 +66,7 @@ class DBPool {
      */
     public function commit()
     {
-        self::PDO_InsertRange($this->db_table, $this->pool, $this->db_columns, $this->pdo);
+        self::insertRange($this->db_table, $this->pool, $this->db_columns, $this->pdo);
         $this->pool = [];
     }
 
@@ -77,9 +77,11 @@ class DBPool {
      * @param array $db_columns
      * @param $pdo_connection
      */
-    private static function PDO_InsertRange(string $tableName, array $rows, array $db_columns, PDO $pdo_connection)
+    private static function insertRange(string $tableName, array $rows, array $db_columns, PDO $pdo_connection)
     {
-        if (empty($rows)) return;
+        if (empty($rows)) {
+            return;
+        }
 
         // Get column list
         $columnList = array_keys($rows[0]);
