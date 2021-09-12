@@ -27,12 +27,15 @@ interface PathInterface
     public function __construct($path, $isAbsolutePath = null, $hasTrailingSeparator = null);
     
     public function validateAtom($value);
+
     public function toString($hasTrailingSeparator = null);
     public function __toString();
+
+    public function setAbsolutePath($is_present = true);
     public function setTrailingSeparator($is_present = true);
     public function setOptions($options = []);
     
-    public static function create($path);
+    public static function create($path, $isAbsolutePath = null, $hasTrailingSeparator = null);
     public function join($data);
     public function joinName($data);
     

@@ -21,7 +21,7 @@ class AppConfig implements AppConfigInterface
      * @param Dot $instance
      * @return Dot
      */
-    public static function init(Dot &$instance)
+    public static function init(Dot $instance)
     {
         self::$instance = $instance;
         return $instance;
@@ -40,7 +40,7 @@ class AppConfig implements AppConfigInterface
      *
      * @param Dot $instance
      */
-    public static function set(Dot &$instance)
+    public static function set(Dot $instance)
     {
         self::$instance = $instance;
     }

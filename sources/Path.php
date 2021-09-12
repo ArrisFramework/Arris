@@ -91,12 +91,30 @@ class Path implements PathInterface
      * @param bool $is_present
      * @return $this
      */
-    public function setTrailingSeparator($is_present = true)
+    public function setTrailingSeparator($is_present = true):Path
     {
         $this->hasTrailingSeparator = (bool)$is_present;
         return $this;
     }
-    
+
+    /**
+     * Мутирует текущий инстанс - устанавливает флаг "абсолютный путь (начинается с /)"
+     *
+     * @param bool $is_present
+     * @return $this
+     */
+    public function setAbsolutePath($is_present = true)
+    {
+        $this->isAbsolutePath = (bool)$is_present;
+        return $this;
+    }
+
+    /**
+     * Мутирует инстанс - устанавливает опции
+     *
+     * @param array $options
+     * @return $this
+     */
     public function setOptions($options = [])
     {
         if (array_key_exists('isAbsolute', $options)) {
@@ -108,16 +126,19 @@ class Path implements PathInterface
         
         return $this;
     }
-    
+
     /**
      * Create ummutable instance
      *
      * @param $path
+     *
+     * @param null $isAbsolutePath
+     * @param null $hasTrailingSeparator
      * @return Path
      */
-    public static function create($path)
+    public static function create($path, $isAbsolutePath = null, $hasTrailingSeparator = null)
     {
-        return new self($path);
+        return new self($path, $isAbsolutePath, $hasTrailingSeparator);
     }
     
     /**
@@ -125,7 +146,8 @@ class Path implements PathInterface
      *
      * Что делать с попыткой склейки URL-схемы через Path?
      * a) правильный путь: сделать свой класс для склейки URL-ов
-     * б) костыль: если есть схема - менять :// на :|| (в имени нормального файла такого не бывает), а при выводе строки менять обратно. Используем костыль
+     * б) костыль: если есть схема - менять :// на :|| (в имени нормального файла такого не бывает), а при выводе строки менять обратно.
+     *    Используем костыль
      *
      * @param $path - строка | массив строк | массив элементов (строка / экземпляр PathInterface)
      */

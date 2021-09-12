@@ -58,24 +58,13 @@ interface AppInterface
     public function get($key = null, $default = null);
     
     /**
-     * Invoke экземпляра App.
-     * Если передано два аргумента - рассматривается как SET,
-     * Если передан один аргумент - рассматривается как GET
-     *
-     * @param null $key
-     * @param null $data
-     * @return array|mixed|void|null
-     */
-    public function __invoke($key = null, $data = null);
-    
-    /**
      * Устанавливает конфиг для приложения (array или Dot)
      *
      * @param $config
      * @return mixed
      */
     public function setConfig($config);
-    
+
     /**
      * Возвращает весь конфиг или ключ
      *
@@ -83,6 +72,56 @@ interface AppInterface
      * @return mixed
      */
     public function getConfig($key = null);
+
+    /**
+     * @param $key
+     * @return mixed
+     */
+    public static function config($key);
+
+    /* MAGIC METHODS */
+
+    /**
+     * Invoke экземпляра App
+     *
+     * Если передано два аргумента - рассматривается как SET,
+     * Если передан один аргумент - рассматривается как GET
+     *
+     * Позволяет использовать механизм обращения к переменной $APP с аргументами:
+     * $app = (App::factory())
+     * $app($key, $data) or $app($key)
+     *
+     * @param null $key
+     * @param null $data
+     * @return array|mixed|void|null
+     */
+    public function __invoke($key = null, $data = null);
+
+    /**
+     * Setter, хранит в "магическом" репозитории значения
+     * $app->xxx = 1
+     *
+     * @param $key
+     * @param $value
+     */
+    public function __set($key, $value);
+
+    /**
+     * isSet, проверяет наличие значения в "магическом" репозитории
+     *
+     * @param $key
+     * @return bool
+     */
+    public function __isset($key);
+
+    /**
+     * Getter, возвращает значение из магического репозитория (или null)
+     *
+     * @param $key
+     * @return mixed|null
+     */
+    public function __get($key);
+
 }
 
 # -eof-

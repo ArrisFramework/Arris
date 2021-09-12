@@ -29,6 +29,11 @@ class App implements AppInterface
      * @var Dot
      */
     private $repository = null;
+
+    /**
+     * @var array|null|Dot
+     */
+    private $magic_repo = null;
     
     /**
      * @var
@@ -55,12 +60,6 @@ class App implements AppInterface
         return (self::getInstance())->get($key, $default);
     }
     
-    /**
-     * @todo: isCorrect? isUsable?
-     *
-     * @param $key
-     * @return mixed
-     */
     public static function config($key)
     {
         return (self::getInstance())->getConfig($key);
@@ -92,7 +91,7 @@ class App implements AppInterface
         }
     }
     
-    function add($keys, $value = null)
+    public function add($keys, $value = null)
     {
         $this->repository->add($keys, $value);
     }
@@ -107,18 +106,43 @@ class App implements AppInterface
         return $this->repository->get($key, $default);
     }
 
-    // @todo: isCorrect? isUsable?
     public function getConfig($key = null)
     {
-        return $this->config[$key];
+        return  is_null($key)
+                ? $this->config
+                : $this->config[$key];
     }
     
-    // @todo: isCorrect? isUsable?
     public function setConfig($config)
     {
         $this->config = $config;
     }
-    
+
+    /* ===================== MAGIC METHODS =========================== */
+
+    public function __invoke($key = null, $data = null)
+    {
+        return
+            is_null($data)
+            ? $this->repository->get($key)
+            : $this->repository->set($key, $data);
+    }
+
+    public function __set($key, $value)
+    {
+        $this->magic_repo[ $key ] = $value;
+    }
+
+    public function __isset($key)
+    {
+        return array_key_exists($key, $this->magic_repo);
+    }
+
+    public function __get($key)
+    {
+        return $this->__isset($key) ? $this->magic_repo[$key] : null;
+    }
+
     /**
      * Prevent the instance from being cloned.
      * Предотвращаем клонирование инстанса
@@ -129,7 +153,7 @@ class App implements AppInterface
     {
         throw new RuntimeException("Cannot serialize an App");
     }
-    
+
     /**
      * Prevent from being unserialized.
      * Предотвращаем десериализацию инстанса
@@ -141,15 +165,7 @@ class App implements AppInterface
     {
         throw new RuntimeException("Cannot unserialize an App");
     }
-    
-    public function __invoke($key = null, $data = null)
-    {
-        return
-            is_null($data)
-            ? $this->repository->get($key)
-            : $this->repository->set($key, $data);
-    }
-    
+
 }
 
 # -eof-

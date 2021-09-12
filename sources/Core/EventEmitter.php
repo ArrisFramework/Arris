@@ -1,8 +1,6 @@
 <?php
 
-
 namespace Arris\Core;
-
 
 class EventEmitter implements EventEmitterInterface
 {

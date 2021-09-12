@@ -2,9 +2,6 @@
 
 namespace Arris;
 
-// use Sabre\Event\EmitterInterface;
-// use Sabre\Event\WildcardEmitter;
-
 use \Arris\Core\EventEmitter;
 use \Arris\Core\EventEmitterInterface;
 
