@@ -52,7 +52,14 @@ class AppRouter implements AppRouterInterface
      */
     private static $route_names;
     private static $prefix_current;
-    
+
+    /**
+     * Current Routing Info
+     *
+     * @var array
+     */
+    private static $routeInfo;
+
     public static function init(LoggerInterface $logger = null, $options = [])
     {
         self::$logger
@@ -216,21 +223,24 @@ class AppRouter implements AppRouterInterface
                 
                 $r->addRoute($rule['httpMethod'], $rule['route'], $handler);
                 
-                if (!is_null($rule['name']))
-                    self::$route_names[ $rule['name'] ] = $rule['route'];
+                if (!is_null($rule['name'])) {
+                    self::$route_names[$rule['name']] = $rule['route'];
+                }
             }
         });
 
         // Fetch method and URI from somewhere
-        $routeInfo = (self::$dispatcher)->dispatch(self::$httpMethod, self::$uri);
+        self::$routeInfo = $routeInfo = (self::$dispatcher)->dispatch(self::$httpMethod, self::$uri);
 
         // dispatch errors
 
-        if ($routeInfo[0] === FastRoute\Dispatcher::NOT_FOUND)
-            throw new AppRouterException("URL " . self::$uri. " not found", 404);
+        if ($routeInfo[0] === FastRoute\Dispatcher::NOT_FOUND) {
+            throw new AppRouterException("URL " . self::$uri . " not found", 404);
+        }
 
-        if ($routeInfo[0] === FastRoute\Dispatcher::METHOD_NOT_ALLOWED)
+        if ($routeInfo[0] === FastRoute\Dispatcher::METHOD_NOT_ALLOWED) {
             throw new AppRouterException("Method not allowed, valid methods are: " . implode(',', $routeInfo[1]), 405);
+        }
 
         list($state, $handler, $method_parameters) = $routeInfo;
 
@@ -240,7 +250,6 @@ class AppRouter implements AppRouterInterface
             ? self::$default_namespace . "\\{$handler}"
             : $handler;
         */
-
 
         if ($handler instanceof \Closure) {
             $actor = $handler;
@@ -291,6 +300,23 @@ class AppRouter implements AppRouterInterface
         unset($state);
     }
 
+    /**
+     * @inheritDoc
+     *
+     * @return array
+     */
+    public static function getRoutingInfo()
+    {
+        return self::$routeInfo;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public static function getRoutingRules()
+    {
+        return self::$rules;
+    }
 }
 
 # -eof-

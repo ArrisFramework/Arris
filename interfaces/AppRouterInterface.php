@@ -2,7 +2,6 @@
 
 namespace Arris;
 
-use Monolog\Logger;
 use Psr\Log\LoggerInterface;
 
 interface AppRouterInterface
@@ -11,12 +10,13 @@ interface AppRouterInterface
     /**
      * Инициализирует статик-класс
      *
-     * @param Logger $logger
+     * @param LoggerInterface $logger
      */
     public static function init(LoggerInterface $logger = null, $options = []);
 
     /**
-     * Устанавливает namespace по умолчанию.
+     * Устанавливает namespace по умолчанию
+     *
      * @todo: перенести в опции
      * @param string $namespace
      */
@@ -96,7 +96,13 @@ interface AppRouterInterface
     public static function groupNamespace($namespace, callable $callback);
     
     /**
-     * @param $options
+     * Create routing group with options
+     * Создает группу роутов
+     *
+     * @todo: переделать, потому что допускает только однократную вложенность
+     * (self::backup_options - не стек, а просто хранилище)
+     *
+     * @param $options - prefix, namespace
      * @param callable $callback
      * @return mixed
      */
@@ -108,5 +114,27 @@ interface AppRouterInterface
      * @throws \Exception
      */
     public static function dispatch();
+
+    /**
+     * Возвращает информацию о роуте по имени
+     *
+     * @param string $name
+     * @return string
+     */
+    public static function getRouter($name = '');
+
+    /**
+     * Возвращает информацию о текущем роутинге
+     *
+     * @return array
+     */
+    public static function getRoutingInfo();
+
+    /**
+     * Возвращает текущий массив правил роутинга
+     *
+     * @return array
+     */
+    public static function getRoutingRules();
 
 }
