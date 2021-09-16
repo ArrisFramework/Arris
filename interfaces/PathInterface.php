@@ -28,7 +28,7 @@ interface PathInterface
     
     public function validateAtom($value);
 
-    public function toString($hasTrailingSeparator = null);
+    public function toString($hasTrailingSeparator = false);
     public function __toString();
 
     public function setAbsolutePath($is_present = true);

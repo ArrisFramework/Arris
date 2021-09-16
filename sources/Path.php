@@ -41,22 +41,27 @@ class Path implements PathInterface
         
         return $value;
     }
-    
+
+    /**
+     * Экспорт экземпляра Path в строку
+     *
+     * @param null $hasTrailingSeparator
+     * @return string
+     */
     private function export($hasTrailingSeparator = null)
     {
-        $isAP
-            = $this->isAbsolutePath;
-        $hasTS
-            = !is_null($hasTrailingSeparator)
-            ? true
-            : $this->hasTrailingSeparator;
-        
+        // если переданный аргумент НЕ null - он перекрывает предыдущие настройки
+        if (!is_null($hasTrailingSeparator)) {
+            $this->hasTrailingSeparator = (bool)$hasTrailingSeparator;
+        }
+        $hasTS = $hasTrailingSeparator ? DIRECTORY_SEPARATOR : '';
+
+        $isAP = $this->isAbsolutePath ? DIRECTORY_SEPARATOR : '';
+
         $path
-            = ($isAP ? self::ATOM_SEPARATOR : '')
-            .
-            implode(self::ATOM_SEPARATOR, $this->atoms)
-            .
-            ($hasTS ? self::ATOM_SEPARATOR : '');
+            = $isAP
+            . implode(self::ATOM_SEPARATOR, $this->atoms)
+            . $hasTS;
         
         if (strpos($path, ':||') !== false) {
             $path = preg_replace("#:\|\|#", '://', $path);
@@ -70,7 +75,7 @@ class Path implements PathInterface
     /**
      * @return string
      */
-    public function toString($hasTrailingSeparator = null)
+    public function toString($hasTrailingSeparator = false)
     {
         return $this->export($hasTrailingSeparator);
     }
