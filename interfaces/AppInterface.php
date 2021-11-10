@@ -75,9 +75,10 @@ interface AppInterface
 
     /**
      * @param $key
+     * @param null $value
      * @return mixed
      */
-    public static function config($key);
+    public static function config($key = null, $value = null);
 
     /* MAGIC METHODS */
 

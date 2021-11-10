@@ -26,17 +26,23 @@ class App implements AppInterface
     private static $instance;
     
     /**
+     * Репозиторий App
+     *
      * @var Dot
      */
     private $repository = null;
 
     /**
+     * "Магический" репозиторий App для методов __set, __get, __isset
+     *
      * @var array|null|Dot
      */
     private $magic_repo = null;
     
     /**
-     * @var
+     * DOT-Репозиторий конфига
+     *
+     * @var array|null|Dot $config
      */
     private $config = null;
     
@@ -60,9 +66,14 @@ class App implements AppInterface
         return (self::getInstance())->get($key, $default);
     }
     
-    public static function config($key)
+    public static function config($key = null, $value = null)
     {
-        return (self::getInstance())->getConfig($key);
+        if (is_null($value)) {
+            return (self::getInstance())->getConfig($key);
+        }
+
+        (self::getInstance())->set('config', $key);
+        return true;
     }
     
     /**
@@ -71,7 +82,7 @@ class App implements AppInterface
      * @param null $options
      * @return App
      */
-    private static function getInstance($options = null)
+    protected static function getInstance($options = null)
     {
         if (!self::$instance) {
             self::$instance = new self($options);
@@ -88,6 +99,10 @@ class App implements AppInterface
             $this->repository = new Dot($options);
         } else if (!empty($options)) {
             $this->repository->add($options);
+        }
+
+        if (is_null($this->config)) {
+            $this->config = new Dot();
         }
     }
     
@@ -115,7 +130,7 @@ class App implements AppInterface
     
     public function setConfig($config)
     {
-        $this->config = $config;
+        $this->config = new Dot($config);
     }
 
     /* ===================== MAGIC METHODS =========================== */
@@ -130,17 +145,20 @@ class App implements AppInterface
 
     public function __set($key, $value)
     {
-        $this->magic_repo[ $key ] = $value;
+        if (is_null($this->magic_repo)) {
+            $this->magic_repo = new Dot([]);
+        }
+        $this->magic_repo->set($key, $value);
     }
 
     public function __isset($key)
     {
-        return array_key_exists($key, $this->magic_repo);
+        return $this->magic_repo->has($key);
     }
 
     public function __get($key)
     {
-        return $this->__isset($key) ? $this->magic_repo[$key] : null;
+        return $this->__isset($key) ? $this->magic_repo->get($key) : null;
     }
 
     /**

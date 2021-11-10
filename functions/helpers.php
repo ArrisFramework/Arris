@@ -75,4 +75,21 @@ if (!function_exists('__envPath')) {
     }
 }
 
+if (!function_exists('getJSONPayload')) {
+
+    /**
+     * Возвращает десериализованный payload
+     *
+     * Должно применяться для получения массива $_REQUEST для получения данных
+     * отправленных с фронта через JS Fetch API методом POST JSON data
+     * - во всех callback обработчиках, ожидающих данные в JSON.
+     *
+     * @return mixed
+     */
+    function getJSONPayload()
+    {
+        return json_decode(file_get_contents('php://input'), true);
+    }
+}
+
 # -eof-
