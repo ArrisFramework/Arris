@@ -2,50 +2,64 @@
 
 namespace Arris\Utils;
 
-interface TimerInterface {
-
+interface TimerInterface
+{
+    /**
+     * Дефолтное имя таймера
+     */
+    public const DEFAULT_INTERNAL_NAME = 'default';
+    
+    /**
+     * Runtime-состояния
+     */
+    public const STATE_UNDEFINED = 0;
+    public const STATE_NEW = 1;
+    public const STATE_RUNNING = 2;
+    public const STATE_PAUSED = 4;
+    public const STATE_STOPPED = 8;
+    
     /**
      * Создает таймер с указанным идентификатором и описанием.
      * Если не указать имя - будет использован таймер по умолчанию - default.
      * Если такой таймер уже существует - он будет уничтожен (и пересоздан)
      *
-     * @param string $name
-     * @param string $desc
+     * @param string|null $name
+     * @param int $round
      */
-    public static function init($name = null, $desc = null);
-
+    public static function init(string $name = null, int $round = 6);
+    
     /**
      * Создает таймер и запускает с указанным идентификатором и описанием.
      * Если не указать имя - будет использован таймер по умолчанию - default.
      * Если такой таймер уже существует - он будет уничтожен (и пересоздан)
      *
-     * @param null $name
-     * @param null $desc
+     * @param string|null $name
      */
-    public static function start($name = null, $desc = null);
+    public static function start(string $name = null);
 
     /**
      * Запускает таймер с указанным идентификатором
      *
-     * @param string $name
+     * @param string|null $name
      */
-    public static function go($name = null);
-
+    public static function go(string $name = null);
+    
     /**
      * Ставит на паузу таймер с указанным идентификатором
      *
-     * @param string $name
+     * @param string|null $name
+     * @return string
      */
-    public static function pause($name = null);
-
+    public static function pause(string $name = null):string;
+    
     /**
      * Останавливает таймер с указанным идентификатором и возвращает его значение в миллисекундах.
      * При следующем запуске отсчет начнется сначала, т.е. значение таймера сбросится.
      *
-     * @param string $name
-     * @return mixed
+     * @param string|null $name
+     * @return string
      */
-    public static function stop($name = null);
+    public static function stop(string $name = null):string;
 
     /**
      * Останавливает все таймеры
@@ -58,7 +72,7 @@ interface TimerInterface {
      * @param string $name
      * @return mixed
      */
-    public static function get($name = null);
+    public static function get(string $name = null);
 
     /**
      * Возвращает все таймеры в виде массива:
@@ -72,7 +86,7 @@ interface TimerInterface {
      * @param string $name
      * @return bool
      */
-    public static function get_state($name = null);
+    public static function get_state(string $name = null);
 
     /**
      * Уничтожает указанный таймер

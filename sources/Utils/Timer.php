@@ -11,7 +11,10 @@
 
 namespace Arris\Utils;
 
-use Arris\Utils\TimerInterface;
+use function microtime;
+use function array_key_exists;
+use function number_format;
+use function is_null;
 
 /**
  * Class Timer
@@ -20,26 +23,18 @@ use Arris\Utils\TimerInterface;
  */
 class Timer implements TimerInterface
 {
-    const DEFAULT_INTERNAL_NAME = 'default';
-
-    const STATE_NEW = 0;
-    const STATE_RUNNING = 1;
-    const STATE_PAUSED = 2;
-    const STATE_STOPPED = 3;
-
     public static $timers = array();
 
-    public static function init($name = null, $desc = null, $round = 6)
+    public static function init($name = null, $round = 6)
     {
         $name = self::getTimerInternalName($name);
 
-        if (\array_key_exists($name, self::$timers)) {
+        if (array_key_exists($name, self::$timers)) {
             unset( self::$timers[ $name ]);
         }
 
         self::$timers[ $name ] = array(
             'name'          =>  $name,
-            'desc'          =>  $desc,
             'state'         =>  self::STATE_NEW,
             'time.start'    =>  0,
             'time.total'    =>  0,
@@ -47,24 +42,24 @@ class Timer implements TimerInterface
             'round'         =>  (int)$round
         );
     }
-
+    
     /**
      *
      * @param null $name
-     * @param null $desc
+     * @param int $round
      */
-    public static function start($name = null, $desc = null, $round = 6)
+    public static function start($name = null, $round = 6)
     {
-        self::init($name, $desc, $round);
+        self::init($name, $round);
         self::go($name);
     }
 
-    public static function go($name = null)
+    public static function go(string $name = null)
     {
         $name = self::getTimerInternalName($name);
         $timer = &self::$timers[ $name ];
 
-        if ($timer['state'] == self::STATE_STOPPED) {
+        if ($timer['state'] === self::STATE_STOPPED) {
             $timer['time.total'] = 0;
             $timer['iterations'] = 0;
         }
@@ -74,35 +69,37 @@ class Timer implements TimerInterface
         $timer['iterations']++;
     }
 
-    public static function pause($name = null)
+    public static function pause($name = null):string
     {
         $name = self::getTimerInternalName($name);
         $timer = &self::$timers[ $name ];
 
         $timer['state'] = self::STATE_PAUSED;
-        $timer['time.total'] += ( \microtime(true) - $timer['time.start']);
+        $timer['time.total'] += ( microtime(true) - $timer['time.start']);
+        
+        return number_format($timer['time.total'], $timer['round'], '.', '');
     }
 
-    public static function stop($name = null)
+    public static function stop($name = null):string
     {
         $name = self::getTimerInternalName($name);
         $timer = &self::$timers[ $name ];
 
         $timer['state'] = self::STATE_STOPPED;
-        $timer['time.total'] += ( \microtime(true) - $timer['time.start']);
-        return round($timer['time.total'], $timer['round']);
+        $timer['time.total'] += ( microtime(true) - $timer['time.start']);
+        return number_format($timer['time.total'], $timer['round'], '.', '');
     }
 
     public static function stopAll()
     {
         foreach (self::$timers as $n => $timer) {
-            if ($timer['iterations'] == 0) {
+            if ($timer['iterations'] === 0) {
                 unset(self::$timers[$n]);
                 continue;
             }
-            if ((self::$timers[ $n ]['state'] != self::STATE_STOPPED) && (self::$timers[ $n ]['state'] != self::STATE_PAUSED))
+            if ((self::$timers[ $n ]['state'] !== self::STATE_STOPPED) && (self::$timers[ $n ]['state'] !== self::STATE_PAUSED))
             {
-                self::$timers[ $n ]['time.total'] += ( \microtime(true) - self::$timers[ $n ]['time.start']);
+                self::$timers[ $n ]['time.total'] += ( microtime(true) - self::$timers[ $n ]['time.start']);
                 self::$timers[ $n ]['state'] = self::STATE_STOPPED;
             }
         }
@@ -119,7 +116,7 @@ class Timer implements TimerInterface
     {
         $name = self::getTimerInternalName($name);
 
-        if (\array_key_exists($name, self::$timers)) {
+        if (array_key_exists($name, self::$timers)) {
             unset( self::$timers[ $name ]);
             return true;
         }
@@ -131,7 +128,7 @@ class Timer implements TimerInterface
     {
         $name = self::getTimerInternalName($name);
 
-        return \array_key_exists($name, self::$timers);
+        return array_key_exists($name, self::$timers);
     }
 
     public static function get_state($name = null)
@@ -142,7 +139,7 @@ class Timer implements TimerInterface
             return self::$timers[ $name ]['state'];
         }
     
-        return false;
+        return self::STATE_UNDEFINED;
     }
 
     public static function get_all_timers()

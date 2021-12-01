@@ -17,15 +17,29 @@ class Hook implements HookInterface
         self::$emitter = new EventEmitter();
     }
 
+    public static function on(string $eventName, callable $callBack, int $priority = 100)
+    {
+        self::register($eventName, $callBack, $priority);
+    }
+
+    public static function off(string $eventName, callable $callBack)
+    {
+        self::$emitter->removeListener($eventName, $callBack);
+    }
+
     public static function register(string $eventName, callable $callBack, int $priority = 100)
     {
-        if (empty($eventName)) return;
+        if (empty($eventName)) {
+            return;
+        }
         self::$emitter->on($eventName, $callBack, $priority);
     }
 
     public static function run(string $eventName, array $arguments = [], callable $continueCallBack = null)
     {
-        if (empty($eventName)) return false;
+        if (empty($eventName)) {
+            return false;
+        }
         return self::$emitter->emit($eventName, $arguments, $continueCallBack);
     }
 
