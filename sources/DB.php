@@ -10,9 +10,11 @@
 
 namespace Arris;
 
-use Arris\System\AppStateHandler;
-use Arris\System\DBQueryBuilder;
+use Arris\DB\SimpleQueryBuilder;
+use Exception;
 use Monolog\Logger;
+use PDOStatement;
+use RuntimeException;
 
 /**
  * Class DB
@@ -50,19 +52,21 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
     /**
      * DB constructor.
      * @param $suffix
-     * @throws \Exception
+     * @throws Exception
      */
     public function __construct($suffix)
     {
-        $connection_state = new AppStateHandler(__CLASS__);
-
         $config_key = self::getKey($suffix);
         $config = self::getConfig($suffix);
         $logger = self::getLogger($suffix);
+        
+        $state_is_error = false;
+        $state_error_code = 0;
+        $state_error_msg = '';
 
         try {
-            if ($config === NULL) {
-                throw new \Exception("DB class can't find configuration data for suffix {$suffix}" . PHP_EOL, 2);
+            if (is_null($config)) {
+                throw new RuntimeException("Arris\DB class can't find configuration data for suffix {$suffix}" . PHP_EOL, 2);
             }
 
             $db_driver = $config['driver'] ?? 'mysql';
@@ -73,8 +77,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
             $db_port = $config['port'] ?? 3306;
 
             switch ($db_driver) {
-                case 'mysql':
-                {
+                case 'mysql': {
                     $dsl = sprintf("mysql:host=%s;port=%s;dbname=%s",
                         $db_host,
                         $db_port,
@@ -83,8 +86,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
 
                     break;
                 }
-                case 'pgsql':
-                {
+                case 'pgsql': {
                     $dsl = sprintf("pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
                         $db_host,
                         $db_port,
@@ -95,22 +97,20 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
                     $dbh = new \PDO($dsl);
                     break;
                 }
-                case 'sqlite':
-                {
+                case 'sqlite': {
                     $dsl = sprintf("sqlite:%s", realpath($db_host));
                     $dbh = new \PDO($dsl);
                     break;
                 }
-                default:
-                {
-                    throw new \RuntimeException('Unknown database driver : ' . $db_driver);
+                default: {
+                    throw new RuntimeException('Unknown database driver : ' . $db_driver);
                     break;
                 }
             } // switch
             
-            if (isset($config['charset'])) {
+            if (isset($config['charset']) && !is_null($config['charset'])) {
                 $sql = "SET NAMES {$config['charset']}";
-                if (isset($config['charset_collate'])) {
+                if (isset($config['charset_collate']) && !is_null($config['charset_collate'])) {
                     $sql .= " COLLATE {$config['charset_collate']}";
                 }
                 $dbh->exec($sql);
@@ -121,29 +121,31 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
 
             self::$_instances[$config_key] = $dbh;
 
-            $connection_state->setState(FALSE);
-
         } catch (\PDOException $e) {
-            $message = "Unable to connect `{$db_driver}:{$db_name}@{$db_host}:{$db_port}`, PDO CONNECTION ERROR: " . $e->getMessage() . "\r\n" . PHP_EOL;
+            $state_is_error = true;
+            
+            $message = "Unable to connect `{$db_driver}:{$db_name}@{$db_host}:{$db_port}`, PDO CONNECTION ERROR: ";
+            $state_error_msg = $message . $e->getMessage();
+            $state_error_code = $e->getCode();
 
             if ($logger instanceof Logger) {
-                $logger->emergency("Unable to connect `{$db_driver}:{$db_name}@{$db_host}:{$db_port}`, PDO Connection error", [$e->getMessage(), $e->getCode()]);
+                $logger->emergency($message, [$e->getMessage(), $e->getCode()]);
             }
 
-            $connection_state->setState(TRUE, $message, $e->getCode());
+        } catch (RuntimeException $e) {
+            $state_is_error = true;
+            $state_error_msg = $e->getMessage();
+            $state_error_code = $e->getCode();
 
-        } catch (\RuntimeException $e) {
-            $connection_state->setState(TRUE, $e->getMessage(), $e->getCode());
-
-            self::$_configs[$config_key] = NULL;
+            self::$_configs[$config_key] = null;
 
             if ($logger instanceof Logger) {
-                $logger->emergency(__CLASS__ . " Other error: ", [$e->getMessage(), $e->getCode()]);
+                $logger->emergency("Arris\DB Runtime error: ", [$e->getMessage(), $e->getCode()]);
             }
         }
 
-        if ($connection_state->error === true) {
-            throw new \Exception($connection_state->errorMsg, $connection_state->errorCode);
+        if ($state_is_error === true) {
+            throw new Exception($state_error_msg, $state_error_code);
         }
 
         self::$_configs[$config_key] = $config;
@@ -155,7 +157,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @param $config
      * @param Logger|null $logger
      * @param array $options
-     * @throws \Exception
+     * @throws Exception
      */
     public static function init($suffix, $config, Logger $logger = null, array $options = [])
     {
@@ -174,7 +176,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
                 $logger->emergency($message);
             }
 
-            throw new \Exception($message);
+            throw new Exception($message);
         }
 
         self::$_loggers[$config_key]
@@ -205,20 +207,20 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @param null $suffix
      * @return mixed|null
      */
-    public static function getConfig($suffix = NULL)
+    public static function getConfig($suffix = null)
     {
         $config_key = self::getKey($suffix);
-        return array_key_exists($config_key, self::$_configs) ? self::$_configs[$config_key] : NULL;
+        return self::$_configs[ $config_key ] ?? NULL;
     }
 
     /**
      * @param null $suffix
      * @return Logger|null
      */
-    public static function getLogger($suffix = NULL)
+    public static function getLogger($suffix = null)
     {
         $config_key = self::getKey($suffix);
-        return self::$_loggers[ $config_key ] ?? NULL;
+        return self::$_loggers[ $config_key ] ?? null;
     }
 
     /**
@@ -227,26 +229,22 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @param $config
      * @param null $suffix
      */
-    public static function setConfig(array $config, $suffix = NULL)
+    public static function setConfig(array $config, $suffix = null)
     {
         $config_key = self::getKey($suffix);
         self::$_configs[$config_key] = $config;
     }
 
-    public static function getConnection($suffix = NULL): \PDO
+    public static function getConnection($suffix = null): \PDO
     {
         self::$_db_requests_count++;
         return self::getInstance($suffix);
     }
 
-    public static function C($suffix = NULL): \PDO
+    public static function C($suffix = null): \PDO
     {
         return self::getConnection($suffix);
     }
-
-    /*
-    Set default connection context
-    */
 
     /**
      * Set current connection key for internal calls === setContext() ?
@@ -257,7 +255,6 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
     {
         self::$_current_connection = self::getKey($suffix);
     }
-
 
     /**
      * @param $suffix
@@ -275,13 +272,12 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
         return self::$_current_connection;
     }
 
-
     /**
      * Get class instance == connection instance
      *
      * @param null $suffix
      * @return \PDO
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getInstance($suffix = NULL): \PDO
     {
@@ -299,12 +295,12 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      *
      * @param $query
      * @param null $suffix
-     * @return false|\PDOStatement
-     * @throws \Exception
+     * @return false|PDOStatement
+     * @throws Exception
      */
     public static function query($query, $suffix = NULL)
     {
-        return self::C($suffix)->query($query);
+        return self::getConnection($suffix)->query($query);
     }
 
     /**
@@ -314,11 +310,11 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @param string $field
      * @param $id
      * @return int
-     * @throws \Exception
+     * @throws Exception
      */
     public static function queryDeleteRow(string $table, string $field, $id): int
     {
-        if (empty($table) or empty($field) or empty($id)) return false;
+        if (empty($table) || empty($field) || empty($id)) return false;
 
         $state = self::getConnection()->prepare("DELETE FROM {$table} WHERE {$field} = :id");
         return $state->execute(['id' => $id]);
@@ -330,7 +326,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      * @param $table
      * @param null $suffix
      * @return int
-     * @throws \Exception
+     * @throws Exception
      */
     public function getRowCount($table, $suffix = null)
     {
@@ -361,7 +357,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
      *
      * @param null $suffix
      * @return int
-     * @throws \Exception
+     * @throws Exception
      */
     public static function getLastInsertId($suffix = null):int
     {
@@ -476,9 +472,9 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
         return $query;
     }
 
-    public static function makeQuery():DBQueryBuilder
+    public static function makeQuery():SimpleQueryBuilder
     {
-        return (new DBQueryBuilder());
+        return (new SimpleQueryBuilder());
     }
 
     /**
@@ -577,19 +573,19 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
 
         $dataset_keys = array_keys($dataset);
 
-        $query .= implode(', ', array_map(function ($i){
+        $query .= implode(', ', array_map( static function ($i){
             return "`{$i}`";
         }, $dataset_keys));
 
         $query .= " ) VALUES ( ";
 
-        $query .= implode(', ', array_map(function ($i) use ($mva_attributes, $dataset){
+        $query .= implode(', ', array_map(static function ($i) use ($mva_attributes, $dataset){
             return in_array($i, $mva_attributes) ? "({$dataset[$i]})" : ":{$i}";
         }, $dataset_keys));
 
         $query .= " ) ";
 
-        $new_dataset = array_filter($dataset, function ($value, $key) use ($mva_attributes) {
+        $new_dataset = array_filter($dataset, static function ($value, $key) use ($mva_attributes) {
             return !in_array($key, $mva_attributes);
         }, ARRAY_FILTER_USE_BOTH);
 
@@ -605,7 +601,7 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
  *
  * @param null $suffix
  * @return \PDO
- * @throws \Exception
+ * @throws Exception
  */
 function DBC($suffix = null)
 {

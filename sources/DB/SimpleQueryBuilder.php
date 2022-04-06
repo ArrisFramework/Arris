@@ -1,10 +1,8 @@
 <?php
 
-namespace Arris\System;
+namespace Arris\DB;
 
-use Arris\System\DBQueryBuilderInterface;
-
-class DBQueryBuilder implements DBQueryBuilderInterface
+class SimpleQueryBuilder implements SimpleQueryBuilderInterface
 {
     /**
      * @var string
@@ -17,34 +15,52 @@ class DBQueryBuilder implements DBQueryBuilderInterface
 
     public function __construct($table = null)
     {
-        if ( func_num_args()) $this->table = $table;
+        if ( func_num_args()) {
+            $this->table = $table;
+        }
+    }
+    
+    public function table($table = null)
+    {
+        if ( func_num_args()) {
+            $this->table = $table;
+        }
+        return $this;
     }
 
     public function insert($table = null)
     {
         $this->method = 'INSERT';
-        if ( func_num_args()) $this->table = $table;
+        if ( func_num_args()) {
+            $this->table = $table;
+        }
         return $this;
     }
 
     public function replace($table = null)
     {
         $this->method = 'REPLACE';
-        if ( func_num_args()) $this->table = $table;
+        if ( func_num_args()) {
+            $this->table = $table;
+        }
         return $this;
     }
 
     public function update($table = null)
     {
         $this->method = 'UPDATE';
-        if ( func_num_args()) $this->table = $table;
+        if ( func_num_args()) {
+            $this->table = $table;
+        }
         return $this;
     }
 
     public function delete($table = null)
     {
         $this->method = 'DELETE';
-        if ( func_num_args()) $this->table = $table;
+        if ( func_num_args()) {
+            $this->table = $table;
+        }
         return $this;
     }
 
@@ -85,15 +101,22 @@ class DBQueryBuilder implements DBQueryBuilderInterface
     public function data($data, $exclude = [])
     {
         $this->dataset = $data;
-        foreach ($exclude as $value) unset($this->dataset[ $value ]);
+        foreach ($exclude as $value) {
+            unset( $this->dataset[ $value ] );
+        }
         return $this;
     }
-
+    
+    /**
+     * @throws \Exception
+     */
     public function build()
     {
         $sql = '';
 
-        if (is_null($this->table)) throw new \Exception(self::class . ' => no given any table for build() method');
+        if (is_null($this->table)) {
+            throw new \Exception( self::class.' => no given any table for build() method' );
+        }
 
         switch ($this->method) {
             case 'INSERT': {
@@ -122,7 +145,7 @@ class DBQueryBuilder implements DBQueryBuilderInterface
 
     private function buildSelectQuery($table, $fields, $where = '')
     {
-        if (!is_null($this->where) && is_array($this->where)) {
+        if (is_array($this->where)) {
             $where = " WHERE " . implode(' AND ', $this->where);
         }
 
@@ -159,8 +182,9 @@ class DBQueryBuilder implements DBQueryBuilderInterface
     {
         $fields = [];
 
-        if (empty($dataset))
+        if (empty($dataset)) {
             return false;
+        }
 
         $query = "UPDATE `{$table}` SET";
 
@@ -185,8 +209,9 @@ class DBQueryBuilder implements DBQueryBuilderInterface
     {
         $fields = [];
 
-        if (empty($dataset))
+        if (empty($dataset)) {
             return false;
+        }
 
         $query = "REPLACE `{$table}` SET";
 
@@ -209,7 +234,7 @@ class DBQueryBuilder implements DBQueryBuilderInterface
 
     private function buildDeleteQuery($table, $where = '')
     {
-        if (!is_null($this->where) && is_array($this->where)) {
+        if (is_array($this->where)) {
             $where = " WHERE " . implode(' AND ', $this->where);
         }
 

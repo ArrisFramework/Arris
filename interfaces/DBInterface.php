@@ -2,7 +2,7 @@
 
 namespace Arris;
 
-use Arris\System\DBQueryBuilder;
+use Arris\DB\SimpleQueryBuilder;
 use Monolog\Logger;
 
 interface DBInterface {
@@ -38,13 +38,13 @@ interface DBInterface {
     public static function buildReplaceQuery(string $table, array $dataset):string;
     public static function buildReplaceQueryMVA(string $table, array $dataset, array $mva_attributes):array;
 
-    public static function makeQuery():DBQueryBuilder;
+    public static function makeQuery():SimpleQueryBuilder;
 
     public static function makeInsertQuery(string $table, &$dataset):string;
     public static function makeUpdateQuery(string $table, &$dataset, $where_condition):string;
     public static function makeReplaceQuery(string $table, array &$dataset, string $where = '');
 
-    public static function getConfig($suffix = NULL);
-    public static function setConfig(array $config, $suffix = NULL);
-    public static function getLogger($suffix = NULL);
+    public static function getConfig($suffix = null);
+    public static function setConfig(array $config, $suffix = null);
+    public static function getLogger($suffix = null);
 }

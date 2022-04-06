@@ -1,8 +1,8 @@
 <?php
 
-namespace Arris\System;
+namespace Arris\DB;
 
-interface DBQueryBuilderInterface {
+interface SimpleQueryBuilderInterface {
     public function __construct();
     public function insert($table);
     public function replace($table);

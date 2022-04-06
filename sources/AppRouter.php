@@ -59,7 +59,12 @@ class AppRouter implements AppRouterInterface
      * @var array
      */
     private static $routeInfo;
-
+    
+    /**
+     * @var array
+     */
+    private static $error_handlers;
+    
     public static function init(LoggerInterface $logger = null, $options = [])
     {
         self::$logger
@@ -263,7 +268,7 @@ class AppRouter implements AppRouterInterface
             }
 
             if (!method_exists($class, $method)) {
-                self::$logger->err("Method {$method} not declared at {$class} class.", [ self::$uri, self::$httpMethod, $class ]);
+                self::$logger->error("Method {$method} not declared at {$class} class.", [ self::$uri, self::$httpMethod, $class ]);
                 throw new AppRouterException("Method {$method} not declared at {$class} class", 500);
             }
 
@@ -316,6 +321,11 @@ class AppRouter implements AppRouterInterface
     public static function getRoutingRules()
     {
         return self::$rules;
+    }
+    
+    public static function setErrorHandler($code, callable $callable)
+    {
+        self::$error_handlers[$code] = $callable;
     }
 }
 
