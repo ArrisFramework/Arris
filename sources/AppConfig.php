@@ -31,9 +31,13 @@ class AppConfig implements AppConfigInterface
      *
      * @return Dot
      */
-    public static function get(): Dot
+    public static function get($key = null)
     {
-        return self::$instance;
+        if (!is_null($key)) {
+            return self::$instance[$key];
+        } else {
+            return self::$instance;
+        }
     }
 
     /**
