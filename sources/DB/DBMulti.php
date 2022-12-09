@@ -10,7 +10,7 @@
 
 namespace Arris;
 
-use Arris\DB\SimpleQueryBuilder;
+use Arris\DB\PDOWrapper\SimpleQueryBuilder;
 use Exception;
 use Monolog\Logger;
 use PDOStatement;
@@ -19,7 +19,7 @@ use RuntimeException;
 /**
  * Class DB
  */
-class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
+class DBMulti implements DBInterface, DBConnectionInterface, DBInstanceInterface
 {
     const VERSION = "2.4/Arris";
 
@@ -605,12 +605,12 @@ class DB implements DBInterface, DBConnectionInterface, DBInstanceInterface
  */
 function DBC($suffix = null)
 {
-    return DB::C($suffix);
+    return DBMulti::C($suffix);
 }
 
 function DBI($suffix = null)
 {
-    return DB::I($suffix);
+    return DBMulti::I($suffix);
 }
 
 # -eof-

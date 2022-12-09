@@ -3,7 +3,7 @@
 require_once __DIR__ . '/../../vendor/autoload.php';
 
 use Arris\AppLogger;
-use Arris\DB;
+use Arris\DBMulti;
 
 $ENV = include '../../_env.php';
 $ENV = $ENV['DB:PGSQL'];
@@ -14,11 +14,11 @@ try {
         [ '_error.log', \Monolog\Logger::EMERGENCY ]
     ]);
 
-    DB::init(NULL, $ENV, AppLogger::scope('pgsql'));
+    DBMulti::init(NULL, $ENV, AppLogger::scope('pgsql'));
 
-DB::query("INSERT INTO t1 (code, name) VALUES (1, '55555')");
+DBMulti::query("INSERT INTO t1 (code, name) VALUES (1, '55555')");
 
-    $n = DB::query("SELECT * FROM t1;")->fetchAll();
+    $n = DBMulti::query("SELECT * FROM t1;")->fetchAll();
 
 
 

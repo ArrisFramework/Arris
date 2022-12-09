@@ -15,7 +15,7 @@
         "platform-check": false
     },
     "require": {
-        "php": ">=7.2",
+        "php": ">=7.4",
         "ext-pdo": "*",
         "ext-mbstring": "*",
         "ext-json": "*",

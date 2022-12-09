@@ -2,7 +2,7 @@
 
 namespace Arris;
 
-use Arris\DB\SimpleQueryBuilder;
+use Arris\DB\PDOWrapper\SimpleQueryBuilder;
 use Monolog\Logger;
 
 interface DBInterface {

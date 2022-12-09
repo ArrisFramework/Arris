@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris\DB;
+namespace Arris\DB\PDOWrapper;
 
 use Psr\Log\LoggerInterface;
 use stdClass;

@@ -58,7 +58,7 @@ class DBC {
      */
     public static function prepare($statement, $driver_options = [])
     {
-        return DB::C(self::$current_connection)->prepare($statement, $driver_options);
+        return DBMulti::C(self::$current_connection)->prepare($statement, $driver_options);
     }
 
     /**
@@ -71,6 +71,6 @@ class DBC {
      */
     public static function query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, $arg3 = null, array $ctorargs = array())
     {
-        return DB::C(self::$current_connection)->query($statement, $mode, $arg3, $ctorargs);
+        return DBMulti::C(self::$current_connection)->query($statement, $mode, $arg3, $ctorargs);
     }
 }

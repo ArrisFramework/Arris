@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris;
+namespace Arris\DB;
 
 use Exception;
 use PDO;
@@ -39,7 +39,7 @@ class DBPool {
      * @param string $db_table
      * @param array $db_columns
      */
-    public function __construct(PDO $pdo_connection, int $pool_max_size, string $db_table, array $db_columns)
+    public function __construct($pdo_connection, int $pool_max_size, string $db_table, array $db_columns)
     {
         $this->pdo = $pdo_connection;
         $this->pool_max_size = $pool_max_size;
@@ -77,7 +77,7 @@ class DBPool {
      * @param array $db_columns
      * @param $pdo_connection
      */
-    private static function insertRange(string $tableName, array $rows, array $db_columns, PDO $pdo_connection)
+    private static function insertRange(string $tableName, array $rows, array $db_columns, $pdo_connection)
     {
         if (empty($rows)) {
             return;
@@ -91,8 +91,7 @@ class DBPool {
         // Generate pdo param placeholders
         $placeHolders = [];
 
-        foreach($rows as $row)
-        {
+        foreach($rows as $row) {
             $placeHolders[] = "(?".str_repeat(",?", count($db_columns) - 1). ")";
         }
 

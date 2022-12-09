@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris\System;
+namespace Arris\Utils;
 
 /**
  * Class Option
