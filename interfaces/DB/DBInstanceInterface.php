@@ -1,7 +1,7 @@
 <?php
 
 
-namespace Arris;
+namespace Arris\DB;
 
 
 interface DBInstanceInterface

@@ -8,9 +8,8 @@
  * Library: https://github.com/KarelWintersky/Arris
  */
 
-namespace Arris;
+namespace Arris\DB;
 
-use Arris\DB\PDOWrapper\SimpleQueryBuilder;
 use Exception;
 use Monolog\Logger;
 use PDOStatement;

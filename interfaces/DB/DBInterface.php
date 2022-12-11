@@ -1,8 +1,7 @@
 <?php
 
-namespace Arris;
+namespace Arris\DB;
 
-use Arris\DB\PDOWrapper\SimpleQueryBuilder;
 use Monolog\Logger;
 
 interface DBInterface {

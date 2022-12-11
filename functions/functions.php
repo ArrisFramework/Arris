@@ -69,7 +69,17 @@ if (!function_exists('Arris\setOption')) {
     }
 }
 
+/*if (! function_exists('app')) {
 
+    function app($options = null, array $parameters = [])
+    {
+        if (is_null($options)) {
+            return App::factory($options);
+        }
+
+        return Container::getInstance()->make($abstract, $parameters);
+    }
+}*/
 
 
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris\DB\PDOWrapper;
+namespace Arris\DB;
 
 interface SimpleQueryBuilderInterface {
     public function __construct();

@@ -1,10 +1,7 @@
 <?php
 
 
-namespace Arris;
-
-use Arris\System\DBQueryBuilder;
-use Monolog\Logger;
+namespace Arris\DB;
 
 interface DBConnectionInterface
 {
