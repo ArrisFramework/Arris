@@ -3,12 +3,13 @@
 require_once __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
 
 use Arris\AppLogger;
+use Monolog\Handler\RedisHandler;
 use Monolog\Logger;
 
 try {
     AppLogger::init('application', bin2hex(random_bytes(8)),
         [
-            'default_logfile_path'  =>  __DIR__ . '/logs',
+            'default_logfile_path'  =>  __DIR__ ,
             'bubbling' => false,
             'add_scope_to_log' => true,
             'deferred_scope_separate_files' => true
@@ -23,11 +24,23 @@ try {
         [ '__mysql.400-error.log', Logger::ERROR,  'enable' => true],
     ]);
 
-    AppLogger::scope('mysql')->debug("mysql::Debug", [ ['x'], ['y']]);
+    $redis = new Predis\Client();
+    $redis->connect();
+
+    AppLogger::addScope('test', [
+        [  'debug.log', Logger::DEBUG, 'handler' => \Psr\Log\NullLogger::class ],
+        [  'monolog', Logger::ERROR, 'handler' => new \Monolog\Handler\RedisHandler( $redis, 'monolog', Logger::ERROR ), 'bubbling' => false ],
+        [ 'monolog', Logger::ERROR, 'handler' => [ RedisHandler::class, $redis ] ]
+    ]);
+
+    AppLogger::scope('test')->debug('Debug');
+    AppLogger::scope('test')->error('Error');
+
+    /*AppLogger::scope('mysql')->debug("mysql::Debug", [ ['x'], ['y']]);
 
     AppLogger::scope('mysql')->notice('mysql::Notice', ['x', 'y']);
 
-    AppLogger::scope('mysql')->warn("mysql::Warning ");
+    AppLogger::scope('mysql')->warning("mysql::Warning ");
 
     AppLogger::scope('mysql')->error('mysql::Error', ['foobar']);
 
@@ -37,7 +50,7 @@ try {
 
     AppLogger::scope('mysql')->emergency('MYSQL EMERGENCY');
 
-    AppLogger::scope('usage')->emergency('EMERGENCY USAGE');
+    AppLogger::scope('usage')->emergency('EMERGENCY USAGE');*/
 
 
 

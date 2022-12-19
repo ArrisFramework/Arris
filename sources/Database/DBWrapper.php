@@ -36,58 +36,6 @@ class DBWrapper
     private $logger;
 
     /**
-     * @var array
-     */
-    private $db_config;
-
-    /**
-     * @var string
-     */
-    private $driver;
-
-    /**
-     * @var string
-     */
-    private $hostname;
-
-    /**
-     * @var int
-     */
-    private $port;
-
-    /**
-     * @var string
-     */
-    private $username;
-
-    /**
-     * @var string
-     */
-    private $password;
-
-    /**
-     * @var string
-     */
-    private $database;
-
-    /**
-     * @var string
-     */
-    private $charset;
-
-    /**
-     * @var string
-     */
-    private $charset_collate;
-
-    /**
-     * @var float|int
-     */
-    private $slow_query_threshold;
-
-    public $is_lazy = true;
-
-    /**
      * @var PDO
      */
     public $pdo;
@@ -102,7 +50,7 @@ class DBWrapper
     /**
      * @var DBConfig
      */
-    private $config;
+    private DBConfig $config;
 
     public function __construct(array $connection_config, array $options = [], LoggerInterface $logger = null)
     {
@@ -110,14 +58,12 @@ class DBWrapper
 
         $this->logger = is_null($logger) ? new NullLogger() : $logger;
 
-        if ($this->is_lazy === false) {
+        if ($this->config->is_lazy === false) {
             $this->initConnection();
         }
     }
 
     /**
-     * @todo: only MySQL supported now
-     *
      * @return void
      */
     private function initConnection()
@@ -153,7 +99,6 @@ class DBWrapper
             }
             default: {
                 throw new \RuntimeException('Unknown database driver : ' . $this->config->driver);
-
                 break;
             }
         }
@@ -179,9 +124,7 @@ class DBWrapper
 
     public function __call($function, $args)
     {
-        if (empty($this->pdo)) {
-            $this->initConnection();
-        }
+        $this->ensureConnection();
 
         $this->last_state['method'] = $function;
 
@@ -206,23 +149,35 @@ class DBWrapper
 
     public function query()
     {
-        if (empty($this->pdo)) {
-            $this->initConnection();
-        }
+        $this->ensureConnection();
 
         $args = func_get_args();
 
         $this->updateLastState($args);
 
+        $time_start = microtime(true);
         $result = call_user_func_array([$this->pdo, 'query'], $args);
+        $time_consumed = microtime(true) - $time_start;
+
+        if ($time_consumed >= $this->config->slow_query_threshold) {
+            $debug = debug_backtrace();
+            $debug = $debug[1] ?? $debug[0];
+            $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
+            $this->config->logger->info("PDO::query() slow: ", [
+                $time_consumed,
+                $caller,
+                ((PHP_SAPI === "cli") ? __FILE__ : ($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])),
+                $args
+            ]);
+        }
+        $this->config->total_queries++;
+
         return new \Arris\Database\PDOStatement($result, $this->config);
     }
 
     public function prepare()
     {
-        if (empty($this->pdo)) {
-            $this->initConnection();
-        }
+        $this->ensureConnection();
 
         $args = func_get_args();
 

@@ -1,3 +1,11 @@
+А так?
+
+```
+DB::suffix('suffix')->config($config)->logger($logger)->options([])->init();
+```
+
+# OptionHelperClass
+
 ```
 $options = [];
 
@@ -34,4 +42,5 @@ if (getenv('y') !== false ) {
 Option::_()->key()->env()->_()->from($options);
 
 ```
+
 

@@ -50,6 +50,19 @@ class PDOStatement
         $before_call = microtime(true);
         $result = $this->PDOStatement->execute($input_parameters);
         $after_call = microtime(true);
+        $time_consumed = $after_call - $before_call;
+
+        if ($time_consumed >= $this->config->slow_query_threshold) {
+            $debug = debug_backtrace();
+            $debug = $debug[1] ?? $debug[0];
+            $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
+
+            $this->config->logger->info("PDO::execute() slow: ", [
+                $time_consumed,
+                $caller,
+                ((PHP_SAPI === "cli") ? __FILE__ : ($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI']))
+            ]);
+        }
 
         $this->config->total_time += $after_call - $before_call;
         $this->config->total_queries++;
@@ -62,8 +75,22 @@ class PDOStatement
         $before_call = microtime(true);
         $result = call_user_func_array(array($this->PDOStatement, $method), $args);
         $after_call = microtime(true);
+        $time_consumed = $after_call - $before_call;
 
-        $this->config->total_time += $after_call - $before_call;
+        if ($time_consumed >= $this->config->slow_query_threshold) {
+            $debug = debug_backtrace();
+            $debug = $debug[1] ?? $debug[0];
+            $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
+
+            $this->config->logger->info("PDO::{$method} slow: ", [
+                $time_consumed,
+                $caller,
+                ((PHP_SAPI === "cli") ? __FILE__ : ($_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'])),
+                $args
+            ]);
+        }
+
+        $this->config->total_time += $time_consumed;
         $this->config->total_queries++;
 
         return $result;

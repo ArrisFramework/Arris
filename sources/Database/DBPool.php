@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris\DB;
+namespace Arris\Database;
 
 use Exception;
 use PDO;

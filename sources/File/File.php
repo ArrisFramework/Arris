@@ -1,7 +1,10 @@
 <?php
 
-namespace Arris;
+namespace Arris\File;
 
+/**
+ * File Wrapper
+ */
 class File
 {
     private $handler;

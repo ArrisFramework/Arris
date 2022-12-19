@@ -20,14 +20,6 @@ class SimpleQueryBuilder implements SimpleQueryBuilderInterface
         }
     }
     
-    public function table($table = null)
-    {
-        if ( func_num_args()) {
-            $this->table = $table;
-        }
-        return $this;
-    }
-
     public function insert($table = null)
     {
         $this->method = 'INSERT';
@@ -67,10 +59,11 @@ class SimpleQueryBuilder implements SimpleQueryBuilderInterface
     public function select($fields = null)
     {
         $this->method = 'SELECT';
+
         if (is_array($fields)) {
             $this->select_fields = implode(',', $fields);
         } elseif (is_string($fields) && strtoupper($fields) !== '*') {
-            $this->select_fields = " $fields ";
+            $this->select_fields = " {$fields} ";
         } else {
             $this->select_fields = ' * ';
         }

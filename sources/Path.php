@@ -11,7 +11,7 @@ namespace Arris;
  */
 class Path implements PathInterface
 {
-    public $atoms = [];
+    public array $atoms = [];
     
     public $hasTrailingSeparator;
     

@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris\Utils;
+namespace Arris\Core;
 
 use RuntimeException;
 

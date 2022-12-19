@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris\Database;
+namespace Arris\Entity;
 
 final class Context
 {

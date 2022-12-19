@@ -69,6 +69,43 @@ if (!function_exists('Arris\setOption')) {
     }
 }
 
+if (!function_exists('Arris\groupDatasetByColumn')) {
+    /**
+     * Возвращает новый датасет, индекс для строк которого равен значению колонки строки
+     * Предназначен для переформатирования PDO-ответов, полученных в режиме FETCH_ASSOC
+     *
+     * [ 0 => [ 'id' => 5, 'data' => 10], 1 => [ 'id' => 6, 'data' => 12] .. ]
+     * При вызове с аргументами ($dataset, 'id') возвращает
+     * [ 5 => [ 'id' => 5, 'data' => 10], 6 => [ 'id' => 6, 'data' => 12] .. ]
+     *
+     * @param array $dataset
+     * @param $column_id
+     * @return array
+     */
+    function groupDatasetByColumn(array $dataset, $column_id): array
+    {
+        $result = [];
+        array_map(static function ($row) use (&$result, $column_id){
+            $result[ $row[ $column_id ] ] = $row;
+        }, $dataset);
+        return $result;
+    }
+}
+
+if (!function_exists('Arris\jsonize')) {
+
+    /**
+     * Конвертирует в JSON
+     *
+     * @param $data
+     * @return false|string
+     * @throws \JsonException
+     */
+    function jsonize($data) {
+        return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
+    }
+}
+
 /*if (! function_exists('app')) {
 
     function app($options = null, array $parameters = [])

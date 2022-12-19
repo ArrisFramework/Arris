@@ -10,25 +10,39 @@ class Url
     const RELATIVE = 0;
     const ABSOLUTE = 1;
 
-    /** @var string|null */
+    /**
+     * @var string|null
+     */
     private $scheme;
 
-    /** @var string|null */
+    /**
+     * @var string|null
+     */
     private $host;
 
-    /** @var int|null */
+    /**
+     * @var int|null
+     */
     private $port;
 
-    /** @var string */
+    /**
+     * @var string
+     */
     private $path;
 
-    /** @var array */
+    /**
+     * @var array
+     */
     private $query;
 
-    /** @var string|null */
+    /**
+     * @var string|null
+     */
     private $fragment;
 
-    /** @var int */
+    /**
+     * @var int
+     */
     private $preferredFormat;
 
     public function __construct(
@@ -254,7 +268,7 @@ class Url
     /**
      * Add multiple query parameters
      *
-     * Already defined parameters with the same key will be overriden.
+     * Already defined parameters with the same key will be overridden.
      */
     public function add(array $parameters): void
     {
