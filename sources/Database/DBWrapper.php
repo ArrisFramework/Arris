@@ -8,9 +8,10 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
- * @method PDOStatement|false   _prepare($query = '', array $options = [])
  * @method int|false            exec(string $statement = '')
- * @method PDOStatement|false   _query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, ...$fetch_mode_args)
+ *
+ * // PDOStatement|false   _prepare($query = '', array $options = [])
+ * // PDOStatement|false   _query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, ...$fetch_mode_args)
  *
  * @method bool                 beginTransaction()
  * @method bool                 commit()
@@ -27,9 +28,6 @@ use Psr\Log\NullLogger;
  */
 class DBWrapper
 {
-    const DEFAULT_CHARSET = 'utf8';
-    const DEFAULT_CHARSET_COLLATE = 'utf8_general_ci';
-
     /**
      * @var LoggerInterface|null
      */
@@ -40,7 +38,7 @@ class DBWrapper
      */
     public $pdo;
 
-    public $last_state = [
+    public array $last_state = [
         'method'    =>  '',
         'query'     =>  '',
         'time'      =>  0,

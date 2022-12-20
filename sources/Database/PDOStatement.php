@@ -6,13 +6,13 @@ use IteratorAggregate;
 
 /**
  * @method array        fetchAll()
- * @method mixed        fetch()
- * @method mixed        fetchColumn()
- * @method object|false fetchObject()
+ * @method mixed        fetch(int $mode = \PDO::ATTR_DEFAULT_FETCH_MODE, int $cursorOrientation = \PDO::FETCH_ORI_NEXT, int $cursorOffset = 0)
+ * @method mixed        fetchColumn(int $mode = \PDO::FETCH_COLUMN)
+ * @method object|false fetchObject(?string $class = "stdClass", array $constructorArgs = [])
  *
- * @method bool         bindParam()
- * @method bool         bindColumn()
- * @method bool         bindValue()
+ * @method bool         bindParam(string|int $param, mixed &$var, int $type = \PDO::PARAM_STR, int $maxLength = 0, mixed $driverOptions = null)
+ * @method bool         bindColumn(string|int $param, mixed &$var, int $type = \PDO::PARAM_STR, int $maxLength = 0, mixed $driverOptions = null)
+ * @method bool         bindValue(string|int $param, mixed $value, int $type = \PDO::PARAM_STR)
  *
  * @method int          rowCount()
  * @method int          columnCount()
@@ -20,11 +20,11 @@ use IteratorAggregate;
  * @method string       errorCode()
  * @method array        errorInfo()
  *
- * @method bool         setAttribute()
- * @method mixed        getAttribute()
+ * @method bool         setAttribute(int $attribute, mixed $value)
+ * @method mixed        getAttribute(int $name)
  *
- * @method array|false  getColumnMeta()
- * @method              setFetchMode()
+ * @method array|false  getColumnMeta(int $column)
+ * @method              setFetchMode(int $mode)
  *
  * @method bool         nextRowset()
  * @method bool         closeCursor()
