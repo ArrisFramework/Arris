@@ -56,14 +56,15 @@ interface AppInterface
      * @return array|mixed|null
      */
     public function get($key = null, $default = null);
-    
+
     /**
      * Устанавливает конфиг для приложения (array или Dot)
      *
-     * @param $config
+     * @param $key
+     * @param null $value
      * @return mixed
      */
-    public function setConfig($config);
+    public function setConfig($key, $value = null);
 
     /**
      * Возвращает весь конфиг или ключ

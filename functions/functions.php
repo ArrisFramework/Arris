@@ -23,6 +23,7 @@ if (!function_exists('Arris\checkAllowedValue')) {
 }
 
 if (!function_exists('Arris\setOptionEnv')) {
+
     /**
      * use function ArrisFunctions\setOption as setOption;
      *
@@ -38,7 +39,7 @@ if (!function_exists('Arris\setOptionEnv')) {
      * @param string $default_value
      * @return string
      */
-    function setOptionEnv(array $options, $key, $env_key = null, $default_value = '')
+    function setOptionEnv(array $options, string $key, $env_key = null, $default_value = ''): string
     {
         if (empty($options) || is_null($key) || !array_key_exists($key, $options)) {
             if (is_null($env_key)) {
@@ -55,6 +56,13 @@ if (!function_exists('Arris\setOptionEnv')) {
 }
 
 if (!function_exists('Arris\setOption')) {
+
+    /**
+     * @param array $options
+     * @param $key
+     * @param $default_value
+     * @return mixed|null
+     */
     function setOption(array $options = [], $key = null, $default_value = null)
     {
         if (!is_array($options)) {
@@ -70,6 +78,7 @@ if (!function_exists('Arris\setOption')) {
 }
 
 if (!function_exists('Arris\groupDatasetByColumn')) {
+
     /**
      * Возвращает новый датасет, индекс для строк которого равен значению колонки строки
      * Предназначен для переформатирования PDO-ответов, полученных в режиме FETCH_ASSOC
@@ -106,18 +115,67 @@ if (!function_exists('Arris\jsonize')) {
     }
 }
 
-/*if (! function_exists('app')) {
+if (!function_exists('Arris\config')) {
 
-    function app($options = null, array $parameters = [])
-    {
-        if (is_null($options)) {
-            return App::factory($options);
+    /**
+     * get/set config key
+     *
+     * @param $key
+     * @param $value
+     * @return array|bool|mixed|null
+     */
+    function config($key = null, $value = null) {
+        $app = App::factory();
+
+        if (!is_null($value)) {
+            $app->setConfig($key, $value);
+            return true;
         }
 
-        return Container::getInstance()->make($abstract, $parameters);
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                $app->setConfig($k, $v);
+            }
+            return true;
+        }
+
+        if (empty($key)) {
+            return $app->getConfig();
+        }
+
+        return $app->getConfig($key);
     }
-}*/
+}
 
+if (!function_exists('Arris\app')) {
 
+    /**
+     * @param $key
+     * @param $value
+     *
+     * @return array|bool|mixed|null
+     */
+    function app($key = null, $value = null) {
+        $app = App::factory();
+
+        if (!is_null($value)) {
+            $app->set($key, $value);
+            return true;
+        }
+
+        if (is_array($key)) {
+            foreach ($key as $k => $v) {
+                $app->set($k, $v);
+            }
+            return true;
+        }
+
+        if (empty($key)) {
+            return $app->get();
+        }
+
+        return $app->get($key);
+    }
+}
 
 # -eof-

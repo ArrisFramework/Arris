@@ -72,8 +72,7 @@ class App implements AppInterface
             return (self::getInstance())->getConfig($key);
         }
 
-        (self::getInstance())->set('config', $key);
-        return true;
+        return (self::getInstance())->setConfig($key, $value);
     }
     
     /**
@@ -113,7 +112,7 @@ class App implements AppInterface
     
     public function set($key, $data = null)
     {
-        $this->repository->set($key, $data);
+        return $this->repository->set($key, $data);
     }
     
     public function get($key = null, $default = null)
@@ -128,9 +127,16 @@ class App implements AppInterface
                 : $this->config[$key];
     }
     
-    public function setConfig($config)
+    public function setConfig($key, $value = null)
     {
-        $this->config = new Dot($config);
+        $this->config->set($key, $value);
+    }
+
+    public function getConfigJSON($key = null)
+    {
+        return  is_null($key)
+            ? $this->config->toJson()
+            : $this->config[$key]->toJson();
     }
 
     /* ===================== MAGIC METHODS =========================== */

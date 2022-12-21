@@ -2,16 +2,16 @@
 
 namespace Arris\Database;
 
-use PDO;
-use PDOStatement;
+use \PDO;
+use \PDOStatement;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
 /**
  * @method int|false            exec(string $statement = '')
  *
- * // PDOStatement|false   _prepare($query = '', array $options = [])
- * // PDOStatement|false   _query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, ...$fetch_mode_args)
+ * PDOStatement|false           _prepare($query = '', array $options = [])
+ * PDOStatement|false           _query($statement, $mode = PDO::ATTR_DEFAULT_FETCH_MODE, ...$fetch_mode_args)
  *
  * @method bool                 beginTransaction()
  * @method bool                 commit()
@@ -145,6 +145,12 @@ class DBWrapper
         return $result;
     }
 
+    /**
+     * @param string $query
+     * @param int $fetchMode = null
+     *
+     * @return \Arris\Database\PDOStatement
+     */
     public function query()
     {
         $this->ensureConnection();
@@ -173,6 +179,12 @@ class DBWrapper
         return new \Arris\Database\PDOStatement($result, $this->config);
     }
 
+    /**
+     * @param string $query
+     * @param array $options = []
+     *
+     * @return \Arris\Database\PDOStatement
+     */
     public function prepare()
     {
         $this->ensureConnection();
