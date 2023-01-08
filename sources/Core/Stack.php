@@ -22,7 +22,7 @@ class Stack
     /**
      * @var array
      */
-    private $stack;
+    private array $stack;
 
     public function __construct($values = null, $limit = null)
     {
@@ -113,6 +113,11 @@ class Stack
     public function toArray():array
     {
         return array_reverse($this->stack);
+    }
+
+    public function implode($separator = '', $inverse_order = false):string
+    {
+        return $inverse_order ? implode($separator, array_reverse($this->stack)) : implode($separator, $this->stack);
     }
 
 }

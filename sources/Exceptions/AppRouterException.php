@@ -2,6 +2,6 @@
 
 namespace Arris\Exceptions;
 
-class AppRouterException  extends \RuntimeException {
+class AppRouterException extends \RuntimeException {
 
 }

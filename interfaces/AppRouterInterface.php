@@ -115,12 +115,7 @@ interface AppRouterInterface
      */
     public static function dispatch();
 
-    /**
-     * Возвращает информацию о роуте по имени
-     *
-     * @param string $name
-     * @return string
-     */
+
     public static function getRouter($name = '');
 
     /**

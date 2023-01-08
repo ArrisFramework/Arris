@@ -2,6 +2,7 @@
 
 namespace Arris;
 
+use Arris\Core\Stack;
 use Arris\Exceptions\AppRouterHandlerError;
 use Arris\Exceptions\AppRouterMethodNotAllowedException;
 use Arris\Exceptions\AppRouterNotFoundException;
@@ -48,8 +49,14 @@ class AppRouter implements AppRouterInterface
      */
     private static $logger;
 
+    /**
+     * @var
+     */
     private static $httpMethod;
 
+    /**
+     * @var string
+     */
     private static $uri;
 
     private static $backup_options = [
@@ -59,26 +66,25 @@ class AppRouter implements AppRouterInterface
     ];
 
     /**
-     * @var
+     * @var array
      */
-    private static $route_names;
+    public static $route_names;
 
     /**
-     * @var
+     * @var string
      */
-    private static $prefix_current;
+    private static $current_prefix;
 
     /**
      * Current Routing Info
      *
      * @var array
      */
-    private static $routeInfo;
+    private static array $routeInfo;
     
-    /**
-     * @var array
-     */
-    private static $error_handlers;
+    private static Stack $stack_prefix;
+
+    private static Stack $stack_namespace;
     
     public static function init(LoggerInterface $logger = null, $options = [])
     {
@@ -97,8 +103,17 @@ class AppRouter implements AppRouterInterface
 
         if (array_key_exists('defaultNamespace', $options)) {
             self::setDefaultNamespace($options['defaultNamespace']);
+        } elseif (array_key_exists('namespace', $options)) {
+            self::setDefaultNamespace($options['namespace']);
         }
 
+        if (array_key_exists('prefix', $options)) {
+            self::$current_prefix = $options['prefix'];
+        }
+
+        self::$stack_prefix = new Stack();
+
+        self::$stack_namespace = new Stack();
     }
 
     public static function setDefaultNamespace(string $namespace = '')
@@ -109,9 +124,13 @@ class AppRouter implements AppRouterInterface
 
     public static function get($route, $handler, $name = null)
     {
+        if (!is_null($name)) {
+            self::$route_names[$name] = $route;
+        }
+
         self::$rules[] = [
             'httpMethod'    =>  'GET',
-            'route'         =>  $route,
+            'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
@@ -122,7 +141,7 @@ class AppRouter implements AppRouterInterface
     {
         self::$rules[] = [
             'httpMethod'    =>  'POST',
-            'route'         =>  $route,
+            'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
@@ -133,7 +152,7 @@ class AppRouter implements AppRouterInterface
     {
         self::$rules[] = [
             'httpMethod'    =>  'PUT',
-            'route'         =>  $route,
+            'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
@@ -144,7 +163,7 @@ class AppRouter implements AppRouterInterface
     {
         self::$rules[] = [
             'httpMethod'    =>  'PATCH',
-            'route'         =>  $route,
+            'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
@@ -155,7 +174,7 @@ class AppRouter implements AppRouterInterface
     {
         self::$rules[] = [
             'httpMethod'    =>  'DELETE',
-            'route'         =>  $route,
+            'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
@@ -166,7 +185,7 @@ class AppRouter implements AppRouterInterface
     {
         self::$rules[] = [
             'httpMethod'    =>  'HEAD',
-            'route'         =>  $route,
+            'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
@@ -179,7 +198,7 @@ class AppRouter implements AppRouterInterface
         foreach (self::ALL_HTTP_METHODS as $method) {
             self::$rules[] = [
                 'httpMethod'    =>  $method,
-                'route'         =>  $route,
+                'route'         =>  self::$current_prefix . $route,
                 'handler'       =>  $handler,
                 'namespace'     =>  self::$current_namespace,
                 'name'          =>  $name
@@ -216,32 +235,42 @@ class AppRouter implements AppRouterInterface
         self::$current_namespace = self::$default_namespace;
     }
 
-    public static function group(array $options, callable $callback)
+    public static function group(array $options = [], callable $callback = null, string $name = '')
     {
         $_setPrefix = array_key_exists('prefix', $options);
         $_setNamespace = array_key_exists('namespace', $options);
 
         if ($_setPrefix) {
-            self::$backup_options['prefix'] = self::$prefix_current;
-            self::$prefix_current = $options['prefix'];
+            self::$stack_prefix->push($options['prefix']);
+            self::$current_prefix = self::$stack_prefix->implode();
         }
 
         if ($_setNamespace) {
-            self::$backup_options['namespace'] = self::$current_namespace;
-            self::$current_namespace = $options['namespace'];
+            self::$stack_namespace->push($options['namespace']);
+            self::$current_namespace = self::$stack_namespace->implode('\\');
         }
 
         $callback();
 
         if ($_setNamespace) {
-            self::$current_namespace = self::$backup_options['namespace'];
+            self::$stack_namespace->pop();
+            self::$current_namespace = self::$stack_namespace->implode('\\');
         }
 
         if ($_setPrefix) {
-            self::$prefix_current = self::$backup_options['prefix'];
+            self::$stack_prefix->pop();
+            self::$current_prefix = self::$stack_prefix->implode();
         }
     }
 
+    /**
+     * Возвращает информацию о роуте по имени
+     *
+     * Сейчас работает только ПОСЛЕ dispatch
+     *
+     * @param string $name
+     * @return string
+     */
     public static function getRouter($name = '')
     {
         if ($name === '') {
@@ -255,6 +284,16 @@ class AppRouter implements AppRouterInterface
         return '/';
     }
 
+    /**
+     * Не делает нихрена
+     *
+     * @return array
+     */
+    public static function getRoutersNames()
+    {
+        return self::$route_names;
+    }
+
     public static function dispatch()
     {
         self::$dispatcher = FastRoute\simpleDispatcher(function (RouteCollector $r) {
@@ -263,12 +302,14 @@ class AppRouter implements AppRouterInterface
                     = (is_string($rule['handler']) && !empty($rule['namespace']))
                     ? "{$rule['namespace']}\\{$rule['handler']}"
                     : $rule['handler'];
+
+                sage($handler);
                 
                 $r->addRoute($rule['httpMethod'], $rule['route'], $handler);
-                
-                if (!is_null($rule['name'])) {
+
+                /*if (!is_null($rule['name'])) {
                     self::$route_names[$rule['name']] = $rule['route'];
-                }
+                }*/
             }
         });
 
@@ -387,23 +428,28 @@ class AppRouter implements AppRouterInterface
     }
 
     /**
-     * @inheritDoc
+     * Возвращает список объявленных роутов: [ 'method route' => [ handler, namespace, name ]
+     *
+     * @return array
      */
     public static function getRoutingRules(): array
     {
-        return self::$rules;
-    }
+        $rules = [];
+        foreach (self::$rules as $record) {
+            $key = "{$record['httpMethod']} {$record['route']}";
 
-    /**
-     * А зачем я этот метод делал?
-     *
-     * @param $code
-     * @param callable $callable
-     * @return void
-     */
-    public static function setErrorHandler($code, callable $callable)
-    {
-        self::$error_handlers[$code] = $callable;
+            if (array_key_exists($key, $rules)) {
+                $key .= " [ DUPLICATE ROUTE " . microtime(false) . ' ]';
+            }
+
+            $rules[ $key ] = [
+                'handler'   =>  is_callable($record['handler']) ? "Closure" : $record['handler'],
+                'namespace' =>  $record['namespace'],
+                'name'      =>  $record['name'],
+            ];
+        }
+
+        return $rules;
     }
 
     /**
@@ -413,7 +459,6 @@ class AppRouter implements AppRouterInterface
     {
         return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
     }
-
 
 }
 
