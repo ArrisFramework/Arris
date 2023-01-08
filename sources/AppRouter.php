@@ -85,6 +85,14 @@ class AppRouter implements AppRouterInterface
     private static Stack $stack_prefix;
 
     private static Stack $stack_namespace;
+
+    private static Stack $stack_middlewares_before;
+
+    private static $current_middleware_before = null;
+
+    private static Stack $stack_middlewares_after;
+
+    private static $current_middleware_after = null;
     
     public static function init(LoggerInterface $logger = null, $options = [])
     {
@@ -114,6 +122,10 @@ class AppRouter implements AppRouterInterface
         self::$stack_prefix = new Stack();
 
         self::$stack_namespace = new Stack();
+
+        self::$stack_middlewares_before = new Stack();
+
+        self::$stack_middlewares_after = new Stack();
     }
 
     public static function setDefaultNamespace(string $namespace = '')
@@ -133,10 +145,15 @@ class AppRouter implements AppRouterInterface
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
-            'name'          =>  $name
+            'name'          =>  $name,
+            'middlewares'   =>  [
+                'before'        =>  self::$current_middleware_before,
+                'after'         =>  self::$current_middleware_after
+            ]
         ];
     }
 
+    //@todo: переписать остальные методы аналогично get()
     public static function post($route, $handler, $name = null)
     {
         self::$rules[] = [
@@ -195,7 +212,7 @@ class AppRouter implements AppRouterInterface
 
     public static function any($route, $handler, $name = null)
     {
-        foreach (self::ALL_HTTP_METHODS as $method) {
+        /*foreach (self::ALL_HTTP_METHODS as $method) {
             self::$rules[] = [
                 'httpMethod'    =>  $method,
                 'route'         =>  self::$current_prefix . $route,
@@ -203,7 +220,15 @@ class AppRouter implements AppRouterInterface
                 'namespace'     =>  self::$current_namespace,
                 'name'          =>  $name
             ];
-        }
+        }*/
+
+        self::$rules[] = [
+            'httpMethod'    =>  self::ALL_HTTP_METHODS,
+            'route'         =>  self::$current_prefix . $route,
+            'handler'       =>  $handler,
+            'namespace'     =>  self::$current_namespace,
+            'name'          =>  $name
+        ];
 
         /*self::$rules[] = [
             'httpMethod'    =>  '*',
@@ -235,6 +260,17 @@ class AppRouter implements AppRouterInterface
         self::$current_namespace = self::$default_namespace;
     }
 
+    /**
+     * @param array $options [<br>
+     *      string 'prefix' => '',<br>
+     *      string 'namespace' => '',<br>
+     *      callable 'before' = null,<br>
+     *      callable 'after' => null<br>
+     * ]
+     * @param callable|null $callback
+     * @param string $name
+     * @return mixed|void
+     */
     public static function group(array $options = [], callable $callback = null, string $name = '')
     {
         $_setPrefix = array_key_exists('prefix', $options);
@@ -250,7 +286,22 @@ class AppRouter implements AppRouterInterface
             self::$current_namespace = self::$stack_namespace->implode('\\');
         }
 
+        //@todo: эксперимент (кладем текущий коллбэк в стэк и присваиваем новый
+        if (array_key_exists('before', $options) && self::is_handler($options['before'])) {
+            self::$stack_middlewares_before->push($options['before']);
+            self::$current_middleware_before = $options['before'];
+
+            self::$stack_middlewares_after->push($options['after']);
+            self::$current_middleware_after = $options['after'];
+        }
+
         $callback();
+
+        //@todo: эксперимент
+        if (array_key_exists('after', $options) && self::is_handler($options['after'])) {
+            self::$current_middleware_after = self::$stack_middlewares_after->pop();
+            self::$current_middleware_before = self::$stack_middlewares_before->pop();
+        }
 
         if ($_setNamespace) {
             self::$stack_namespace->pop();
@@ -303,13 +354,9 @@ class AppRouter implements AppRouterInterface
                     ? "{$rule['namespace']}\\{$rule['handler']}"
                     : $rule['handler'];
 
-                sage($handler);
+                // sage($handler);
                 
                 $r->addRoute($rule['httpMethod'], $rule['route'], $handler);
-
-                /*if (!is_null($rule['name'])) {
-                    self::$route_names[$rule['name']] = $rule['route'];
-                }*/
             }
         });
 
@@ -334,14 +381,11 @@ class AppRouter implements AppRouterInterface
             ]), 405);
         }
 
-        //@todo: namespace
+        //@todo: нужно получить параметры правила для обработанного роута!
 
-        /*$handler
-            = (
-            is_string($handler) && self::$default_namespace != '' )
-            ? self::$default_namespace . "\\{$handler}"
-            : $handler;
-        */
+        sage($routeInfo);
+
+        //@todo: namespace
 
         if ($handler instanceof \Closure) {
             $actor = $handler;
@@ -412,6 +456,12 @@ class AppRouter implements AppRouterInterface
             $actor = $handler;
         }
 
+        /*if (self::is_handler()) {
+
+        }*/
+
+        sage($method_parameters);
+
         call_user_func_array($actor, $method_parameters);
 
         unset($state);
@@ -436,7 +486,7 @@ class AppRouter implements AppRouterInterface
     {
         $rules = [];
         foreach (self::$rules as $record) {
-            $key = "{$record['httpMethod']} {$record['route']}";
+            $key = is_array($record['httpMethod']) ? "ANY {$record['route']}" : "{$record['httpMethod']} {$record['route']}";
 
             if (array_key_exists($key, $rules)) {
                 $key .= " [ DUPLICATE ROUTE " . microtime(false) . ' ]';
@@ -459,6 +509,54 @@ class AppRouter implements AppRouterInterface
     {
         return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
     }
+
+    /**
+     * Выясняет, является ли передаваемый аргумент допустимым хэндлером
+     *
+     * @param $handler
+     * @param bool $validate_handlers
+     *
+     * @return bool
+     */
+    public static function is_handler($handler, $validate_handlers = false)
+    {
+        if ($handler instanceof \Closure) {
+            return true;
+        } elseif (strpos($handler, '@') > 0) {
+            // dynamic method
+            list($class, $method) = explode('@', $handler, 2);
+
+            if ($validate_handlers && !class_exists($class)) {
+                return false;
+            }
+
+            if ($validate_handlers && !method_exists($class, $method)) {
+                return false;
+            }
+
+            return true;
+        } elseif (strpos($handler, '::')) {
+            // static method
+            list($class, $method) = explode('::', $handler, 2);
+
+            if ($validate_handlers && !class_exists($class)){
+                return false;
+            }
+
+            if ($validate_handlers && !method_exists($class, $method)){
+                return false;
+            }
+
+            return true;
+        } else {
+            // function
+            if ($validate_handlers && !function_exists($handler)){
+                return false;
+            }
+
+            return true;
+        }
+    } // is_handler()
 
 }
 
