@@ -26,9 +26,9 @@ class App implements AppInterface
     private static $instance;
     
     /**
-     * Репозиторий App
+     * Общий репозиторий App
      *
-     * @var Dot
+     * @var array|null|Dot
      */
     private $repository = null;
 
@@ -38,9 +38,16 @@ class App implements AppInterface
      * @var array|null|Dot
      */
     private $magic_repo = null;
+
+    /**
+     * Репозиторий сервисов
+     *
+     * @var array|null|Dot
+     */
+    private $services = null;
     
     /**
-     * DOT-Репозиторий конфига
+     * Репозиторий конфига
      *
      * @var array|null|Dot $config
      */
@@ -103,6 +110,16 @@ class App implements AppInterface
         if (is_null($this->config)) {
             $this->config = new Dot();
         }
+    }
+
+    public function addService($name, $definition = null)
+    {
+        $this->services->add($name, $definition);
+    }
+
+    public function getService($name)
+    {
+        return $this->services->get($name, null);
     }
     
     public function add($keys, $value = null)

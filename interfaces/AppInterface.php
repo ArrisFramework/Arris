@@ -124,6 +124,23 @@ interface AppInterface
      */
     public function __get($key);
 
+    /**
+     * Добавляет сервис в репозиторий сервисов.
+     *
+     * @param $name
+     * @param $definition
+     * @return void
+     */
+    public function addService($name, $definition = null);
+
+    /**
+     * Возвращает сервис из репозитория сервисов
+     *
+     * @param $name
+     * @return array|mixed
+     */
+    public function getService($name);
+
 }
 
 # -eof-
