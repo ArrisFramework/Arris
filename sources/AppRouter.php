@@ -37,11 +37,6 @@ class AppRouter implements AppRouterInterface
     /**
      * @var string
      */
-    private static $default_namespace = '';
-
-    /**
-     * @var string
-     */
     private static $current_namespace = '';
 
     /**
@@ -58,12 +53,6 @@ class AppRouter implements AppRouterInterface
      * @var string
      */
     private static $uri;
-
-    private static $backup_options = [
-        'prefix'        =>  '',
-        'namespace'     =>  '',
-        'middleware'    =>  \stdClass::class //@todo ???
-    ];
 
     /**
      * @var array
@@ -94,7 +83,7 @@ class AppRouter implements AppRouterInterface
 
     private static $current_middleware_after = null;
     
-    public static function init(LoggerInterface $logger = null, $options = [])
+    public static function init(LoggerInterface $logger = null, array $options = [])
     {
         self::$logger
             = (!is_null($logger) && $logger instanceof LoggerInterface)
@@ -130,14 +119,13 @@ class AppRouter implements AppRouterInterface
 
     public static function setDefaultNamespace(string $namespace = '')
     {
-        self::$default_namespace = $namespace;
         self::$current_namespace = $namespace;
     }
 
     public static function get($route, $handler, $name = null)
     {
         if (!is_null($name)) {
-            self::$route_names[$name] = $route;
+            self::$route_names[$name] = self::$current_prefix . $route;
         }
 
         self::$rules[] = [
@@ -153,66 +141,122 @@ class AppRouter implements AppRouterInterface
         ];
     }
 
-    //@todo: переписать остальные методы аналогично get()
     public static function post($route, $handler, $name = null)
     {
+        if (!is_null($name)) {
+            self::$route_names[$name] = self::$current_prefix . $route;
+        }
+
         self::$rules[] = [
             'httpMethod'    =>  'POST',
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
-            'name'          =>  $name
+            'name'          =>  $name,
+            'middlewares'   =>  [
+                'before'        =>  self::$current_middleware_before,
+                'after'         =>  self::$current_middleware_after
+            ]
         ];
     }
 
     public static function put($route, $handler, $name = null)
     {
+        if (!is_null($name)) {
+            self::$route_names[$name] = self::$current_prefix . $route;
+        }
+
         self::$rules[] = [
             'httpMethod'    =>  'PUT',
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
-            'name'          =>  $name
+            'name'          =>  $name,
+            'middlewares'   =>  [
+                'before'        =>  self::$current_middleware_before,
+                'after'         =>  self::$current_middleware_after
+            ]
         ];
     }
 
     public static function patch($route, $handler, $name = null)
     {
+        if (!is_null($name)) {
+            self::$route_names[$name] = self::$current_prefix . $route;
+        }
+
         self::$rules[] = [
             'httpMethod'    =>  'PATCH',
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
-            'name'          =>  $name
+            'name'          =>  $name,
+            'middlewares'   =>  [
+                'before'        =>  self::$current_middleware_before,
+                'after'         =>  self::$current_middleware_after
+            ]
         ];
     }
 
     public static function delete($route, $handler, $name = null)
     {
+        if (!is_null($name)) {
+            self::$route_names[$name] = self::$current_prefix . $route;
+        }
+
         self::$rules[] = [
             'httpMethod'    =>  'DELETE',
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
-            'name'          =>  $name
+            'name'          =>  $name,
+            'middlewares'   =>  [
+                'before'        =>  self::$current_middleware_before,
+                'after'         =>  self::$current_middleware_after
+            ]
         ];
     }
 
     public static function head($route, $handler, $name = null)
     {
+        if (!is_null($name)) {
+            self::$route_names[$name] = self::$current_prefix . $route;
+        }
+
         self::$rules[] = [
             'httpMethod'    =>  'HEAD',
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
-            'name'          =>  $name
+            'name'          =>  $name,
+            'middlewares'   =>  [
+                'before'        =>  self::$current_middleware_before,
+                'after'         =>  self::$current_middleware_after
+            ]
         ];
     }
 
 
     public static function any($route, $handler, $name = null)
     {
-        /*foreach (self::ALL_HTTP_METHODS as $method) {
+        foreach (self::ALL_HTTP_METHODS as $method) {
+            if (!is_null($name)) {
+                self::$route_names[$name] = self::$current_prefix . $route;
+            }
+
+            self::$rules[] = [
+                'httpMethod'    =>  $method,
+                'route'         =>  self::$current_prefix . $route,
+                'handler'       =>  $handler,
+                'namespace'     =>  self::$current_namespace,
+                'name'          =>  $name,
+                'middlewares'   =>  [
+                    'before'        =>  self::$current_middleware_before,
+                    'after'         =>  self::$current_middleware_after
+                ]
+            ];
+            
+            
             self::$rules[] = [
                 'httpMethod'    =>  $method,
                 'route'         =>  self::$current_prefix . $route,
@@ -220,15 +264,15 @@ class AppRouter implements AppRouterInterface
                 'namespace'     =>  self::$current_namespace,
                 'name'          =>  $name
             ];
-        }*/
+        }
 
-        self::$rules[] = [
+        /*self::$rules[] = [
             'httpMethod'    =>  self::ALL_HTTP_METHODS,
             'route'         =>  self::$current_prefix . $route,
             'handler'       =>  $handler,
             'namespace'     =>  self::$current_namespace,
             'name'          =>  $name
-        ];
+        ];*/
 
         /*self::$rules[] = [
             'httpMethod'    =>  '*',
@@ -243,21 +287,27 @@ class AppRouter implements AppRouterInterface
     public static function addRoute($httpMethod, $route, $handler, $name = null)
     {
         foreach ((array) $httpMethod as $method) {
+            if (!is_null($name)) {
+                self::$route_names[$name] = self::$current_prefix . $route;
+            }
+
             self::$rules[] = [
                 'httpMethod'    =>  $method,
-                'route'         =>  $route,
+                'route'         =>  self::$current_prefix . $route,
                 'handler'       =>  $handler,
                 'namespace'     =>  self::$current_namespace,
-                'name'          =>  $name
+                'name'          =>  $name,
+                'middlewares'   =>  [
+                    'before'        =>  self::$current_middleware_before,
+                    'after'         =>  self::$current_middleware_after
+                ]
             ];
         }
-    }
 
-    public static function groupNamespace($namespace, callable $callback)
-    {
-        self::$current_namespace = $namespace;
-        $callback();
-        self::$current_namespace = self::$default_namespace;
+
+        if (!is_null($name)) {
+            self::$route_names[$name] = self::$current_prefix . $route;
+        }
     }
 
     /**
@@ -271,7 +321,7 @@ class AppRouter implements AppRouterInterface
      * @param string $name
      * @return mixed|void
      */
-    public static function group(array $options = [], callable $callback = null, string $name = '')
+    public static function group(array $options = [], callable $callback = null)
     {
         $_setPrefix = array_key_exists('prefix', $options);
         $_setNamespace = array_key_exists('namespace', $options);
@@ -286,7 +336,6 @@ class AppRouter implements AppRouterInterface
             self::$current_namespace = self::$stack_namespace->implode('\\');
         }
 
-        //@todo: эксперимент (кладем текущий коллбэк в стэк и присваиваем новый
         if (array_key_exists('before', $options) && self::is_handler($options['before'])) {
             self::$stack_middlewares_before->push($options['before']);
             self::$current_middleware_before = $options['before'];
@@ -297,7 +346,6 @@ class AppRouter implements AppRouterInterface
 
         $callback();
 
-        //@todo: эксперимент
         if (array_key_exists('after', $options) && self::is_handler($options['after'])) {
             self::$current_middleware_after = self::$stack_middlewares_after->pop();
             self::$current_middleware_before = self::$stack_middlewares_before->pop();
@@ -317,13 +365,15 @@ class AppRouter implements AppRouterInterface
     /**
      * Возвращает информацию о роуте по имени
      *
-     * Сейчас работает только ПОСЛЕ dispatch
-     *
      * @param string $name
-     * @return string
+     * @return string|array
      */
     public static function getRouter($name = '')
     {
+        if ($name === '*') {
+            return self::$route_names;
+        }
+        
         if ($name === '') {
             return '/';
         }
@@ -336,8 +386,6 @@ class AppRouter implements AppRouterInterface
     }
 
     /**
-     * Не делает нихрена
-     *
      * @return array
      */
     public static function getRoutersNames()
@@ -354,6 +402,7 @@ class AppRouter implements AppRouterInterface
                     ? "{$rule['namespace']}\\{$rule['handler']}"
                     : $rule['handler'];
 
+                // Чтобы передавать доп.параметры в правило - нужно расширять метод addRoute
                 $r->addRoute($rule['httpMethod'], $rule['route'], $handler);
             }
         });
@@ -363,7 +412,7 @@ class AppRouter implements AppRouterInterface
 
         list($state, $handler, $method_parameters) = $routeInfo;
 
-        //@todo: никак невозможно выяснить, какому правилу сопоставлен обработанный URL. Issue?
+        //@todo: никак невозможно выяснить, какому правилу сопоставлен обработанный URL. Имеет ли смысл создать issue для пакета, который не обновлялся много лет?
 
         // dispatch errors
         if ($state === FastRoute\Dispatcher::NOT_FOUND) {
@@ -383,103 +432,30 @@ class AppRouter implements AppRouterInterface
             ]), 405);
         }
 
-        //@todo: нужно получить параметры правила для обработанного роута!
+        // нужно получить параметры правила для обработанного роута! (к сожалению, не получится получить именно для ОБРАБОТАННОГО, только для объявленного)
+        // т.е., если в роуте есть опциональные части или плейсхолдеры - роут работать не будет.
 
         $rules = self::getRoutingRules();
-
-        // sage($rules);
-
         $rules_key = self::$httpMethod . ' ' . self::$uri;
-
-        // sage($rules_key);
-
         $rule = array_key_exists($rules_key, $rules) ? $rules[$rules_key] : [];
 
-        // sage($rule);
-
-        /*if ($handler instanceof \Closure) {
-            $actor = $handler;
-        } elseif (strpos($handler, '@') > 0) {
-            // dynamic method
-            list($class, $method) = explode('@', $handler, 2);
-
-            if (!class_exists($class)) {
-                self::$logger->error("Class {$class} not defined.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Class {$class} not defined",
-                    'uri'       =>  self::$uri,
-                    'method'    =>  self::$httpMethod,
-                    'info'      =>  self::$routeInfo
-                ]), 500);
-            }
-
-            if (!method_exists($class, $method)) {
-                self::$logger->error("Method {$method} not declared at {$class} class.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Method {$method} not declared at {$class} class",
-                    'uri'       =>  self::$uri,
-                    'method'    =>  self::$httpMethod,
-                    'info'      =>  self::$routeInfo
-                ]), 500);
-            }
-
-            $actor = [ new $class, $method ];
-
-        } elseif (strpos($handler, '::')) {
-            // static method
-            list($class, $method) = explode('::', $handler, 2);
-
-            if (!class_exists($class)){
-                self::$logger->error("Class {$class} not defined.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Class {$class} not defined",
-                    'uri'       =>  self::$uri,
-                    'method'    =>  self::$httpMethod,
-                    'info'      =>  self::$routeInfo
-                ]), 500);
-            }
-
-            if (!method_exists($class, $method)){
-                self::$logger->error("Method {$method} not declared at {$class} class", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Method {$method} not declared at {$class} class",
-                    'uri'       =>  self::$uri,
-                    'method'    =>  self::$httpMethod,
-                    'info'      =>  self::$routeInfo
-                ]), 500);
-            }
-
-            $actor = [ $class, $method ];
-
-        } else {
-            // function
-            if (!function_exists($handler)){
-                self::$logger->error("Handler function {$handler} not found", [ self::$uri, self::$httpMethod, $handler ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Handler function {$handler} not found",
-                    'uri'       =>  self::$uri,
-                    'method'    =>  self::$httpMethod,
-                    'info'      =>  self::$routeInfo
-                ]), 500);
-            }
-
-            $actor = $handler;
-        }*/
-        $actor = self::makeHandler($handler);
+        $actor = self::compileHandler($handler);
 
         if (self::is_handler($rule['middlewares']['before'])){
-            $before = self::makeHandler($rule['middlewares']['before']);
+            $before = self::compileHandler($rule['middlewares']['before']);
             $before();
+            unset($before);
         }
 
         call_user_func_array($actor, $method_parameters);
 
         if (self::is_handler($rule['middlewares']['after'])){
-            $after = self::makeHandler($rule['middlewares']['after']);
+            $after = self::compileHandler($rule['middlewares']['after']);
             $after();
+            unset($after);
         }
 
-        unset($state);
+        unset($state, $rules, $rules_key, $rule);
     }
 
     /**
@@ -579,7 +555,7 @@ class AppRouter implements AppRouterInterface
         }
     } // is_handler()
 
-    private static function makeHandler($handler)
+    private static function compileHandler($handler)
     {
         if ($handler instanceof \Closure) {
             $actor = $handler;

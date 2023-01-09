@@ -58,4 +58,46 @@ $smarty->registerClass("Foo", "\my\php\application\Bar");
 ```
 
 
+-------------
+
+## Register class for use within a template
+
+```php
+<?php
+
+class Bar {
+  $property = "hello world";
+}
+
+$smarty = new Smarty();
+$smarty->registerClass("Foo", "Bar");
+```
+
+   
+```php
+{* Smarty will access this class as long as it's not prohibited by security *}
+{Bar::$property}
+{* Foo translates to the real class Bar *}
+{Foo::$property}
+```
+   
+## 14.37. Register namespaced class for use within a template
+
+```php
+<?php
+namespace my\php\application {
+  class Bar {
+    $property = "hello world";
+  }
+}
+
+$smarty = new Smarty();
+$smarty->registerClass("Foo", "\my\php\application\Bar");
+
+{* Foo translates to the real class \my\php\application\Bar *}
+{Foo::$property}
+```
+   
+
+
 

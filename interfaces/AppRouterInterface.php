@@ -10,18 +10,17 @@ interface AppRouterInterface
     /**
      * Инициализирует статик-класс
      *
-     * @param LoggerInterface $logger
+     * @param LoggerInterface|null $logger
+     * @param array $options
      */
-    public static function init(LoggerInterface $logger = null, $options = []);
+    public static function init(LoggerInterface $logger = null, array $options = []);
 
     /**
-     * Устанавливает namespace по умолчанию
+     * Устанавливает namespace по умолчанию (дублируется в опциях init() )
      *
-     * @todo: перенести в опции
      * @param string $namespace
      */
     public static function setDefaultNamespace(string $namespace = '');
-
 
     /**
      * Helper method GET
@@ -88,25 +87,20 @@ interface AppRouterInterface
     public static function addRoute($httpMethod, $route, $handler, $name = null);
 
     /**
-     * Namespace grouping
-     *
-     * @param $namespace
-     * @param callable $callback
-     */
-    public static function groupNamespace($namespace, callable $callback);
-    
-    /**
      * Create routing group with options
      * Создает группу роутов
      *
-     * @todo: переделать, потому что допускает только однократную вложенность
-     * (self::backup_options - не стек, а просто хранилище)
+     * Возможные ключи в списке опций:
+     * - prefix (URL prefix)
+     * - namespace
+     * - before (middleware handler)
+     * - after (middleware handler)
      *
-     * @param $options - prefix, namespace
+     * @param array $options
      * @param callable $callback
      * @return mixed
      */
-    public static function group(array $options, callable $callback);
+    public static function group(array $options = [], callable $callback = null);
 
     /**
      * Dispatch routing
@@ -126,7 +120,12 @@ interface AppRouterInterface
     public static function getRoutingInfo();
 
     /**
-     * Возвращает текущий массив правил роутинга
+     * @return mixed
+     */
+    public static function getRoutersNames();
+
+    /**
+     * Возвращает список объявленных роутов: [ 'method route' => [ handler, namespace, name ]
      *
      * @return array
      */
