@@ -30,6 +30,12 @@ class DBHelper
                 continue;
             }
 
+            if (strtoupper(trim($value)) === 'UUID()') {
+                $set[] = "\r\n {$index} = UUID()";
+                unset($dataset[$index]);
+                continue;
+            }
+
             $set[] = "\r\n `{$index}` = :{$index}";
         }
 
@@ -61,6 +67,12 @@ class DBHelper
             if (strtoupper(trim($value)) === 'NOW()') {
                 $set[] = "{$crlf} `{$index}` = NOW()";
                 unset($dataset[ $index ]);
+                continue;
+            }
+
+            if (strtoupper(trim($value)) === 'UUID()') {
+                $set[] = "\r\n {$index} = UUID()";
+                unset($dataset[$index]);
                 continue;
             }
 
@@ -97,6 +109,12 @@ class DBHelper
             if (strtoupper(trim($value)) === 'NOW()') {
                 $fields[] = "`{$index}` = NOW()";
                 unset($dataset[ $index ]);
+                continue;
+            }
+
+            if (strtoupper(trim($value)) === 'UUID()') {
+                $fields[] = " {$index} = UUID() ";
+                unset($dataset[$index]);
                 continue;
             }
 
