@@ -110,6 +110,10 @@ class App implements AppInterface
         if (is_null($this->config)) {
             $this->config = new Dot();
         }
+
+        if (is_null($this->services)) {
+            $this->services = new Dot();
+        }
     }
 
     public function addService($name, $definition = null)
