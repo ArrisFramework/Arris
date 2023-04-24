@@ -417,19 +417,18 @@ class AppRouter implements AppRouterInterface
         // dispatch errors
         if ($state === FastRoute\Dispatcher::NOT_FOUND) {
             // URL or URI? https://ru.wikipedia.org/wiki/URI
-            throw new AppRouterNotFoundException(self::jsonize([
-                'message'   =>  "URL not found",
+            throw new AppRouterNotFoundException("URL not found", 404, null, [
                 'method'    =>  self::$httpMethod,
                 'uri'       =>  self::$uri
-            ]), 404);
+            ]);
         }
 
         if ($state === FastRoute\Dispatcher::METHOD_NOT_ALLOWED) {
-            throw new AppRouterMethodNotAllowedException(self::jsonize([
+            throw new AppRouterMethodNotAllowedException("Method " . self::$httpMethod . " not allowed for URI " . self::$uri, 405, null, [
                 'uri'       => self::$uri,
                 'method'    => self::$httpMethod,
                 'info'      => self::$routeInfo
-            ]), 405);
+            ]);
         }
 
         // нужно получить параметры правила для обработанного роута! (к сожалению, не получится получить именно для ОБРАБОТАННОГО, только для объявленного)
@@ -565,22 +564,20 @@ class AppRouter implements AppRouterInterface
 
             if (!class_exists($class)) {
                 self::$logger->error("Class {$class} not defined.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Class {$class} not defined",
+                throw new AppRouterHandlerError("Class {$class} not defined", 500, null, [
                     'uri'       =>  self::$uri,
                     'method'    =>  self::$httpMethod,
                     'info'      =>  self::$routeInfo
-                ]), 500);
+                ]);
             }
 
             if (!method_exists($class, $method)) {
                 self::$logger->error("Method {$method} not declared at {$class} class.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Method {$method} not declared at {$class} class",
+                throw new AppRouterHandlerError("Method {$method} not declared at class {$class}", 500, null, [
                     'uri'       =>  self::$uri,
                     'method'    =>  self::$httpMethod,
                     'info'      =>  self::$routeInfo
-                ]), 500);
+                ]);
             }
 
             $actor = [ new $class, $method ];
@@ -591,22 +588,20 @@ class AppRouter implements AppRouterInterface
 
             if (!class_exists($class)){
                 self::$logger->error("Class {$class} not defined.", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Class {$class} not defined",
+                throw new AppRouterHandlerError("Static class {$class} not defined", 500, null, [
                     'uri'       =>  self::$uri,
                     'method'    =>  self::$httpMethod,
                     'info'      =>  self::$routeInfo
-                ]), 500);
+                ]);
             }
 
             if (!method_exists($class, $method)){
                 self::$logger->error("Method {$method} not declared at {$class} class", [ self::$uri, self::$httpMethod, $class ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Method {$method} not declared at {$class} class",
+                throw new AppRouterHandlerError("Method {$method} not declared at static class {$class}", 500, null, [
                     'uri'       =>  self::$uri,
                     'method'    =>  self::$httpMethod,
                     'info'      =>  self::$routeInfo
-                ]), 500);
+                ]);
             }
 
             $actor = [ $class, $method ];
@@ -615,12 +610,11 @@ class AppRouter implements AppRouterInterface
             // function
             if (!function_exists($handler)){
                 self::$logger->error("Handler function {$handler} not found", [ self::$uri, self::$httpMethod, $handler ]);
-                throw new AppRouterHandlerError(self::jsonize([
-                    'message'   =>  "Handler function {$handler} not found",
+                throw new AppRouterHandlerError("Handler function {$handler} not found", 500, null, [
                     'uri'       =>  self::$uri,
                     'method'    =>  self::$httpMethod,
                     'info'      =>  self::$routeInfo
-                ]), 500);
+                ]);
             }
 
             $actor = $handler;

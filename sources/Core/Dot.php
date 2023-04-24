@@ -551,8 +551,10 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      *
      * @param  int|string $key
      * @return bool
+     *
+     * #[\ReturnTypeWillChange]
      */
-    public function offsetExists($key)
+    public function offsetExists($key): bool
     {
         return $this->has($key);
     }
@@ -562,6 +564,8 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      *
      * @param  int|string $key
      * @return mixed
+     *
+     * #[\ReturnTypeWillChange]
      */
     public function offsetGet($key)
     {
@@ -573,6 +577,8 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      *
      * @param int|string|null $key
      * @param mixed           $value
+     *
+     * #[\ReturnTypeWillChange]
      */
     public function offsetSet($key, $value)
     {
@@ -589,6 +595,8 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      * Delete the given key
      *
      * @param int|string $key
+     *
+     * #[\ReturnTypeWillChange]
      */
     public function offsetUnset($key)
     {
@@ -607,7 +615,7 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      * @param  int|string|null $key
      * @return int
      */
-    public function count($key = null)
+    public function count($key = null):int
     {
         return count($this->get($key));
     }
@@ -638,6 +646,8 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      * Return items for JSON serialization
      *
      * @return array
+     *
+     * #[\ReturnTypeWillChange]
      */
     public function jsonSerialize()
     {

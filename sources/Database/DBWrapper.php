@@ -196,11 +196,17 @@ class DBWrapper
         return new \Arris\Database\PDOStatement($result, $this->config);
     }
 
+    /**
+     * @return string
+     */
     public function getLastQueryTime(): string
     {
         return $this->config->formatTime($this->last_state['time']);
     }
 
+    /**
+     * @return array
+     */
     public function getLastState():array
     {
         $result = $this->last_state;
@@ -208,11 +214,15 @@ class DBWrapper
         return $result;
     }
 
-    public function getStats()
+    /**
+     * @param int $precision
+     * @return array
+     */
+    public function getStats(int $precision = 6): array
     {
         return [
             'total_queries' =>  $this->config->total_queries,
-            'total_time'    =>  $this->config->formatTime($this->config->total_time)
+            'total_time'    =>  $this->config->formatTime($this->config->total_time, $precision)
         ];
     }
 

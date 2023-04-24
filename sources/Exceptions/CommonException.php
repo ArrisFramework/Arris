@@ -6,17 +6,11 @@ use Arris\ExceptionInterface;
 use Throwable;
 
 /**
- * Кидается, если обнаружена для переданного URI использован недопустимый метод.
- * Как правило, эта ситуация эквивалентна ошибке 405
+ * Общий предок для всех классов-исключений фреймворка.
  *
- * Дополнительные параметры:
- * - uri
- * - method
- * - routing info
- *
- * Можно получить в обработчике исключения с помощью метода getInfo()
+ * Дает возможность использовать 4-е поле $info для передачи расширенных данных
  */
-class AppRouterMethodNotAllowedException extends AppRouterException implements ExceptionInterface
+class CommonException extends \RuntimeException implements ExceptionInterface
 {
     protected array $_info;
 
@@ -32,7 +26,7 @@ class AppRouterMethodNotAllowedException extends AppRouterException implements E
     {
         $this->_info = $info;
 
-        parent::__construct($message, $code, $previous, $info);
+        parent::__construct($message, $code, $previous);
     }
 
     /**
@@ -45,4 +39,5 @@ class AppRouterMethodNotAllowedException extends AppRouterException implements E
     {
         return is_null($key) ? $this->_info : (array_key_exists($key, $this->_info) ? $this->_info[$key] : null);
     }
+
 }
