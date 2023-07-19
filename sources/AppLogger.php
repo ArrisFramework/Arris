@@ -18,6 +18,7 @@ use Exception;
 use \Monolog\Logger;
 use \Monolog\Handler\StreamHandler;
 use \Monolog\Handler\NullHandler;
+use Psr\Log\NullLogger;
 
 /**
  * Class AppLogger
@@ -29,6 +30,8 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
      * @var array $_instances \Monolog
      */
     public static $_instances = [];
+
+    public static $_declared_loggers = [];
 
     /**
      * @var array
@@ -116,46 +119,69 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
 
             $logger = new Logger($logger_name);
 
+            // $level - параметры логгера для разных уровней
             foreach ($scope_levels as $level) {
-                $filename = self::createLoggerFilename($scope, $level, $is_deferred_scope);
-
                 $loglevel = $level[ self::addScope_OPTION_LOGLEVEL ] ?? self::$_global_config['default_log_level'];
 
-                $level_options = array(
+                $filename
+                    = $level[ self::addScope_OPTION_FILENAME ] === 'php://stdout'
+                    ? 'php://stdout'
+                    : self::createLoggerFilename($scope, $level, $is_deferred_scope);
+
+                $options = array_key_exists(self::addScope_OPTION_OPTIONS, $level) ? $level[ self::addScope_OPTION_OPTIONS ] : [];
+
+                $level_options = [
+                    'enable'    =>  array_key_exists('enable', $options) ? $options['enable'] : $scope_logging_enabled,
+                    'bubbling'    =>  array_key_exists('bubbling', $options) ? $options['bubbling'] : self::$_global_config['bubbling'],
+                    'handler'    =>  array_key_exists('handler', $options) ? $options['handler'] : StreamHandler::class
+                ];
+
+                self::$_declared_loggers[ $scope ][] = [
+                    'file'      =>  $filename,
+                    'level'     =>  $loglevel,
+                    'options'   =>  $level_options
+                ];
+
+                /*$level_options = array(
                     'enable'    =>  setOption($level, 'enable', $scope_logging_enabled),
                     'bubbling'  =>  setOption($level, 'bubbling', self::$_global_config['bubbling']),
                     'handler'   =>  setOption($level, 'handler', StreamHandler::class)
-                );
+                );*/
 
                 // NullHandler если логгер так или иначе отключен
                 if ($level_options['enable'] === false) {
                     $level_options['handler'] = \Monolog\Handler\NullHandler::class;
                 }
 
-                if ( $level_options['enable'] == false || $scope_logging_enabled == false ) {
-
+                if ( $level_options['enable'] == false || $scope_logging_enabled == false )
+                {
                     // NULL Handler
                     $level_options['enable'] = false;
                     $logger->pushHandler( new \Monolog\Handler\NullHandler($loglevel) );
+                }
+                elseif ( is_callable($level_options['handler']) )
+                {
+                    // у коллбэка не будет параметров, поэтому мы их не передаем
+                    $logger->pushHandler( call_user_func_array($level_options['handler'], []) );
 
-                } elseif ( $level_options['handler'] == StreamHandler::class || $level_options['handler'] === NULL ) {
-
-                    // Stream Handler
+                }
+                elseif ( $level_options['handler'] == StreamHandler::class || $level_options['handler'] === null )
+                {
+                    // Default stream Handler
                     $logger->pushHandler( new StreamHandler($filename, $loglevel, $level_options['bubbling']) );
-
-                } elseif ( in_array('Monolog\Handler\HandlerInterface', class_implements($level_options['handler'])) ) {
-
-                    // via HandlerInterface
+                }
+                elseif ( in_array('Monolog\Handler\HandlerInterface', class_implements($level_options['handler'])) )
+                {
+                    // via HandlerInterface (не тестировалось нормально)
                     /**
                      * @param \Monolog\Handler\HandlerInterface $level_options[]
                      */
                     $logger->pushHandler( /** @param \Monolog\Handler\HandlerInterface */ $level_options['handler'] );
-
-                } else {
-
+                }
+                else
+                {
                     // NULL Handler
                     $logger->pushHandler( new \Monolog\Handler\NullHandler($loglevel) );
-
                 }
 
                 self::$_configs[ $internal_key ][ $loglevel ] = $level_options;
@@ -190,9 +216,43 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
         }
     }
 
-    public static function getAppLoggerConfig()
+    /**
+     * Возвращает глобальный конфиг
+     *
+     * @return array
+     */
+    public static function getAppLoggerConfig(): array
     {
         return self::$_global_config;
+    }
+
+    /**
+     * Возвращает вычисленные параметры логгера по имени скоупа и уровню логгирования (int)
+     *
+     * @param null $scope
+     * @param null $level
+     * @return array
+     */
+    public static function getScopeConfig($scope = null, $level = null):array
+    {
+        $data = is_null($scope)
+                ? self::$_declared_loggers
+                : (
+                    array_key_exists( $scope, self::$_declared_loggers) ? self::$_declared_loggers[$scope] : []
+                );
+        /*if (is_null($level)) {
+            return $data;
+        } else {
+            return current(array_filter($data, static function ($v) use ($level) {
+                return $v['level'] == $level;
+            }));
+        }*/
+        return is_null($level)
+            ? $data
+            : current(array_filter($data, static function ($v) use ($level)
+            {
+                return $v['level'] == $level;
+            }));
     }
 
     /**
@@ -232,7 +292,7 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
      * @param null $scope
      * @return string
      */
-    private static function getScopeKey($scope = null)
+    private static function getScopeKey($scope = null): string
     {
         $scope = $scope ? (self::SCOPE_DELIMETER . (string)$scope) : '';
         return self::$application . self::$instance . $scope;
@@ -244,7 +304,7 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
      * @param null $scope
      * @return bool
      */
-    private static function checkScopeExist($scope = null)
+    private static function checkScopeExist($scope = null): bool
     {
         $key = self::getScopeKey($scope);
         return self::checkInstance($key);
@@ -256,7 +316,7 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
      * @param null $scope
      * @return string
      */
-    private static function getLoggerName($scope = null)
+    private static function getLoggerName($scope = null): string
     {
         $scope = (string)$scope;
 
@@ -271,9 +331,10 @@ class AppLogger implements AppLoggerInterface, AppLoggerConstants
      *
      * @param $scope
      * @param $level
+     * @param bool $is_deferred
      * @return string
      */
-    private static function createLoggerFilename($scope, $level, $is_deferred = false)
+    private static function createLoggerFilename($scope, $level, bool $is_deferred = false): string
     {
         $filename
             = empty($level[ self::addScope_OPTION_FILENAME ])

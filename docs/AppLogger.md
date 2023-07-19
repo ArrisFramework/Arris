@@ -101,6 +101,31 @@ AppLogger::scope('log.selectel')->error('Error');
 AppLogger::scope('log.selectel')->notice('Notice');
 ```
 
+# Custom handler
+
+```php
+AppLogger::addScope('console', [
+        [ 'php://stdout', Logger::INFO, [ 'handler' => StreamHandler::class ]]
+    ], $options['verbose']);
+```
+Добавляет стандартный StreamHandler (в stdout). При этом он используется только если `$options['verbose'] === true`.
+
+```php
+  AppLogger::addScope('console', [
+        [ 'php://stdout', Logger::INFO, [ 'handler' => static function()
+          {
+              $formatter = new LineFormatter("[%datetime%]: %message%\n", "Y-m-d H:i:s", false, true);
+              $handler = new StreamHandler('php://stdout', Logger::INFO);
+              $handler->setFormatter($formatter);
+              return $handler;
+          }
+    ], $options['verbose']);
+```
+
+Добавляет собственный хэндлер логгирования - замыкание.
+
+
+https://stackoverflow.com/questions/70875746/laravel-monolog-lineformatter-datetime-pattern
 
 
 

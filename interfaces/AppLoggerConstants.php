@@ -88,11 +88,12 @@ interface AppLoggerConstants {
     ];
 
     /**
-     * порядок опций в параметре $options метода addScope()
+     * Порядок опций в параметре $options метода addScope()
      */
-
     const addScope_OPTION_FILENAME = 0;
     const addScope_OPTION_LOGLEVEL = 1;
+    const addScope_OPTION_OPTIONS = 2;
+
     const addScope_OPTION_BUBBLING = 'bubbling';
     const addScope_OPTION_ENABLE = 'enable';
     const addScope_OPTION_HANDLER = 'handler';
