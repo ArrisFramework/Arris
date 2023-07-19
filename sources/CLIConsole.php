@@ -80,7 +80,14 @@ class CLIConsole implements CLIConsoleInterface
         return $result;
     }
 
-    public static function echo_status_cli($message = "", $breakline = true)
+    /**
+     * Форматирует сообщение ESCAPE-последовательностями для вывода в консоль
+     *
+     * @param $message
+     * @param $breakline
+     * @return array|string|string[]|null
+     */
+    public static function format($message = "", $breakline = true)
     {
         $fgcolors = self::FOREGROUND_COLORS;
 
@@ -119,23 +126,32 @@ class CLIConsole implements CLIConsoleInterface
             $message = htmlspecialchars_decode($message, ENT_QUOTES | ENT_HTML5);
 
         if ($breakline === true) $message .= PHP_EOL;
-        echo $message;
         return $message;
     }
 
-    public static function echo_status($message = "", $breakline = true)
+    /**
+     * Генерирует сообщение - отформатированное ESCAPE-последовательностями для CLI
+     * и не отформатированное (с тегами) для WEB
+     *
+     * @param $message
+     * @param $break_line
+     * @return array|string|string[]|null
+     */
+    public static function get_message($message = "", $break_line = true)
     {
         if (php_sapi_name() === "cli") {
-            self::echo_status_cli($message, $breakline);
+            $message = self::format($message, $break_line);
         } else {
-            if ($breakline === true) $message .= PHP_EOL . "<br/>\r\n";
-            echo $message;
+            $message .= $break_line === true ? PHP_EOL . "<br/>\r\n" : '';
+
+            /*if ($breakline === true) {
+                $message .= PHP_EOL . "<br/>\r\n";
+            }*/
         }
         return $message;
     }
 
-
-    public static function echo_status_setmode($will_strip = false, $will_decode = false)
+    public static function set_mode($will_strip = false, $will_decode = false)
     {
         self::$echo_status_cli_flags = array(
             'strip_tags'        => $will_strip,
@@ -143,9 +159,9 @@ class CLIConsole implements CLIConsoleInterface
         );
     }
 
-    public static function say($message = "", $breakline = true)
+    public static function say($message = "", $break_line = true)
     {
-        self::echo_status($message, $breakline);
+        echo self::get_message($message, $break_line);
     }
 
 }
