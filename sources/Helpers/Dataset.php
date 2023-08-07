@@ -1,6 +1,6 @@
 <?php
 
-namespace Arris;
+namespace Arris\Helpers;
 
 use ReflectionException;
 use ReflectionFunction;
