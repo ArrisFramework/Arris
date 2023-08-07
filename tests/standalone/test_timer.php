@@ -6,7 +6,7 @@
 
 use Arris\Util\Timer;
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . '/../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 Timer::init('test', 6);
 Timer::start();

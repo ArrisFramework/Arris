@@ -3,148 +3,152 @@
 namespace Arris\Entity;
 
 /**
- * Как это использовать?
+ * Result class:
  *
- * В теле метода сказать:
- * <pre>
- * return new Result([
- * 'query'     =>  $query,
- * 'last'      =>  $last,
- * 'redis_key' =>  $redis_key,
- * 'page'      =>  $page
- * ]);
- * </pre>
- * Это создаст экземпляр класса Result с полями query, last, redis_key, page соответственно.
+ * new Result(bool $is_success, string $message, array $params) - common call
  *
- * Они будут доступны как через хелпер:
- * <pre>
- * $redis_key = $result->get('redis_key');`
- * </pre>
+ * In all other cases `message` or `is_success` can be overriden with data keys.
  *
- * так и напрямую:
- * <pre>
- * $query = $result['query'];
- * $query = $result->query;
- * $query = $result->{'query'};
- * </pre>
+ * new Result(string $message, array $params) - is_success will true
+ * new Result(bool $result, array $params) - message will empty
+ * new Result(bool $result, string $message) - data will empty
  *
- * Если вторым аргументом в конструктор Result передать TRUE, то будет возвращаться
- * экземпляр класса Value, который реализует методы приведения типов
- * <pre>
- * ->toString()
- * ->toInt()
- * ->toBool()
- * ->toArray()
- * </pre>
- *
- * Для этого в шапке метода, возвращающего Result нужно указать массив с перечислением типов:
- * Это используется PHPStan-нотация: https://stackoverflow.com/a/61369750
- *
- * @return array{query: string, last: bool, redis_key: string, page: int}
- *
- * Впрочем, можно указать тип и принудительно, уже по месту использования: "@ var Select $query"
+ * new Result(array $params) - message will empty, is_success will true
  */
-class Result implements \ArrayAccess
+class Result implements \ArrayAccess, \Serializable
 {
-    public $result;
-
-    public bool $is_error = false;
-
-    public $error;
-
-    public $error_code;
-
-    public array $repository = [];
-
-    private $_return_as_value = false;
-
-    public function __construct($dataset = [], $return_as_value = false)
-    {
-        $this->is_error = false;
-        $this->error_code = 0;
-        $this->_return_as_value = $return_as_value;
-
-        foreach ($dataset as $key => $value) {
-            $this->{$key} = $value;
-        }
-    }
-
-    public function isError():bool
-    {
-        return $this->is_error;
-    }
-
-    public function getErrorCode()
-    {
-        return $this->error_code;
-    }
-
-    public function getError()
-    {
-        return $this->error;
-    }
-
-    public function __set($key, $data)
-    {
-        $this->{$key} = $data;
-    }
-
-    public function set($key, $data)
-    {
-        $this->result = $data;
-    }
-
-    public function __get($key)
-    {
-        return $this->{$key};
-    }
+    /**
+     * @var bool|null
+     */
+    public ?bool $is_success = true;
 
     /**
-     * Немного сложноЭ
-     * Наверное, возврат экземпляра Value - лишнее
-     *
-     * @return array<Value>|Value
+     * @var bool|null
      */
-    public function get()
-    {
-        $args = func_get_args();
+    public ?bool $is_error = false;
 
-        if (empty($args)) {
-            return $this->_return_as_value ? new Value($this->result) : $this->result;
-        } else {
-            if (count($args) == 1) {
-                if (is_object($this->{$args[0]}) || is_callable($this->{$args[0]}) || is_array($this->{$args[0]})) {
-                    return $this->{$args[0]};
-                } else {
-                    return $this->_return_as_value ? new Value($this->{$args[0]}) : $this->{$args[0]};
+    /**
+     * @var string|null
+     */
+    public $message = '';
+
+    /**
+     * @var array|null
+     */
+    public $data = [];
+
+    public function __construct()
+    {
+        $this->is_success = true;
+        $this->is_error = false;
+        $this->message = '';
+        $this->data = [];
+
+        switch (func_num_args()) {
+            // new Result(bool $is_success, string $message, array $params)
+            case 3: {
+                $first = func_get_arg(0);
+                $second = func_get_arg(1);
+                $third = func_get_arg(2);
+
+                $this->is_success = $first;
+                $this->is_error = !$this->is_success;
+                $this->message = $second;
+
+                foreach ($third as $k => $v) {
+                    $this->__set($k, $v);
                 }
-            } else {
-                $set = [];
-                foreach ($args as $name) {
-                    $set[] = $this->{$name};
+                $this->data = $third;
+
+                break;
+            }
+            // new Result(string $message, array $params)
+            // new Result(bool $is_success, array $params)
+            case 2: {
+                $first = func_get_arg(0);
+                $second = func_get_arg(1);
+
+                if (is_bool($first)) {
+                    $this->is_success = func_get_arg(0);
+                    $this->is_error = !$this->is_success;
+                } elseif (is_string($first)) {
+                    $this->is_success = null;
+                    $this->is_error = null;
+                    $this->message = $first;
                 }
-                return $set;
+
+                if (is_array($second)) {
+                    foreach ($second as $k => $v) {
+                        $this->__set($k, $v);
+                    }
+                    $this->data = $second;
+                } elseif (is_string($second)) {
+                    $this->message = $second;
+                }
+
+                break;
+            }
+            // new Result(array $params)
+            default: {
+                $first = func_get_arg(0);
+
+                $this->is_success = true;
+                $this->is_error = false;
+                $this->message = '';
+                $this->data = [];
+
+                if (is_array($first)) {
+                    foreach ($first as $k => $v) {
+                        $this->__set($k, $v);
+                    }
+                    $this->data = $first;
+                }
+
+                break;
             }
         }
     }
 
-    /*public function exception(\Throwable $exception)
+    /**
+     * Setter
+     * Handles access to non-existing property
+     *
+     * ? если ключ не найден в списке property, то нужно добавить его в массив $data
+     *
+     * @param string $key
+     * @param $value
+     * @return void
+     */
+    public function __set(string $key, $value = null)
     {
-        $this->is_error = true;
-        $this->error_code = $exception->getCode();
-        $this->error = $exception->getMessage();
-    }*/
+        $this->{$key} = $value;
+    }
 
-    /** ArrayAccess */
+    /**
+     * Getter.
+     * Handles access to non-existing property
+     *
+     * ? если ключ не найден в списке property, то нужно проверить его в массиве $data и только потом вернуть null
+     *
+     * @param string $key
+     * @return null
+     */
+    public function __get(string $key)
+    {
+        return $this->offsetExists($key) ? $this->{$key} : null;
+    }
 
     public function offsetExists($offset)
     {
-        return !empty($this->{$offset});
+        return property_exists($this, $offset);
     }
 
     public function offsetGet($offset)
     {
-        return $this->{$offset};
+        if (property_exists($this, $offset)) {
+            return $this->{$offset};
+        }
+        return null;
     }
 
     public function offsetSet($offset, $value)
@@ -156,4 +160,35 @@ class Result implements \ArrayAccess
     {
         unset($this->{$offset});
     }
+
+    /**
+     * Stringable interface available since PHP 8.0
+     * @return string
+     */
+    public function __toString(): string
+    {
+        return $this->message;
+    }
+
+    public function serialize()
+    {
+        return json_encode([
+            'is_success'    =>  $this->is_success,
+            'is_error'      =>  $this->is_error,
+            'message'       =>  $this->message,
+            'data'          =>  $this->data
+        ], JSON_HEX_APOS | JSON_HEX_QUOT | JSON_NUMERIC_CHECK | JSON_UNESCAPED_UNICODE | JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_INVALID_UTF8_SUBSTITUTE /*| JSON_THROW_ON_ERROR*/);
+    }
+
+    public function unserialize($data)
+    {
+        $json = json_decode($data, true);
+        $this->is_success   = array_key_exists('is_success', $json) ? $json['is_success'] : true;
+        $this->is_error     = array_key_exists('is_error', $json) ? $json['is_error'] : false;
+        $this->message      = array_key_exists('message', $json) ? $json['message'] : '';
+        $this->data         = array_key_exists('data', $json) ? $json['data'] : '';
+        unset($json);
+    }
+
+
 }

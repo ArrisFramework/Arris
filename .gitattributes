@@ -5,10 +5,9 @@
 .gitattributes      export-ignore
 .gitignore          export-ignore
 _env.example.php    export-ignore
-_tests              export-ignore
+tests              export-ignore
 vendor              export-ignore
 docs                export-ignore
-todo-db.md          export-ignore
 _legacy             export-ignore
 _in_work            export-ignore
 

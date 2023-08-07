@@ -1,6 +1,6 @@
 <?php
 
-require_once __DIR__ . DIRECTORY_SEPARATOR . '../vendor/autoload.php';
+require_once __DIR__ . '/../../vendor/autoload.php';
 
 use function Arris\setOptionEnv as test;
 
