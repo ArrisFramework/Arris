@@ -1,0 +1,16 @@
+<phpunit
+        convertErrorsToExceptions="true"
+        convertNoticesToExceptions="true"
+        convertWarningsToExceptions="true"
+        strict="true">
+
+    <testsuite>
+        <directory>./tests</directory>
+    </testsuite>
+
+    <filter>
+        <whitelist>
+            <directory suffix=".php">sources</directory>
+        </whitelist>
+    </filter>
+</phpunit>

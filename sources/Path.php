@@ -135,14 +135,18 @@ class Path implements PathInterface
     /**
      * Create ummutable instance
      *
-     * @param $path
+     * @param Path|string|array $path
      *
      * @param null $isAbsolutePath
      * @param null $hasTrailingSeparator
      * @return Path
      */
-    public static function create($path, $isAbsolutePath = null, $hasTrailingSeparator = null)
+    public static function create($path, $isAbsolutePath = null, $hasTrailingSeparator = null): Path
     {
+        if ($path instanceof Path) {
+            $path = $path->toString(true);
+        }
+
         return new self($path, $isAbsolutePath, $hasTrailingSeparator);
     }
     
@@ -175,7 +179,7 @@ class Path implements PathInterface
             
             $path = explode(self::ATOM_SEPARATOR, $path);
         }
-        
+
         $numAtoms = count($path);
         
         if ($numAtoms > 1) {
@@ -214,11 +218,16 @@ class Path implements PathInterface
      */
     public function join($data)
     {
+        // или приводить к строке, или делать array_merge atoms with [ data ]
+        /*if ($data instanceof Path) {
+            $data = $data->toString();
+        }*/
+
         if (is_string($data)) {
             $data = explode(DIRECTORY_SEPARATOR, $data);
         }
-        
-        return new self(array_merge($this->atoms, $data), $this->isAbsolutePath, $this->hasTrailingSeparator);
+
+        return new self(array_merge($this->atoms, [ $data ]), $this->isAbsolutePath, $this->hasTrailingSeparator);
     }
     
     /**

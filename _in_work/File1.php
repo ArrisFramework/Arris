@@ -1,11 +1,10 @@
 <?php
 
-namespace Arris\File;
 
 /**
  * File Wrapper
  */
-class File
+class File1
 {
     private $handler;
     private $last_io_content_length;

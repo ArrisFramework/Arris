@@ -6,10 +6,12 @@
 .gitignore          export-ignore
 _env.example.php    export-ignore
 _tests              export-ignore
-_deprecated+work    export-ignore
 vendor              export-ignore
 docs                export-ignore
 todo-db.md          export-ignore
+_legacy             export-ignore
+_in_work            export-ignore
+
 
 
 

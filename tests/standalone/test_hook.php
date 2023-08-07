@@ -25,8 +25,8 @@ Hook::register('example', function (){
 
 
 // где-то там, в ядре делаем вызовы хуков
-Hook::run('post:add:topic');
-Hook::run('post:add:comment');
-Hook::run('create');
+// Hook::run('post:add:topic');
+// Hook::run('post:add:comment');
+// Hook::run('create');
 
 Hook::run('example');

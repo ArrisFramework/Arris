@@ -8,6 +8,7 @@
  * Library: https://github.com/KarelWintersky/Arris
  *
  * Date: 04.03.2018, time: 19:27
+ * Date: 03.08.2023, time: 01:40
  */
 
 namespace Arris;
@@ -20,25 +21,32 @@ class CLIConsole implements CLIConsoleInterface
     const FOREGROUND_COLORS = [
         'black'         => '0;30',
         'dark gray'     => '1;30',
+        'darkgray'     => '1;30',
         'dgray'         => '1;30',
         'blue'          => '0;34',
         'light blue'    => '1;34',
+        'lightblue'    => '1;34',
         'lblue'         => '1;34',
         'green'         => '0;32',
         'light green'   => '1;32',
+        'lightgreen'   => '1;32',
         'lgreen'        => '1;32',
         'cyan'          => '0;36',
         'light cyan'    => '1;36',
+        'lightcyan'    => '1;36',
         'lcyan'         => '1;36',
         'red'           => '0;31',
         'light red'     => '1;31',
+        'lightred'     => '1;31',
         'lred'          => '1;31',
         'purple'        => '0;35',
         'light purple'  => '1;35',
+        'lightpurple'  => '1;35',
         'lpurple'       => '1;35',
         'brown'         => '0;33',
         'yellow'        => '1;33',
         'light gray'    => '0;37',
+        'lightgray'    => '0;37',
         'lgray'         => '0;37',
         'white'         => '1;37'
     ];
@@ -51,14 +59,14 @@ class CLIConsole implements CLIConsoleInterface
         'blue'      => '44',
         'magenta'   => '45',
         'cyan'      => '46',
-        'light gray'=> '47'
+        'light gray'=> '47',
+        'lightgray'=> '47'
     ];
 
-    private static $echo_status_cli_flags = [
+    private static array $echo_status_cli_flags = [
         'strip_tags'        => false,
         'decode_entities'   => false
     ];
-
 
     public static function readline($prompt, $allowed_pattern = '/.*/', $strict_mode = false)
     {
@@ -83,11 +91,11 @@ class CLIConsole implements CLIConsoleInterface
     /**
      * Форматирует сообщение ESCAPE-последовательностями для вывода в консоль
      *
-     * @param $message
-     * @param $breakline
+     * @param string $message
+     * @param bool $breakline
      * @return array|string|string[]|null
      */
-    public static function format($message = "", $breakline = true)
+    public static function format(string $message = "", bool $breakline = true)
     {
         $fgcolors = self::FOREGROUND_COLORS;
 
@@ -133,25 +141,21 @@ class CLIConsole implements CLIConsoleInterface
      * Генерирует сообщение - отформатированное ESCAPE-последовательностями для CLI
      * и не отформатированное (с тегами) для WEB
      *
-     * @param $message
-     * @param $break_line
+     * @param string $message
+     * @param bool $break_line
      * @return array|string|string[]|null
      */
-    public static function get_message($message = "", $break_line = true)
+    public static function get_message(string $message = "", bool $break_line = true)
     {
         if (php_sapi_name() === "cli") {
             $message = self::format($message, $break_line);
         } else {
             $message .= $break_line === true ? PHP_EOL . "<br/>\r\n" : '';
-
-            /*if ($breakline === true) {
-                $message .= PHP_EOL . "<br/>\r\n";
-            }*/
         }
         return $message;
     }
 
-    public static function set_mode($will_strip = false, $will_decode = false)
+    public static function set_mode(bool $will_strip = false, bool $will_decode = false)
     {
         self::$echo_status_cli_flags = array(
             'strip_tags'        => $will_strip,

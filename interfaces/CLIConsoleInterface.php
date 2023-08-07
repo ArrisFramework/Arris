@@ -17,20 +17,20 @@ interface CLIConsoleInterface {
 
     /**
      * Устанавливает флаги обработки разных тегов в функции echo_status()
-     * @param bool|FALSE $will_strip - вырезать ли все лишние теги после обработки заменяемых?
-     * @param bool|FALSE $will_decode - преобразовывать ли html entities в их html-представление?
+     * @param bool|bool $will_strip - вырезать ли все лишние теги после обработки заменяемых?
+     * @param bool|bool $will_decode - преобразовывать ли html entities в их html-представление?
      */
-    public static function set_mode($will_strip = false, $will_decode = false);
+    public static function set_mode(bool $will_strip = false, bool $will_decode = false);
 
     /**
      * Генерирует сообщение - отформатированное ESCAPE-последовательностями для CLI
      * и не отформатированное (с тегами) для WEB
      *
-     * @param $message
-     * @param $break_line
+     * @param string $message
+     * @param bool $break_line
      * @return array|string|string[]|null
      */
-    public static function get_message($message = "", $break_line = true);
+    public static function get_message(string $message = "", bool $break_line = true);
 
     /**
      * Печатает в консоли цветное сообщение. Рекомендуемый к использованию метод.
