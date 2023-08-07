@@ -1,18 +1,26 @@
 <?php
-// Хэлперы объявлены ВНЕ неймспейса
+/**
+ * Хэлперы объявлены ВНЕ неймспейса
+ */
 
 if (!function_exists('d')) {
     /**
      * Dump
      */
     function d() {
-        if (php_sapi_name() !== "cli") echo '<pre>';
+        if (php_sapi_name() !== "cli") {
+            echo '<pre>';
+        }
+
         if (func_num_args()) {
             foreach (func_get_args() as $arg) {
                 var_dump($arg);
             }
         }
-        if (php_sapi_name() !== "cli") echo '</pre>';
+
+        if (php_sapi_name() !== "cli") {
+            echo '</pre>';
+        }
     }
 }
 
@@ -20,51 +28,55 @@ if (!function_exists('dd')) {
     /**
      * Dump and die
      */
-    function dd() {
-        if (php_sapi_name() !== "cli") echo '<pre>';
+    function dd(...$args) {
+        if (php_sapi_name() !== "cli") {
+            echo '<pre>';
+        }
+
         if (func_num_args()) {
             foreach (func_get_args() as $arg) {
                 var_dump($arg);
             }
         }
-        if (php_sapi_name() !== "cli") echo '</pre>';
+
+        if (php_sapi_name() !== "cli") {
+            echo '</pre>';
+        }
+        // d($args);
 
         die;
     }
 }
 
-if (!function_exists('__env')) {
+if (!function_exists('_env')) {
     /**
-     * Возвращает переменную окружения либо (если её нет) - значение по умолчанию (null)
-     *
-     * @param $key
-     * @param null $value
-     * @return array|false|string|null
+     * @param string $key
+     * @param $default
+     * @param string $type (allowed: '', bool, int, float, string, array?, null)
+     * @return array|mixed|string
      */
-    function __env($key, $value = null)
-    {
-        return array_key_exists($key, getenv()) ? getenv($key) : $value;
-    }
-}
+    function _env(string $key, $default, string $type = '') {
+        $k = getenv($key);
+        if ($k === false) {
+            return $default;
+        }
 
-if (!function_exists('__envPath')) {
-    /**
-     * Возвращает значение пути (path) из окружения (env), возможно, с заключительным слэшэм
-     *
-     * @param $key
-     * @param bool $with_tailing_slash (false)
-     * @return string
-     */
-    function __envPath($key, $with_tailing_slash = false)
-    {
-        return $with_tailing_slash
-            ? rtrim(getenv($key), DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR
-            : rtrim(getenv($key), DIRECTORY_SEPARATOR);
+        if ($type !== '') {
+            if ($type === 'array') {
+                return explode(' ', trim(str_replace(['[', ']'], '', $k)));
+            }
+
+            $st = settype($k, $type);
+
+            if ($st === false) {
+                return $default;
+            }
+        }
+        return $k;
     }
 }
 
 if (!function_exists('getJSONPayload')) {
-
     /**
      * Возвращает десериализованный payload
      *
