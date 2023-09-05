@@ -138,7 +138,7 @@ class DBWrapper
         $this->config->total_time += $this->last_state['time'] = $after_call - $before_call;
         $this->config->total_queries++;
 
-        if ($this->last_state['time'] >= $this->config->slow_query_threshold) {
+        if ($this->last_state['time'] >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
             $this->logger->debug($function);
         }
 
@@ -163,7 +163,7 @@ class DBWrapper
         $result = call_user_func_array([$this->pdo, 'query'], $args);
         $time_consumed = microtime(true) - $time_start;
 
-        if ($time_consumed >= $this->config->slow_query_threshold) {
+        if ($time_consumed >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
             $debug = debug_backtrace();
             $debug = $debug[1] ?? $debug[0];
             $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));

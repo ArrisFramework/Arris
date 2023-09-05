@@ -52,7 +52,7 @@ class PDOStatement
         $after_call = microtime(true);
         $time_consumed = $after_call - $before_call;
 
-        if ($time_consumed >= $this->config->slow_query_threshold) {
+        if ($time_consumed >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
             $debug = debug_backtrace();
             $debug = $debug[1] ?? $debug[0];
             $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
@@ -77,7 +77,7 @@ class PDOStatement
         $after_call = microtime(true);
         $time_consumed = $after_call - $before_call;
 
-        if ($time_consumed >= $this->config->slow_query_threshold) {
+        if ($time_consumed >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
             $debug = debug_backtrace();
             $debug = $debug[1] ?? $debug[0];
             $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));

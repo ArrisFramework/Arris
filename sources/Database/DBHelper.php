@@ -21,7 +21,7 @@ class DBHelper
 
         $set = [];
 
-        $query = "INSERT INTO `{$table}` SET ";
+        $query = "INSERT INTO {$table} SET ";
 
         foreach ($dataset as $index => $value) {
             if (strtoupper(trim($value)) === 'NOW()') {
