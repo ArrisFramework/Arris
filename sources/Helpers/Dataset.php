@@ -16,7 +16,7 @@ class Dataset
     {
         $reflection = new ReflectionFunction($suspected_closure);
 
-        return (bool)$reflection->isClosure();
+        return $reflection->isClosure();
     }
 
     /**

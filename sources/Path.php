@@ -259,11 +259,12 @@ class Path implements PathInterface
      */
     public function makePath($access_rights = 0777):bool
     {
-        $path = $this->toString();
+        $path = $this->toString(); // не нужно?
         
         return is_dir( $path ) || ( mkdir( $path, 0777, true ) && is_dir( $path ) );
     }
-    
+
+
     
 }
 

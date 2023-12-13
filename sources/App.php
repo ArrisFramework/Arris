@@ -1,15 +1,18 @@
 <?php
 
 /**
- * User: Karel Wintersky
+ * Class Arris\App
+ * Application container
  *
- * Class App
- * Namespace: Arris
+ * User: Karel Wintersky
  *
  * Library: https://github.com/KarelWintersky/Arris
  *
  * Date: 10.12.2020
+ * Date: 13.12.2023
  *
+ * See: https://www.php.net/manual/ru/language.oop5.late-static-bindings.php
+ * https://stackoverflow.com/questions/3126130/extending-singletons-in-php
  */
 
 namespace Arris;
@@ -23,7 +26,7 @@ class App implements AppInterface
     /**
      * @var App ссылка на инстанс
      */
-    private static $instance;
+    private static $instance = null;
     
     /**
      * Общий репозиторий App
@@ -57,17 +60,7 @@ class App implements AppInterface
     {
         return self::getInstance($options);
     }
-    
-    public static function access($options = null)
-    {
-        return self::getInstance($options);
-    }
-    
-    public static function handle($options = null)
-    {
-        return self::getInstance($options);
-    }
-    
+
     public static function key($key, $default)
     {
         return (self::getInstance())->get($key, $default);
@@ -83,7 +76,8 @@ class App implements AppInterface
     }
     
     /**
-     * Возвращает инстанс синглтона App (вызывается обёрткой)
+     * Защищенный метод, вызывается обёрткой factory, возвращает инстанс класса App,
+     * при отсутствии - создает новый инстанс и возвращает.
      *
      * @param null $options
      * @return App
@@ -91,14 +85,19 @@ class App implements AppInterface
     protected static function getInstance($options = null)
     {
         if (!self::$instance) {
-            self::$instance = new self($options);
+            self::$instance = new static($options); // not self!!! later static binding, allowing inheritance of Arris\App class
         } else {
             (self::$instance)->add($options);
         }
     
         return self::$instance;
     }
-    
+
+    /**
+     * Приватный конструктор
+     *
+     * @param $options
+     */
     private function __construct($options = null)
     {
         if (is_null($this->repository)) {
@@ -193,10 +192,11 @@ class App implements AppInterface
      * Предотвращаем клонирование инстанса
      *
      * @return void
+     * @throws RuntimeException
      */
-    final private function __clone()
+    final public function __clone()
     {
-        throw new RuntimeException("Cannot serialize an App");
+        throw new RuntimeException("Can't clone " . __CLASS__);
     }
 
     /**
@@ -204,11 +204,23 @@ class App implements AppInterface
      * Предотвращаем десериализацию инстанса
      *
      * @return void
-     * @throws Exception
+     * @throws RuntimeException
      */
-    final private function __wakeup()
+    final public function __wakeup()
     {
-        throw new RuntimeException("Cannot unserialize an App");
+        throw new RuntimeException("Can't unserialize " . __CLASS__);
+    }
+
+    /**
+     * Prevent from being serialized.
+     * Предотвращает сериализацию инстанса.
+     *
+     * @return void
+     * @throws RuntimeException
+     */
+    final public function __sleep()
+    {
+        throw new RuntimeException("Can't serialize " . __CLASS__);
     }
 
 }

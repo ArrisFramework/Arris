@@ -110,6 +110,38 @@ class Result implements \ArrayAccess, \Serializable
     }
 
     /**
+     * Немного сложное.
+     * Возвращает переменную, представленную экземпляром Value.
+     *
+     * @todo: ТЕСТЫ
+     *
+     * @return array<Value>|Value
+     */
+    public function getValue()
+    {
+        $args = func_get_args();
+
+        if (empty($args)) {
+            return new Value($this->result);
+        } else {
+            if (count($args) == 1) {
+                if (is_object($this->{$args[0]}) || is_callable($this->{$args[0]}) || is_array($this->{$args[0]})) {
+                    return $this->{$args[0]};
+                } else {
+                    return new Value($this->{$args[0]});
+                }
+            } else {
+                $set = [];
+                foreach ($args as $name) {
+                    // $set[] = $this->{$name};
+                    $set[] = $this->getValue($name);
+                }
+                return $set;
+            }
+        }
+    }
+
+    /**
      * Setter
      * Handles access to non-existing property
      *

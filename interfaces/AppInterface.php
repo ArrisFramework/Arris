@@ -5,22 +5,12 @@ namespace Arris;
 interface AppInterface
 {
     /**
-     * Возвращает инстанс синглтона App (wrapper)
+     * Публичный метод, возвращает инстанс App (или его наследников)
      *
      * @param null $options
      * @return App
      */
     public static function factory($options = null);
-    
-    /**
-     * Alias of factory
-     */
-    public static function access($options = null);
-    
-    /**
-     * Alias of factory
-     */
-    public static function handle($options = null);
     
     /**
      * Инстанциирует App и возвращает значение по ключу.
@@ -75,11 +65,21 @@ interface AppInterface
     public function getConfig($key = null);
 
     /**
+     * Инстанциирует App и возвращает (или устанавливает) значение в конфиге по ключу
+     *
      * @param $key
      * @param null $value
      * @return mixed
      */
     public static function config($key = null, $value = null);
+
+    /**
+     * Возвращает конфиг или часть (по ключу) в виде JSON-структуры
+     *
+     * @param $key
+     * @return string
+     */
+    public function getConfigJSON($key = null);
 
     /* MAGIC METHODS */
 
