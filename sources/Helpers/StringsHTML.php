@@ -55,5 +55,6 @@ class StringsHTML
         return $content;
     }
 
-
 }
+
+# -eof-

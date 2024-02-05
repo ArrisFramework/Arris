@@ -75,7 +75,7 @@ class Stack
     }
 
     /**
-     * Validates whether stack is empty.
+     * Проверяет, пуст ли стэк
      *
      * @return bool
      */
@@ -84,13 +84,18 @@ class Stack
         return empty($this->stack);
     }
 
+    /**
+     * Возвращает количество элементов в стэке
+     *
+     * @return int
+     */
     public function count(): int
     {
         return count($this->stack);
     }
 
     /**
-     * Clear stack entirely.
+     * Очищает стэк
      *
      * @return void
      */
@@ -101,7 +106,7 @@ class Stack
     }
 
     /**
-     * Get all of the values inside the stack.
+     * Возвращает все элементы стэка
      *
      * @return array
      */
@@ -110,14 +115,43 @@ class Stack
         return $this->stack;
     }
 
+    /**
+     * ?
+     *
+     * @return array
+     */
     public function toArray():array
     {
         return array_reverse($this->stack);
     }
 
-    public function implode($separator = '', $inverse_order = false):string
+    /**
+     * Склеивает содержимое стэка в строчки. Работает только если стэк содержит строки, а не структуры данных
+     *
+     * @param string $separator
+     * @param bool $inverse_order
+     * @return string
+     */
+    public function implode(string $separator = '', bool $inverse_order = false):string
     {
         return $inverse_order ? implode($separator, array_reverse($this->stack)) : implode($separator, $this->stack);
+    }
+
+    /**
+     * Инвертирует стэк
+     *
+     * @return Stack
+     */
+    public function reverse()
+    {
+        $data = [];
+        do {
+            $data[] = $this->pop();
+        } while (!$this->isEmpty());
+
+        foreach ($data as $value) $this->push($value);
+
+        return $this;
     }
 
 }

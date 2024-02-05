@@ -50,6 +50,8 @@ if (!function_exists('dd')) {
 
 if (!function_exists('_env')) {
     /**
+     * Get environment variable and set type.
+     *
      * @param string $key
      * @param $default
      * @param string $type (allowed: '', bool, int, float, string, array?, null)
@@ -91,5 +93,72 @@ if (!function_exists('getJSONPayload')) {
         return json_decode(file_get_contents('php://input'), true);
     }
 }
+
+if (!function_exists('ddt')) {
+    function ddt($array)
+    {
+        function ddt_print($array):string
+        {
+            $print = "<table border='1'>";
+
+            foreach ($array as $key => $value)
+            {
+                $v = is_array($value) ? ddt_print($value) : $value;
+
+                $print .= "<tr>";
+                $print .= "<td>{$key}</td>";
+                $print .= "<td>{$v}</td>";
+                $print .= "</tr>";
+            }
+
+            $print .= "</table>";
+
+            return $print;
+        }
+
+        $is_not_cli = php_sapi_name() !== "cli";
+        if ($is_not_cli) echo '<pre>';
+
+        echo ddt_print($array);
+
+        if ($is_not_cli) echo '</pre>';
+
+        die;
+    }
+}
+
+if (!function_exists('return_bytes')) {
+    function return_bytes($val)
+    {
+        $val = trim($val);
+        $last = strtolower($val[strlen($val)-1]);
+        switch($last) {
+            case 'g':
+                $val = $val << 10;
+            case 'm':
+                $val = $val << 10;
+            case 'k':
+                $val = $val << 10;
+        }
+
+        return $val;
+    }
+}
+
+if (!function_exists('get_ini_value')) {
+
+    /**
+     * Get ini value and format it to bytes
+     *
+     * @param $key
+     * @return int
+     */
+    function get_ini_value($key)
+    {
+        return (int)return_bytes(ini_get($key));
+    }
+}
+
+
 
 # -eof-

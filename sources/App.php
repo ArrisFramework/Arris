@@ -124,6 +124,28 @@ class App implements AppInterface
     {
         return $this->services->get($name, null);
     }
+
+    public function isService($name)
+    {
+        return $this->services->has($name);
+    }
+
+    //@todo: проверить
+    public function getServiceType($name)
+    {
+        if ($this->isService($name)) {
+            $instance = $this->services->get($name);
+
+            if (is_object($instance)) {
+                return get_class($instance);
+            } elseif (is_resource($instance)) {
+                return get_resource_type($instance);
+            } else {
+                return gettype($instance);
+            }
+        }
+        return null;
+    }
     
     public function add($keys, $value = null)
     {

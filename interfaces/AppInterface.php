@@ -141,6 +141,14 @@ interface AppInterface
      */
     public function getService($name);
 
+    /**
+     * Проверяет, существует ли сервис с переданным именем?
+     *
+     * @param $name
+     * @return bool
+     */
+    public function isService($name);
+
 }
 
 # -eof-
