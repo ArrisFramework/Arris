@@ -3,7 +3,6 @@
 namespace Arris\Database;
 
 use \PDO;
-use \PDOStatement;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 
@@ -54,7 +53,7 @@ class DBWrapper
     {
         $this->config = new DBConfig($connection_config, $options, $logger);
 
-        $this->logger = is_null($logger) ? new NullLogger() : $logger;
+        $this->logger = \is_null($logger) ? new NullLogger() : $logger;
 
         if ($this->config->is_lazy === false) {
             $this->initConnection();
@@ -68,7 +67,7 @@ class DBWrapper
     {
         switch ($this->config->driver) {
             case 'mysql': {
-                $dsl = sprintf("mysql:host=%s;port=%s;dbname=%s",
+                $dsl = \sprintf("mysql:host=%s;port=%s;dbname=%s",
                     $this->config->hostname,
                     $this->config->port,
                     $this->config->database);
@@ -78,7 +77,7 @@ class DBWrapper
                 break;
             }
             case 'pgsql': {
-                $dsl = sprintf("pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
+                $dsl = \sprintf("pgsql:host=%s;port=%d;dbname=%s;user=%s;password=%s",
                     $this->config->hostname,
                     $this->config->port,
                     $this->config->database,
@@ -90,7 +89,7 @@ class DBWrapper
                 break;
             }
             case 'sqlite': {
-                $dsl = sprintf("sqlite:%s", realpath($this->config->hostname));
+                $dsl = \sprintf("sqlite:%s", realpath($this->config->hostname));
                 $this->pdo = new \PDO($dsl);
 
                 break;
@@ -126,14 +125,20 @@ class DBWrapper
 
         $this->last_state['method'] = $function;
 
+        /*
+        // старый код, проверяет вхождение имени функции в массив. Рационален, если > 1 элемента в массиве
         if (in_array(strtolower($function), [ 'prepare' ])) {
+            $this->updateLastState($args);
+        }
+        */
+        if (\strtolower($function) == 'prepare') {
             $this->updateLastState($args);
         }
 
         // invoke the original method & calc time cost
-        $before_call = microtime(true);
-        $result = call_user_func_array([$this->pdo, $function], $args);
-        $after_call = microtime(true);
+        $before_call = \microtime(true);
+        $result = \call_user_func_array([$this->pdo, $function], $args);
+        $after_call = \microtime(true);
 
         $this->config->total_time += $this->last_state['time'] = $after_call - $before_call;
         $this->config->total_queries++;
@@ -155,18 +160,18 @@ class DBWrapper
     {
         $this->ensureConnection();
 
-        $args = func_get_args();
+        $args = \func_get_args();
 
         $this->updateLastState($args);
 
-        $time_start = microtime(true);
-        $result = call_user_func_array([$this->pdo, 'query'], $args);
-        $time_consumed = microtime(true) - $time_start;
+        $time_start = \microtime(true);
+        $result = \call_user_func_array([$this->pdo, 'query'], $args);
+        $time_consumed = \microtime(true) - $time_start;
 
         if ($time_consumed >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
-            $debug = debug_backtrace();
+            $debug = \debug_backtrace();
             $debug = $debug[1] ?? $debug[0];
-            $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
+            $caller = \sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
             $this->config->logger->info("PDO::query() slow: ", [
                 $time_consumed,
                 $caller,
@@ -189,10 +194,10 @@ class DBWrapper
     {
         $this->ensureConnection();
 
-        $args = func_get_args();
+        $args = \func_get_args();
 
         $this->updateLastState($args);
-        $result = call_user_func_array([$this->pdo, 'prepare'], $args);
+        $result = \call_user_func_array([$this->pdo, 'prepare'], $args);
         return new \Arris\Database\PDOStatement($result, $this->config);
     }
 
@@ -229,9 +234,9 @@ class DBWrapper
     private function updateLastState($args)
     {
         $this->last_state['query'] = $args[0];
-        if (preg_match('#^\/\*\s(.+)\s\*\/#', $args[0], $matches)) {
+        if (\preg_match('#^\/\*\s(.+)\s\*\/#', $args[0], $matches)) {
             $this->last_state['comment'] = $matches[0];
-        };
+        }
     }
 }
 

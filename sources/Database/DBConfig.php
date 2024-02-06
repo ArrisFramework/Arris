@@ -134,7 +134,7 @@ class DBConfig
      */
     public function formatTime($time = 0, int $decimals = 6, string $decimal_separator = '.', string $thousands_separator = ''): string
     {
-        return number_format($time, $decimals, $decimal_separator, $thousands_separator);
+        return \number_format($time, $decimals, $decimal_separator, $thousands_separator);
     }
 
 }

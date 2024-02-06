@@ -127,37 +127,8 @@ if (!function_exists('ddt')) {
     }
 }
 
-if (!function_exists('return_bytes')) {
-    function return_bytes($val)
-    {
-        $val = trim($val);
-        $last = strtolower($val[strlen($val)-1]);
-        switch($last) {
-            case 'g':
-                $val = $val << 10;
-            case 'm':
-                $val = $val << 10;
-            case 'k':
-                $val = $val << 10;
-        }
 
-        return $val;
-    }
-}
 
-if (!function_exists('get_ini_value')) {
-
-    /**
-     * Get ini value and format it to bytes
-     *
-     * @param $key
-     * @return int
-     */
-    function get_ini_value($key)
-    {
-        return (int)return_bytes(ini_get($key));
-    }
-}
 
 
 

@@ -1,3 +1,15 @@
+# CLI Tables
+
+https://packagist.org/packages/jc21/clitable -- выглядит отлично, но таблицы нужно именно _создавать_
+
+https://packagist.org/packages/miloske85/php-cli-table - ?
+
+https://packagist.org/packages/sevenecks/tableify - 
+
+https://packagist.org/packages/pgooch/php-ascii-tables
+
+# DB
+
 А так?
 
 ```

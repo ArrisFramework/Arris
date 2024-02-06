@@ -237,6 +237,7 @@ class Timer
                     unset($item['time.total']);
                 });
                 $result = self::$timers;
+                break;
             }
             default: {
                 $result = false;

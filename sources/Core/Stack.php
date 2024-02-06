@@ -4,15 +4,7 @@ namespace Arris\Core;
 
 use RuntimeException;
 
-/**
- * Class Stack
- * @package Arris\Utils
- *
- * Примитивный стэк, правильнее использовать https://github.com/php-ds/polyfill/blob/master/src/Stack.php
- * из пакета `php-ds/php-ds`
- */
-
-class Stack
+class Stack implements StackInterface
 {
     /**
      * @var int
@@ -23,6 +15,14 @@ class Stack
      * @var array
      */
     private array $stack;
+    
+    private bool $allowPopFromEmptyStack = false;
+    
+    /**
+     * Дефолтное значение, извлекаемое из пустого стэка, если это разрешено
+     * @var mixed
+     */
+    private $defaultValueForEmptyStack = null;
 
     public function __construct($values = null, $limit = null)
     {
@@ -32,9 +32,9 @@ class Stack
         // initialize the stack
         $this->stack = [];
 
-        if (is_null($values)) {
+        if (\is_null($values)) {
             $values = [];
-        } else if (!is_array($values)) {
+        } else if (!\is_array($values)) {
             $values = array($values);
         }
 
@@ -43,105 +43,73 @@ class Stack
         }
     }
 
-    /**
-     * Push an item to the stack.
-     *
-     * @param mixed ...$items
-     */
+    public function allowPopFromEmptyStack(bool $allow = true, $default_null_value = '')
+    {
+        $this->allowPopFromEmptyStack = $allow;
+        $this->defaultValueForEmptyStack = $default_null_value;
+    }
+
     public function push(...$items)
     {
         // trap for stack overflow
-        if (!is_null($this->limit) && ($this->count() >= $this->limit)) {
+        if (!\is_null($this->limit) && ($this->count() >= $this->limit)) {
             throw new RunTimeException('Stack is full!');
         }
 
         foreach ($items as $i) {
-            array_push($this->stack, $i);
+            $this->stack[] = $i;
         }
     }
 
-    /**
-     * Pop last value from stack.
-     *
-     * @return mixed
-     */
     public function pop()
     {
         if ($this->count() === 0) {
+            if ($this->allowPopFromEmptyStack) {
+                return $this->defaultValueForEmptyStack;
+            }
+            
             throw new RuntimeException('Stack is empty');
         }
 
-        return array_pop($this->stack);
+        return \array_pop($this->stack);
     }
 
-    /**
-     * Проверяет, пуст ли стэк
-     *
-     * @return bool
-     */
     public function isEmpty(): bool
     {
         return empty($this->stack);
     }
 
-    /**
-     * Возвращает количество элементов в стэке
-     *
-     * @return int
-     */
     public function count(): int
     {
-        return count($this->stack);
+        return \count($this->stack);
     }
 
-    /**
-     * Очищает стэк
-     *
-     * @return void
-     */
     public function clear(): void
     {
         unset($this->stack);
         $this->stack = [];
     }
 
-    /**
-     * Возвращает все элементы стэка
-     *
-     * @return array
-     */
     public function get(): array
     {
         return $this->stack;
     }
 
-    /**
-     * ?
-     *
-     * @return array
-     */
-    public function toArray():array
+    public function getReversed():array
     {
         return array_reverse($this->stack);
     }
 
-    /**
-     * Склеивает содержимое стэка в строчки. Работает только если стэк содержит строки, а не структуры данных
-     *
-     * @param string $separator
-     * @param bool $inverse_order
-     * @return string
-     */
+    public function toArray():array
+    {
+        return self::getReversed();
+    }
+
     public function implode(string $separator = '', bool $inverse_order = false):string
     {
         return $inverse_order ? implode($separator, array_reverse($this->stack)) : implode($separator, $this->stack);
     }
 
-    /**
-     * Инвертирует стэк
-     *
-     * @return Stack
-     */
     public function reverse()
     {
         $data = [];
@@ -150,6 +118,8 @@ class Stack
         } while (!$this->isEmpty());
 
         foreach ($data as $value) $this->push($value);
+        
+        unset($data);
 
         return $this;
     }

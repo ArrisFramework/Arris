@@ -549,58 +549,58 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
     /**
      * Check if a given key exists
      *
-     * @param  int|string $key
+     * @param  int|string $offset
      * @return bool
      *
      * #[\ReturnTypeWillChange]
      */
-    public function offsetExists($key): bool
+    public function offsetExists($offset): bool
     {
-        return $this->has($key);
+        return $this->has($offset);
     }
     
     /**
      * Return the value of a given key
      *
-     * @param  int|string $key
+     * @param  int|string $offset
      * @return mixed
      *
      * #[\ReturnTypeWillChange]
      */
-    public function offsetGet($key)
+    public function offsetGet($offset)
     {
-        return $this->get($key);
+        return $this->get($offset);
     }
     
     /**
      * Set a given value to the given key
      *
-     * @param int|string|null $key
+     * @param int|string|null $offset
      * @param mixed           $value
      *
      * #[\ReturnTypeWillChange]
      */
-    public function offsetSet($key, $value)
+    public function offsetSet($offset, $value)
     {
-        if (is_null($key)) {
+        if (is_null($offset)) {
             $this->items[] = $value;
             
             return;
         }
         
-        $this->set($key, $value);
+        $this->set($offset, $value);
     }
     
     /**
      * Delete the given key
      *
-     * @param int|string $key
+     * @param int|string $offset
      *
      * #[\ReturnTypeWillChange]
      */
-    public function offsetUnset($key)
+    public function offsetUnset($offset)
     {
-        $this->delete($key);
+        $this->delete($offset);
     }
     
     /*

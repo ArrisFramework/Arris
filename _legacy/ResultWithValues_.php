@@ -44,7 +44,7 @@ namespace Arris\Entity;
  *
  * Впрочем, можно указать тип и принудительно, уже по месту использования: "@ var Select $query"
  */
-class Result_ implements \ArrayAccess
+class Result_WithValues_ implements \ArrayAccess
 {
     public $result;
 

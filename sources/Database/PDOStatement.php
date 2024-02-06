@@ -2,8 +2,6 @@
 
 namespace Arris\Database;
 
-use IteratorAggregate;
-
 /**
  * @method array        fetchAll()
  * @method mixed        fetch(int $mode = \PDO::ATTR_DEFAULT_FETCH_MODE, int $cursorOrientation = \PDO::FETCH_ORI_NEXT, int $cursorOffset = 0)
@@ -47,15 +45,15 @@ class PDOStatement
 
     public function execute(array $input_parameters = null):bool
     {
-        $before_call = microtime(true);
+        $before_call = \microtime(true);
         $result = $this->PDOStatement->execute($input_parameters);
-        $after_call = microtime(true);
+        $after_call = \microtime(true);
         $time_consumed = $after_call - $before_call;
 
         if ($time_consumed >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
-            $debug = debug_backtrace();
+            $debug = \debug_backtrace();
             $debug = $debug[1] ?? $debug[0];
-            $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
+            $caller = \sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
 
             $this->config->logger->info("PDO::execute() slow: ", [
                 $time_consumed,
@@ -72,15 +70,15 @@ class PDOStatement
 
     public function __call($method, $args)
     {
-        $before_call = microtime(true);
-        $result = call_user_func_array(array($this->PDOStatement, $method), $args);
-        $after_call = microtime(true);
+        $before_call = \microtime(true);
+        $result = \call_user_func_array(array($this->PDOStatement, $method), $args);
+        $after_call = \microtime(true);
         $time_consumed = $after_call - $before_call;
 
         if ($time_consumed >= $this->config->slow_query_threshold && $this->config->slow_query_threshold > 0) {
-            $debug = debug_backtrace();
+            $debug = \debug_backtrace();
             $debug = $debug[1] ?? $debug[0];
-            $caller = sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
+            $caller = \sprintf("%s%s%s", ($debug['class'] ?? ''), ($debug['type'] ?? ''), ($debug['function'] ?? ''));
 
             $this->config->logger->info("PDO::{$method} slow: ", [
                 $time_consumed,

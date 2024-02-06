@@ -18,7 +18,6 @@
 namespace Arris;
 
 use Arris\Core\Dot;
-use Exception;
 use RuntimeException;
 
 class App implements AppInterface
@@ -122,7 +121,7 @@ class App implements AppInterface
 
     public function getService($name)
     {
-        return $this->services->get($name, null);
+        return $this->services->get($name);
     }
 
     public function isService($name)
