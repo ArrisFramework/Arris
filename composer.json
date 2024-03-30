@@ -33,9 +33,11 @@
         "php-coveralls/php-coveralls": "^1.1"
     },
     "suggest": {
+        "karelwintersky/arris.entity": "Arris µFramework: Entity Types",
         "karelwintersky/arris.router": "Arris µFramework: AppRouter class",
         "karelwintersky/arris.logger": "Arris µFramework: AppLogger class",
         "karelwintersky/arris.helpers": "Arris µFramework: helpers",
+        "karelwintersky/arris.template": "Arris Template engine",
         "ajur-media/php-image-resize": "PHP class to re-size and scale images",
         "php-curl-class/php-curl-class": "PHP Curl Class makes it easy to send HTTP requests and integrate with web APIs.",
         "spatie/regex": "A sane interface for php's built in preg_* functions",
