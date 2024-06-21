@@ -9,13 +9,13 @@
             "email": "karel.wintersky@gmail.com"
         }
     ],
-    "keywords": [ "logging", "database", "console", "hooks", "routing" ],
+    "keywords": [ "app", "logging", "console", "hooks", "routing" ],
     "config": {
         "optimize-autoloader": true,
         "platform-check": false
     },
     "require": {
-        "php": ">=7.4",
+        "php": ">=7.4 | 8.*",
         "ext-pdo": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
