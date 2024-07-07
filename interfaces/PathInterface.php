@@ -41,6 +41,8 @@ interface PathInterface
     
     public function isPresent():bool;
     public function makePath($access_rights = 0777):bool;
+
+    public function isFile():bool;
 }
 
 # -eof-

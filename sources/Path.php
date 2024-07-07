@@ -251,6 +251,17 @@ class Path implements PathInterface
     {
         return is_dir($this->toString());
     }
+
+    /**
+     * Проверяет наличие файла
+     *
+     * @return bool
+     */
+    public function isFile():bool
+    {
+        $fn = $this->toString();
+        return is_file($fn) && is_readable($fn);
+    }
     
     /**
      *
