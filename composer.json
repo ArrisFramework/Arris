@@ -6,7 +6,7 @@
     "authors": [
         {
             "name": "Karel Wintersky",
-            "email": "karel.wintersky@gmail.com"
+            "email": "karel.wintersky@yandex.ru"
         }
     ],
     "keywords": [ "app", "logging", "console", "hooks", "routing" ],
@@ -22,7 +22,7 @@
         "ext-readline": "*",
         "ext-curl": "*",
         "ext-simplexml": "*",
-        "psr/log": "^1.1"
+        "psr/log": "*"
     },
     "require-dev": {
         "predis/predis": "^2.0",
@@ -38,12 +38,15 @@
         "karelwintersky/arris.logger": "Arris µFramework: AppLogger class",
         "karelwintersky/arris.helpers": "Arris µFramework: helpers",
         "karelwintersky/arris.template": "Arris Template engine",
+        "karelwintersky/arris.toolkit.cli-console": "Arris µFramework - CLIConsole helper",
         "ajur-media/php-image-resize": "PHP class to re-size and scale images",
         "php-curl-class/php-curl-class": "PHP Curl Class makes it easy to send HTTP requests and integrate with web APIs.",
         "spatie/regex": "A sane interface for php's built in preg_* functions",
         "adbario/php-dot-notation": "PHP dot notation access to arrays",
         "sabre/event": "sabre/event is a library for lightweight event-based programming (more complexity than Arris/Hook)",
-        "php-sage/sage": "Sage - Insightful PHP debugging assistant, pretty replacement for var_dump() and debug_backtrace()."
+        "php-sage/sage": "Sage - Insightful PHP debugging assistant, pretty replacement for var_dump() and debug_backtrace().",
+        "league/csv": "CSV data manipulation made easy in PHP",
+        "vlucas/phpdotenv": "Loads environment variables from `.env` to `getenv()`, `$_ENV` and `$_SERVER` automagically."
     },
     "autoload": {
         "files": [
