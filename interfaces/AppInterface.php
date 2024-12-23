@@ -2,15 +2,19 @@
 
 namespace Arris;
 
+use Arris\Core\Dot;
+
 interface AppInterface
 {
     /**
      * Публичный метод, возвращает инстанс App (или его наследников)
      *
-     * @param null $options
+     * @param array $config
+     * @param array $options
+     * @param array $services
      * @return App
      */
-    public static function factory($options = null);
+    public static function factory($config = [], $options = [], $services = []): ?App;
     
     /**
      * Инстанциирует App и возвращает значение по ключу.
@@ -52,9 +56,17 @@ interface AppInterface
      *
      * @param $key
      * @param null $value
-     * @return mixed
+     * @return Dot
      */
-    public function setConfig($key, $value = null);
+    public function setConfig($key, $value = null):Dot;
+
+    /**
+     * add config to App instance
+     *
+     * @param $config
+     * @return Dot
+     */
+    public function addConfig($config): Dot;
 
     /**
      * Возвращает весь конфиг или ключ

@@ -471,7 +471,7 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      * @param mixed $value
      * @return Dot
      */
-    public function set($keys, $value = null)
+    public function set($keys, $value = null): Dot
     {
         if (is_array($keys)) {
             foreach ($keys as $k => $v) {

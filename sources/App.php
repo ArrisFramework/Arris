@@ -23,9 +23,9 @@ use RuntimeException;
 class App implements AppInterface
 {
     /**
-     * @var App ссылка на инстанс
+     * @var App|null ссылка на инстанс
      */
-    private static $instance = null;
+    private static ?App $instance = null;
     
     /**
      * Общий репозиторий App
@@ -55,9 +55,9 @@ class App implements AppInterface
      */
     private $config = null;
     
-    public static function factory($options = null)
+    public static function factory($config = [], $options = [], $services = []): ?App
     {
-        return self::getInstance($options);
+        return self::getInstance($config, $options, $services);
     }
 
     public static function key($key, $default)
@@ -78,13 +78,14 @@ class App implements AppInterface
      * Защищенный метод, вызывается обёрткой factory, возвращает инстанс класса App,
      * при отсутствии - создает новый инстанс и возвращает.
      *
-     * @param null $options
+     * @param null $config
      * @return App
      */
-    protected static function getInstance($options = null)
+    protected static function getInstance($config = [], $options = [], $services = []): ?App
     {
         if (!self::$instance) {
-            self::$instance = new static($options); // not self!!! later static binding, allowing inheritance of Arris\App class
+            // not self!!! later static binding, allowing inheritance of Arris\App class
+            self::$instance = new static($config, $options, $services);
         } else {
             (self::$instance)->add($options);
         }
@@ -96,21 +97,29 @@ class App implements AppInterface
      * Приватный конструктор
      *
      * @param $options
+     * @param $config
+     * @param $services
      */
-    private function __construct($options = null)
+    private function __construct($config = [], $options = [], $services = [])
     {
+        if (is_null($this->config)) {
+            $this->config = new Dot($config);
+        }
+
         if (is_null($this->repository)) {
-            $this->repository = new Dot($options);
+            $this->repository = new Dot();
         } else if (!empty($options)) {
             $this->repository->add($options);
         }
 
-        if (is_null($this->config)) {
-            $this->config = new Dot();
-        }
-
         if (is_null($this->services)) {
             $this->services = new Dot();
+        }
+
+        if (!empty($services)) {
+            foreach ($services as $service_name => $service) {
+                $this->addService($service_name, $service);
+            }
         }
     }
 
@@ -168,14 +177,29 @@ class App implements AppInterface
                 : $this->config[$key];
     }
     
-    public function setConfig($key, $value = null)
+    public function setConfig($key, $value = null):Dot
     {
-        $this->config->set($key, $value);
+        if (is_array($key) || $key instanceof Dot) {
+            return $this->config->replace($key);
+        }
+
+        return $this->config->set($key, $value);
+    }
+
+    /**
+     * add config to App instance
+     *
+     * @param $config
+     * @return Dot
+     */
+    public function addConfig($config): Dot
+    {
+        return $this->config->add($config);
     }
 
     public function getConfigJSON($key = null)
     {
-        return  is_null($key)
+        return is_null($key)
             ? $this->config->toJson()
             : $this->config[$key]->toJson();
     }

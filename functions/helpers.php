@@ -127,6 +127,27 @@ if (!function_exists('ddt')) {
     }
 }
 
+if (!function_exists('dl')) {
+    /**
+     * аналог d(), но печатает строку вызова d()
+     *
+     * @return void
+     */
+    function dl()
+    {
+        $line = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0]['line'];
+        echo '<pre>';
+        echo "----- [At line: {$line}]:<br>";
+        if (func_num_args()) {
+            foreach (func_get_args() as $arg) {
+                var_dump($arg);
+            }
+        }
+        echo '-----';
+        echo '</pre>';
+    }
+}
+
 
 
 
