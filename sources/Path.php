@@ -163,6 +163,10 @@ class Path implements PathInterface
     public function __construct($path, $isAbsolutePath = null, $hasTrailingSeparator = null)
     {
         $atoms = [];
+
+        if ($path instanceof Path) {
+            $path = $path->toString();
+        }
         
         if (is_string($path)) {
             if (preg_match('#://#', $path) === 1) {
@@ -181,7 +185,7 @@ class Path implements PathInterface
         }
 
         $numAtoms = count($path);
-        
+
         if ($numAtoms > 1) {
             if ('' === $path[0] ) {
                 $isAbsolutePath = true;
