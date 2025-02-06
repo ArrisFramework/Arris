@@ -19,7 +19,7 @@ class Debug implements DebugInterface
      *
      * @return Debug
      */
-    public static function dump()
+    public static function dump(): Debug
     {
         $is_not_cli = php_sapi_name() !== "cli";
 
@@ -51,8 +51,6 @@ class Debug implements DebugInterface
 
     /**
      * Dump
-     *
-     * @return self
      */
     public static function d()
     {
@@ -138,13 +136,26 @@ class Debug implements DebugInterface
      */
     public static function ddt($array)
     {
-        $is_not_cli = php_sapi_name() !== "cli";
-        if ($is_not_cli) echo '<pre>';
-
-        echo self::ddt_prepare($array);
-
-        if ($is_not_cli) echo '</pre>';
-
+        self::dt($array);
         die;
+    }
+
+    /**
+     * аналог d(), но печатает строку вызова d()
+     *
+     * @return void
+     */
+    public static function dl():void
+    {
+        $line = debug_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS, 1)[0]['line'];
+        echo '<pre>';
+        echo "----- [At line: {$line}]:<br>";
+        if (func_num_args()) {
+            foreach (func_get_args() as $arg) {
+                var_dump($arg);
+            }
+        }
+        echo '-----';
+        echo '</pre>';
     }
 }

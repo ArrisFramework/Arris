@@ -10,7 +10,7 @@ require_once __DIR__ . '/../vendor/phpunit/phpunit/src/Framework/Assert/Function
  */
 class PathTest extends TestCase
 {
-    public static function setUpBeforeClass()
+    public static function setUpBeforeClass():void
     {
         // self::markTestSkipped('This works');
     }

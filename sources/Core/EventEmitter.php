@@ -7,14 +7,14 @@ class EventEmitter implements EventEmitterInterface
     /**
      * @var array The list of listeners.
      */
-    protected $listeners = [];
+    protected array $listeners = [];
     
     /**
      * The list of "wildcard listeners".
      *
      * @var array
      */
-    protected $wildcardListeners = [];
+    protected array $wildcardListeners = [];
     
     /**
      * An index of listeners for a specific event name. This helps speeding
@@ -24,7 +24,7 @@ class EventEmitter implements EventEmitterInterface
      *
      * @var array
      */
-    protected $listenerIndex = [];
+    protected array $listenerIndex = [];
     
     /**
      * Subscribe to an event.

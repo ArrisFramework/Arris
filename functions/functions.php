@@ -34,12 +34,12 @@ if (!function_exists('Arris\setOptionEnv')) {
      * ([], null, null, null)               =>  null
      *
      * @param array $options
-     * @param string $key
+     * @param string|null $key
      * @param mixed $env_key
      * @param string $default_value
      * @return string
      */
-    function setOptionEnv(array $options, string $key, $env_key = null, $default_value = ''): string
+    function setOptionEnv(array $options, ?string $key, $env_key = null, $default_value = ''): string
     {
         if (empty($options) || is_null($key) || !array_key_exists($key, $options)) {
             if (is_null($env_key)) {

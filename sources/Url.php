@@ -13,37 +13,37 @@ class Url
     /**
      * @var string|null
      */
-    private $scheme;
+    private ?string $scheme;
 
     /**
      * @var string|null
      */
-    private $host;
+    private ?string $host;
 
     /**
      * @var int|null
      */
-    private $port;
+    private ?int $port;
 
     /**
      * @var string
      */
-    private $path;
+    private string $path;
 
     /**
      * @var array
      */
-    private $query;
+    private array $query;
 
     /**
      * @var string|null
      */
-    private $fragment;
+    private ?string $fragment;
 
     /**
      * @var int
      */
-    private $preferredFormat;
+    private int $preferredFormat;
 
     public function __construct(
         ?string $scheme = null,
@@ -70,12 +70,12 @@ class Url
     }
 
     /**
-     * Parse an URL
+     * Parse URL
      *
      * @return static
      * @throws InvalidUrlException if the URL is invalid
      */
-    public static function parse(string $url, ?int $preferredFormat = self::ABSOLUTE)
+    public static function parse(string $url, ?int $preferredFormat = self::ABSOLUTE): Url
     {
         $components = parse_url($url);
 

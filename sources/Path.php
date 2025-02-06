@@ -48,7 +48,7 @@ class Path implements PathInterface
      * @param null $hasTrailingSeparator
      * @return string
      */
-    private function export($hasTrailingSeparator = null)
+    private function export($hasTrailingSeparator = null): string
     {
         // если переданный аргумент НЕ null - он перекрывает предыдущие настройки
         if (!is_null($hasTrailingSeparator)) {
@@ -75,7 +75,7 @@ class Path implements PathInterface
     /**
      * @return string
      */
-    public function toString($hasTrailingSeparator = false)
+    public function toString($hasTrailingSeparator = false): string
     {
         return $this->export($hasTrailingSeparator);
     }
@@ -106,9 +106,9 @@ class Path implements PathInterface
      * Мутирует текущий инстанс - устанавливает флаг "абсолютный путь (начинается с /)"
      *
      * @param bool $is_present
-     * @return $this
+     * @return Path
      */
-    public function setAbsolutePath($is_present = true)
+    public function setAbsolutePath($is_present = true): Path
     {
         $this->isAbsolutePath = (bool)$is_present;
         return $this;
@@ -118,13 +118,14 @@ class Path implements PathInterface
      * Мутирует инстанс - устанавливает опции
      *
      * @param array $options
-     * @return $this
+     * @return Path
      */
-    public function setOptions($options = [])
+    public function setOptions($options = []): Path
     {
         if (array_key_exists('isAbsolute', $options)) {
             $this->isAbsolutePath = (bool)$options['isAbsolute'];
         }
+
         if (array_key_exists('hasTrailingSeparator', $options)) {
             $this->hasTrailingSeparator = (bool)$options['hasTrailingSeparator'];
         }
@@ -133,7 +134,7 @@ class Path implements PathInterface
     }
 
     /**
-     * Create ummutable instance
+     * Create immutable instance
      *
      * @param Path|string|array $path
      *
@@ -218,15 +219,10 @@ class Path implements PathInterface
     
     /**
      * @param $data
-     * @return $this|Path
+     * @return Path
      */
-    public function join($data)
+    public function join($data): Path
     {
-        // или приводить к строке, или делать array_merge atoms with [ data ]
-        /*if ($data instanceof Path) {
-            $data = $data->toString();
-        }*/
-
         if (is_string($data)) {
             $data = explode(DIRECTORY_SEPARATOR, $data);
         }
@@ -236,9 +232,9 @@ class Path implements PathInterface
     
     /**
      * @param $data
-     * @return $this|Path
+     * @return Path
      */
-    public function joinName($data)
+    public function joinName($data): Path
     {
         if (is_string($data)) {
             $data = explode(DIRECTORY_SEPARATOR, $data);
