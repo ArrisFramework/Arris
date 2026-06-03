@@ -1,12 +1,11 @@
+vendor
+composer.lock
+build
+node_modules
+
+# Ignore files from PHPStorm
 .idea
 
-vendor
-_NEVER_USED
-
-tests/*.log
-composer.lock
-
-_env*
-
+# Ignore test & coverage files
 .phpunit.result.cache
-
+coverage.clover

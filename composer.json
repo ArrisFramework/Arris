@@ -12,7 +12,8 @@
     "keywords": [ "app", "logging", "console", "hooks", "routing" ],
     "config": {
         "optimize-autoloader": true,
-        "platform-check": false
+        "platform-check": false,
+        "sort-packages": true
     },
     "require": {
         "php": "8.*",
@@ -28,17 +29,22 @@
         "predis/predis": "^2.0",
         "vlucas/phpdotenv": "^3.3",
         "symfony/var-dumper": "^5.4",
-        "phpunit/phpunit": "^10"
+        "phpunit/phpunit": "^10",
+        "scrutinizer/ocular": "^1.9",
+        "squizlabs/php_codesniffer": "^3.6",
+        "symfony/yaml": "^5.4"
     },
     "suggest": {
+        "symfony/yaml": "^5.4",
+
         "karelwintersky/arris.entity": "Arris µFramework: Entity Types",
         "karelwintersky/arris.entity.path": "Arris µFramework: Path builder",
         "karelwintersky/arris.router": "Arris µFramework: AppRouter class",
         "karelwintersky/arris.logger": "Arris µFramework: AppLogger class",
         "karelwintersky/arris.helpers": "Arris µFramework: helpers",
         "karelwintersky/arris.presenter": "Arris µFramework: Presenter engine",
-
         "karelwintersky/arris.toolkit.cli-console": "Arris µFramework - CLIConsole helper",
+        "karelwintersky/arris.cli": "Arris µFramework - CLIConsole helper",
         "adbario/php-dot-notation": "PHP dot notation access to arrays",
         "sabre/event": "sabre/event is a library for lightweight event-based programming (more complexity than Arris/Hook)",
         "php-sage/sage": "Sage - Insightful PHP debugging assistant, pretty replacement for var_dump() and debug_backtrace().",
@@ -55,6 +61,11 @@
         "psr-4": {
             "Arris\\"           : ["interfaces", "sources"],
             "Arris\\Traits\\"   : ["traits"]
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+
         }
     }
 }

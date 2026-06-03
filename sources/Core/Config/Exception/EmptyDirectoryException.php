@@ -1,0 +1,9 @@
+<?php
+
+namespace Arris\Core\Config\Exception;
+
+use Arris\Core\Config\Exception;
+
+class EmptyDirectoryException extends Exception
+{
+}
