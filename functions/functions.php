@@ -10,7 +10,7 @@ if (!function_exists('Arris\checkAllowedValue')) {
      * @param null $invalid_value
      * @return mixed|null
      */
-    function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL )
+    function checkAllowedValue( $value, $allowed_values_array , $invalid_value = NULL ): mixed
     {
         if (empty($value)) {
             return $invalid_value;
@@ -18,7 +18,7 @@ if (!function_exists('Arris\checkAllowedValue')) {
     
         $key = array_search( $value, $allowed_values_array);
     
-        return ($key !== FALSE) ? $allowed_values_array[ $key ] : $invalid_value;
+        return ($key !== false) ? $allowed_values_array[ $key ] : $invalid_value;
     }
 }
 
@@ -35,11 +35,12 @@ if (!function_exists('Arris\setOptionEnv')) {
      *
      * @param array $options
      * @param string|null $key
-     * @param mixed $env_key
+     * @param mixed|null $env_key
      * @param string $default_value
+     *
      * @return string
      */
-    function setOptionEnv(array $options, ?string $key, $env_key = null, $default_value = ''): string
+    function setOptionEnv(array $options, ?string $key, mixed $env_key = null, string $default_value = ''): string
     {
         if (empty($options) || is_null($key) || !array_key_exists($key, $options)) {
             if (is_null($env_key)) {
@@ -63,7 +64,7 @@ if (!function_exists('Arris\setOption')) {
      * @param $default_value
      * @return mixed|null
      */
-    function setOption(array $options = [], $key = null, $default_value = null)
+    function setOption(array $options = [], $key = null, $default_value = null): mixed
     {
         if (!is_array($options)) {
             return $default_value;
@@ -82,10 +83,11 @@ if (!function_exists('Arris\jsonize')) {
      * Конвертирует в JSON
      *
      * @param $data
-     * @return false|string
+     * @return string
      * @throws \JsonException
      */
-    function jsonize($data) {
+    function jsonize($data): string
+    {
         return json_encode($data, JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR);
     }
 }
@@ -94,6 +96,8 @@ if (!function_exists('Arris\config')) {
 
     /**
      * get/set config key
+     *
+     * @todo: старая логика для 2.*, не совместимо с будущим конфигом hassankhan/config
      *
      * @param $key
      * @param $value
@@ -153,4 +157,4 @@ if (!function_exists('Arris\app')) {
     }
 }
 
-# -eof-
+# -eof- #

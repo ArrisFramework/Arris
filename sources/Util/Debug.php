@@ -132,12 +132,15 @@ class Debug implements DebugInterface
      * Dump as table and die
      *
      * @param $array
+     * @param $die
      * @return void
      */
-    public static function ddt($array)
+    public static function ddt($array, bool $die = true)
     {
         self::dt($array);
-        die;
+        if ($die) {
+            die;
+        }
     }
 
     /**

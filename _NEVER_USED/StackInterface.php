@@ -94,5 +94,4 @@ interface StackInterface
      * @return string
      */
     public function implode(string $separator = '', bool $inverse_order = false):string;
-
 }

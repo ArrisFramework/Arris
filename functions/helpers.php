@@ -43,13 +43,10 @@ if (!function_exists('getJSONPayload')) {
      *
      * @return mixed
      */
-    function getJSONPayload()
+    function getJSONPayload(): mixed
     {
         return json_decode(file_get_contents('php://input'), true);
     }
 }
 
-
-
-
-# -eof-
+# -eof- #

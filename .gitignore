@@ -1,7 +1,12 @@
 .idea
+
 vendor
-dev
+_NEVER_USED
+
 tests/*.log
 composer.lock
+
 _env*
+
+.phpunit.result.cache
 

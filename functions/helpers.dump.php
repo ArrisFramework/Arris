@@ -26,14 +26,14 @@ if (!function_exists('dd')) {
 if (!function_exists('ddt')) {
     function ddt($array)
     {
-        \Arris\Util\Debug::ddt($array);
+        \Arris\Util\Debug::ddt($array, true);
     }
 }
 
 
 if (!function_exists('dl')) {
     /**
-     * аналог d(), но печатает строку вызова d()
+     * Аналог d(), но печатает строку вызова d()
      *
      * @return void
      */
@@ -42,3 +42,5 @@ if (!function_exists('dl')) {
         \Arris\Util\Debug::dl();
     }
 }
+
+# -eof- #
