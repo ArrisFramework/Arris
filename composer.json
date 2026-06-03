@@ -15,7 +15,7 @@
         "platform-check": false
     },
     "require": {
-        "php": ">=7.4 | 8.*",
+        "php": "8.*",
         "ext-pdo": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
@@ -28,18 +28,17 @@
         "predis/predis": "^2.0",
         "vlucas/phpdotenv": "^3.3",
         "symfony/var-dumper": "^5.4",
-        "phpunit/phpunit": "^8"
+        "phpunit/phpunit": "^10"
     },
     "suggest": {
         "karelwintersky/arris.entity": "Arris µFramework: Entity Types",
+        "karelwintersky/arris.entity.path": "Arris µFramework: Path builder",
         "karelwintersky/arris.router": "Arris µFramework: AppRouter class",
         "karelwintersky/arris.logger": "Arris µFramework: AppLogger class",
         "karelwintersky/arris.helpers": "Arris µFramework: helpers",
-        "karelwintersky/arris.template": "Arris Template engine",
+        "karelwintersky/arris.presenter": "Arris µFramework: Presenter engine",
+
         "karelwintersky/arris.toolkit.cli-console": "Arris µFramework - CLIConsole helper",
-        "ajur-media/php-image-resize": "PHP class to re-size and scale images",
-        "php-curl-class/php-curl-class": "PHP Curl Class makes it easy to send HTTP requests and integrate with web APIs.",
-        "spatie/regex": "A sane interface for php's built in preg_* functions",
         "adbario/php-dot-notation": "PHP dot notation access to arrays",
         "sabre/event": "sabre/event is a library for lightweight event-based programming (more complexity than Arris/Hook)",
         "php-sage/sage": "Sage - Insightful PHP debugging assistant, pretty replacement for var_dump() and debug_backtrace().",
@@ -50,7 +49,8 @@
         "files": [
             "functions/functions.php",
             "functions/helpers.php",
-            "functions/helpers.dump.php"
+            "functions/helpers.dump.php",
+            "functions/helpers.dot.php"
         ],
         "psr-4": {
             "Arris\\"           : ["interfaces", "sources"],
