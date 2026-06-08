@@ -95,7 +95,7 @@ abstract class AbstractConfig implements ArrayAccess, ConfigInterface, Iterator
             //Unset all old nested cache in case of array
             if (count($segments) == 0) {
                 foreach ($this->cache as $cacheLocalKey => $cacheValue) {
-                    if (substr($cacheLocalKey, 0, strlen($cacheKey)) === $cacheKey) {
+                    if (str_starts_with($cacheLocalKey, $cacheKey)) {
                         unset($this->cache[$cacheLocalKey]);
                     }
                 }
@@ -141,7 +141,7 @@ abstract class AbstractConfig implements ArrayAccess, ConfigInterface, Iterator
      * @param ConfigInterface $config
      * @return ConfigInterface
      */
-    public function merge(ConfigInterface $config)
+    public function merge(ConfigInterface $config): ConfigInterface
     {
         $this->data = array_replace_recursive($this->data, $config->all());
         $this->cache = [];

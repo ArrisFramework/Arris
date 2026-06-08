@@ -75,9 +75,6 @@ class App implements AppInterface
     }
     
     /**
-     * Защищенный метод, вызывается обёрткой factory, возвращает инстанс класса App,
-     * при отсутствии - создает новый инстанс и возвращает.
-     *
      * @param null $config
      * @return App
      */
@@ -97,12 +94,14 @@ class App implements AppInterface
      * Приватный конструктор
      *
      * @param $options
-     * @param $config
+     * @param array $config_files
      * @param $services
      */
-    private function __construct($config = [], $options = [], $services = [])
+    private function __construct(array $config_files = [], $options = [], $services = [])
     {
-        if (is_null($this->config)) {
+        $this->config = AppConfig::getInstance($config_files);
+
+        /*if (is_null($this->config)) {
             $this->config = new Dot($config);
         }
 
@@ -120,7 +119,7 @@ class App implements AppInterface
             foreach ($services as $service_name => $service) {
                 $this->addService($service_name, $service);
             }
-        }
+        }*/
     }
 
     public function addService($name, $definition = null)
