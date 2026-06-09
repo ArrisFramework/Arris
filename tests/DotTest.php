@@ -1,12 +1,10 @@
 <?php
 
-/**
- * Dot - PHP dot notation access to arrays
- */
+namespace Tests;
 
+use ArrayIterator;
 use Arris\Core\Dot;
 use PHPUnit\Framework\TestCase;
-
 
 class DotTest extends TestCase
 {

@@ -27,11 +27,11 @@ abstract class AbstractConfig implements ArrayAccess, ConfigInterface, Iterator
     /**
      * Constructor method and sets default options, if any
      *
-     * @param array $data
+     * @param array $files
      */
-    public function __construct(array $data)
+    public function __construct(array $files)
     {
-        $this->data = array_merge($this->getDefaults(), $data);
+        $this->data = array_merge($this->getDefaults(), $files);
     }
 
     /**

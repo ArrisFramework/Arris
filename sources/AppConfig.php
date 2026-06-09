@@ -19,11 +19,11 @@ class AppConfig extends AbstractConfig
         return self::$instance;
     }
 
-    public function __construct(array $data = [])
+    public function __construct(array $files = [])
     {
-        parent::__construct($data);
+        parent::__construct($files);
 
-        $this->data = self::array_merge_recursive_replace($this->getDefaults(), (new Config($data))->data);
+        $this->data = self::array_merge_recursive_replace($this->getDefaults(), (new Config($files))->data);
     }
 
     /**

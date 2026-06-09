@@ -42,17 +42,23 @@ class Config extends AbstractConfig
         'Arris\Core\Config\Writer\Properties',
         'Arris\Core\Config\Writer\Serialize'
     ];
+    /**
+     * Игнорировать ли несуществующий файл конфига?
+     *
+     * @var bool
+     */
+    private bool $ignore_non_existent_files;
 
     /**
      * Static method for loading a Config instance.
      *
-     * @param  string|array    $values Filenames or string with configuration
-     * @param  ParserInterface $parser Configuration parser
-     * @param  bool            $string Enable loading from string
+     * @param  string|array    $values     Filenames or string with configuration
+     * @param ParserInterface|null $parser Configuration parser
+     * @param bool $string                 Enable loading from string
      *
      * @return Config
      */
-    public static function load($values, $parser = null, $string = false)
+    public static function load(mixed $values, ?ParserInterface $parser = null, bool $string = false):Config
     {
         return new static($values, $parser, $string);
     }
@@ -60,13 +66,17 @@ class Config extends AbstractConfig
     /**
      * Loads a Config instance.
      *
-     * @param  string|array    $values Filenames or string with configuration
-     * @param  ?ParserInterface $parser Configuration parser
-     * @param  bool            $string Enable loading from string
+     * @param string|array $values          Filenames or string with configuration
+     * @param  ?ParserInterface $parser     Configuration parser
+     * @param bool $enable_config_as_string Enable loading from string
+     *
+     * @throws EmptyDirectoryException|FileNotFoundException
      */
-    public function __construct($values, ?ParserInterface $parser = null, $string = false)
+    public function __construct($values, ?ParserInterface $parser = null, bool $enable_config_as_string = false, bool $ignore_non_existent_files = false)
     {
-        if ($string === true) {
+        $this->ignore_non_existent_files = $ignore_non_existent_files;
+
+        if ($enable_config_as_string === true) {
             $this->loadFromString($values, $parser);
         } else {
             $this->loadFromFile($values, $parser);
@@ -78,17 +88,19 @@ class Config extends AbstractConfig
     /**
      * Loads configuration from file.
      *
-     * @param  string|array     $path   Filenames or directories with configuration
+     * @param string|array $path        Filenames or directories with configuration
      * @param  ?ParserInterface $parser Configuration parser
      *
      * @throws EmptyDirectoryException If `$path` is an empty directory
+     * @throws FileNotFoundException|UnsupportedFormatException
      */
-    protected function loadFromFile($path, ?ParserInterface $parser = null)
+    protected function loadFromFile(mixed $path, ?ParserInterface $parser = null): void
     {
         $paths      = $this->getValidPath($path);
         $this->data = [];
 
         foreach ($paths as $path) {
+
             if ($parser === null) {
                 // Get file information
                 $info      = pathinfo($path);
@@ -220,17 +232,17 @@ class Config extends AbstractConfig
     /**
      * Gets an array of paths
      *
-     * @param  array $path
+     * @param  array $input_paths
      *
      * @return array
      *
      * @throws FileNotFoundException|EmptyDirectoryException   If a file is not found at `$path`
      */
-    protected function getPathFromArray($path)
+    protected function getPathFromArray(array $input_paths): array
     {
         $paths = [];
 
-        foreach ($path as $unverifiedPath) {
+        foreach ($input_paths as $unverifiedPath) {
             try {
                 // Check if `$unverifiedPath` is optional
                 // If it exists, then it's added to the list
@@ -259,7 +271,7 @@ class Config extends AbstractConfig
     /**
      * Checks `$path` to see if it is either an array, a directory, or a file.
      *
-     * @param  string|array $path
+     * @param array|string $path
      *
      * @return array
      *
@@ -267,9 +279,9 @@ class Config extends AbstractConfig
      *
      * @throws FileNotFoundException   If a file is not found at `$path`
      */
-    protected function getValidPath($path)
+    protected function getValidPath(mixed $path): array
     {
-        // If `$path` is array
+        // If `$path` is arrayed
         if (is_array($path)) {
             return $this->getPathFromArray($path);
         }
@@ -284,11 +296,56 @@ class Config extends AbstractConfig
             return $paths;
         }
 
-        // If `$path` is not a file, throw an exception
-        if (!file_exists($path)) {
-            throw new FileNotFoundException("Configuration file: [$path] cannot be found");
+        // if NOT allowed non-existent files...
+        if ($this->ignore_non_existent_files === false) {
+            // If `$path` is not a file, throw an exception
+            if (!file_exists($path)) {
+                throw new FileNotFoundException("Configuration file: [$path] cannot be found");
+            }
+        } else {
+            return [];
         }
 
         return [$path];
     }
+
+    /*protected function getValidPath(mixed $path): array
+    {
+        // Если передан массив — обрабатываем каждый элемент
+        if (is_array($path)) {
+            $paths = [];
+            foreach ($path as $unverifiedPath) {
+                $isOptional = str_starts_with($unverifiedPath, '?');
+                $realPath = $isOptional ? substr($unverifiedPath, 1) : $unverifiedPath;
+
+                try {
+                    $paths = array_merge($paths, $this->getValidPath($realPath));
+                } catch (FileNotFoundException $e) {
+                    if (!$isOptional) {
+                        throw $e;
+                    }
+                }
+            }
+            return $paths;
+        }
+
+        // Если директория — собираем все файлы внутри
+        if (is_dir($path)) {
+            $paths = glob($path . '/*.*');
+            if (empty($paths)) {
+                throw new EmptyDirectoryException("Configuration directory: [$path] is empty");
+            }
+            return $paths;
+        }
+
+        // Если файл не существует
+        if (!file_exists($path)) {
+            if ($this->ignore_non_existent_files) {
+                return [];
+            }
+            throw new FileNotFoundException("Configuration file: [$path] cannot be found");
+        }
+
+        return [$path];
+    }*/
 }
