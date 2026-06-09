@@ -70,7 +70,7 @@ class Config extends AbstractConfig
      * @param  ?ParserInterface $parser     Configuration parser
      * @param bool $enable_config_as_string Enable loading from string
      *
-     * @throws EmptyDirectoryException|FileNotFoundException
+     * @throws EmptyDirectoryException|FileNotFoundException|UnsupportedFormatException
      */
     public function __construct($values, ?ParserInterface $parser = null, bool $enable_config_as_string = false, bool $ignore_non_existent_files = false)
     {
@@ -107,7 +107,7 @@ class Config extends AbstractConfig
                 $parts     = explode('.', $info['basename']);
                 $extension = array_pop($parts);
 
-                // Skip the `dist` extension
+                // REMOVE the `dist` extension
                 if ($extension === 'dist') {
                     $extension = array_pop($parts);
                 }
@@ -130,12 +130,12 @@ class Config extends AbstractConfig
     /**
      * Writes configuration to file.
      *
-     * @param  string           $filename   Filename to save configuration to
+     * @param string $filename          Filename to save configuration to
      * @param  ?WriterInterface $writer Configuration writer
      *
-     * @throws WriteException if the data could not be written to the file
+     * @throws WriteException|UnsupportedFormatException if the data could not be written to the file
      */
-    public function toFile($filename, ?WriterInterface $writer = null)
+    public function toFile(string $filename, ?WriterInterface $writer = null)
     {
         if ($writer === null) {
             // Get file information
@@ -165,10 +165,10 @@ class Config extends AbstractConfig
     /**
      * Loads configuration from string.
      *
-     * @param string          $configuration String with configuration
-     * @param ParserInterface $parser        Configuration parser
+     * @param string $configuration   String with configuration
+     * @param ParserInterface $parser Configuration parser
      */
-    protected function loadFromString($configuration, ParserInterface $parser)
+    protected function loadFromString(string $configuration, ParserInterface $parser): void
     {
         $this->data = [];
 
@@ -182,7 +182,7 @@ class Config extends AbstractConfig
      * @param  WriterInterface  $writer Configuration writer
      * @param boolean           $pretty Encode pretty
      */
-    public function toString(WriterInterface $writer, $pretty = true)
+    public function toString(WriterInterface $writer, bool $pretty = true): string
     {
         return $writer->toString($this->all(), $pretty);
     }
@@ -190,13 +190,13 @@ class Config extends AbstractConfig
     /**
      * Gets a parser for a given file extension.
      *
-     * @param  string $extension
+     * @param string $extension
      *
      * @return ParserInterface
      *
      * @throws UnsupportedFormatException If `$extension` is an unsupported file format
      */
-    protected function getParser($extension)
+    protected function getParser(string $extension): ParserInterface
     {
         foreach ($this->supportedParsers as $parser) {
             if (in_array($extension, $parser::getSupportedExtensions())) {
@@ -211,13 +211,13 @@ class Config extends AbstractConfig
     /**
      * Gets a writer for a given file extension.
      *
-     * @param  string $extension
+     * @param string $extension
      *
      * @return WriterInterface
      *
      * @throws UnsupportedFormatException If `$extension` is an unsupported file format
      */
-    protected function getWriter($extension)
+    protected function getWriter(string $extension): WriterInterface
     {
         foreach ($this->supportedWriters as $writer) {
             if (in_array($extension, $writer::getSupportedExtensions())) {
@@ -279,7 +279,7 @@ class Config extends AbstractConfig
      *
      * @throws FileNotFoundException   If a file is not found at `$path`
      */
-    protected function getValidPath(mixed $path): array
+    /*protected function getValidPath(mixed $path): array
     {
         // If `$path` is arrayed
         if (is_array($path)) {
@@ -307,9 +307,9 @@ class Config extends AbstractConfig
         }
 
         return [$path];
-    }
+    }*/
 
-    /*protected function getValidPath(mixed $path): array
+    protected function getValidPath(mixed $path): array
     {
         // Если передан массив — обрабатываем каждый элемент
         if (is_array($path)) {
@@ -347,5 +347,5 @@ class Config extends AbstractConfig
         }
 
         return [$path];
-    }*/
+    }
 }

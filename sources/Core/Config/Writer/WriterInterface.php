@@ -35,7 +35,7 @@ interface WriterInterface
      * @param  array $config
      * @param  bool $pretty
      *
-     * @return array
+     * @return string
      */
     public function toString($config, $pretty = true);
 
