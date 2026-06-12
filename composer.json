@@ -16,12 +16,13 @@
         "sort-packages": true
     },
     "require": {
-        "php": "8.*",
+        "php": "^8.2",
         "ext-pdo": "*",
         "ext-mbstring": "*",
         "ext-json": "*",
         "ext-readline": "*",
         "ext-curl": "*",
+        "ext-intl": "*",
         "ext-simplexml": "*",
         "psr/log": "*"
     },
@@ -49,7 +50,9 @@
         "sabre/event": "sabre/event is a library for lightweight event-based programming (more complexity than Arris/Hook)",
         "php-sage/sage": "Sage - Insightful PHP debugging assistant, pretty replacement for var_dump() and debug_backtrace().",
         "league/csv": "CSV data manipulation made easy in PHP",
-        "vlucas/phpdotenv": "Loads environment variables from `.env` to `getenv()`, `$_ENV` and `$_SERVER` automagically."
+        "vlucas/phpdotenv": "Loads environment variables from `.env` to `getenv()`, `$_ENV` and `$_SERVER` automagically.",
+        "nette/utils": "Various helpers",
+        "symfony/string": "Symfony String component"
     },
     "autoload": {
         "files": [
