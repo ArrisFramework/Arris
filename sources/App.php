@@ -6,7 +6,7 @@ namespace Arris;
 use Arris\Core\Dot;
 use RuntimeException;
 
-class App /*implements AppInterface*/
+class App implements AppInterface
 {
     /**
      * Реестр инстансов. Ключ - имя класса (static::class).
@@ -31,7 +31,8 @@ class App /*implements AppInterface*/
         array $services = []
     ) {
         // Запрашиваем дефолты у наследника (App\App) и передаем их в AppConfig
-        $this->config = AppConfig::getInstance($this->config_files, $this->getDefaultConfig());
+        $this->config = new AppConfig($this->config_files, $this->getDefaultConfig());
+
         $this->repository = new Dot($options);
         $this->services = new Dot();
 
@@ -120,7 +121,7 @@ class App /*implements AppInterface*/
     }
 
     public function setConfig(string $key, mixed $value = null): void { $this->config->set($key, $value); }
-    /*public function addConfig(array|Dot $config): void { $this->config->add($config); }*/
+    public function addConfig(array|Dot $config): void { $this->config->add($config); }
 
     /* ===================== MAGIC & PROTECTION =========================== */
     public function __invoke(?string $key = null, mixed $data = null): mixed { return is_null($data) ? $this->get($key) : $this->set($key, $data); }
@@ -128,7 +129,19 @@ class App /*implements AppInterface*/
     public function __isset(string $key): bool { return $this->magic_repo?->has($key) ?? false; }
     public function __get(string $key): mixed { return $this->__isset($key) ? $this->magic_repo->get($key) : null; }
 
-    private function __clone() {}
+    final public function __clone() { throw new RuntimeException("Cannot clone " . static::class); }
     final public function __serialize(): array { throw new RuntimeException("Cannot serialize " . static::class); }
     final public function __unserialize(array $data): void { throw new RuntimeException("Cannot unserialize " . static::class); }
+
+    /**
+     * Сброс реестра инстансов.
+     * Используется ТОЛЬКО в Unit-тестах для изоляции тестов друг от друга.
+     * В production-коде этот метод вызывать НЕ НУЖНО.
+     */
+    public static function reset(): void
+    {
+        self::$instances = [];
+    }
+
+
 }

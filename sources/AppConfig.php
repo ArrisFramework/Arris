@@ -18,28 +18,15 @@ class AppConfig extends AbstractConfig
      * @throws FileNotFoundException
      * @throws EmptyDirectoryException
      */
-    final private function __construct(array $files = [], array $defaults = [])
+    public function __construct(array $files = [], array $defaults = [])
     {
         parent::__construct($files);
 
-        // ВОЗВРАЩАЕМ парсинг через конкретный класс Config
+        // Читаем файлы с диска
         $loadedData = (new Config($files))->data;
 
+        // Сливаем дефолты конкретного App с загруженными файлами
         $this->data = self::arrayMergeRecursiveReplace($defaults, $loadedData);
-    }
-
-    /**
-     * @throws UnsupportedFormatException
-     * @throws FileNotFoundException
-     * @throws EmptyDirectoryException
-     */
-    public static function getInstance(array $files = [], array $defaults = []): static
-    {
-        $class = static::class;
-        if (!isset(self::$instances[$class])) {
-            self::$instances[$class] = new static($files, $defaults);
-        }
-        return self::$instances[$class];
     }
 
     protected static function arrayMergeRecursiveReplace(array $original, array $patch): array
@@ -54,5 +41,30 @@ class AppConfig extends AbstractConfig
             }
         }
         return $original;
+    }
+
+    /**
+     * Добавляет массив конфигурации к существующим данным.
+     * Используется для динамического расширения конфига.
+     *
+     * @param array $config Массив для слияния
+     * @return self
+     */
+    public function add(array $config): self
+    {
+        $this->data = self::arrayMergeRecursiveReplace($this->data, $config);
+        return $this;
+    }
+
+    /**
+     * Заменяет данные конфига целиком.
+     *
+     * @param array $config Новый массив конфигурации
+     * @return self
+     */
+    public function replace(array $config): self
+    {
+        $this->data = $config;
+        return $this;
     }
 }

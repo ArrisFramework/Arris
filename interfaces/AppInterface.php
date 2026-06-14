@@ -1,166 +1,103 @@
 <?php
 
+declare(strict_types=1);
+
 namespace Arris;
 
 use Arris\Core\Dot;
 
+/**
+ * Интерфейс ядра приложения Arris.
+ *
+ * Описывает контракт контейнера зависимостей, репозитория данных
+ * и менеджера конфигурации.
+ */
 interface AppInterface
 {
-    /**
-     * Публичный метод, возвращает инстанс App (или его наследников)
-     *
-     * @param array $config
-     * @param array $options
-     * @param array $services
-     * @return App
-     */
-    public static function factory($config = [], $options = [], $services = []): ?App;
-    
-    /**
-     * Инстанциирует App и возвращает значение по ключу.
-     * Краткая форма, не требует предварительного вызова App::factory()
-     *
-     * @param $key
-     * @param $default
-     * @return mixed
-     */
-    public static function key($key, $default);
-    
-    /**
-     * Добавляет значение в репозиторий по ключу
-     *
-     * @param $keys
-     * @param null $value
-     */
-    public function add($keys, $value = null);
-    
-    /**
-     * Устанавливает значение/значения по ключу
-     *
-     * @param $key
-     * @param $data
-     */
-    public function set($key, $data = null);
-    
-    /**
-     * Получает значение из репозитория по ключу
-     *
-     * @param null $key
-     * @param null $default
-     * @return array|mixed|null
-     */
-    public function get($key = null, $default = null);
+    /* ===================== DI & SERVICES =========================== */
 
     /**
-     * Устанавливает конфиг для приложения (array или Dot)
+     * Регистрирует сервис в контейнере.
      *
-     * @param $key
-     * @param null $value
-     * @return Dot
+     * @param string $name Уникальное имя сервиса
+     * @param mixed $definition Объект, Closure или массив конфигурации
      */
-    public function setConfig($key, $value = null):Dot;
+    public function addService(string $name, mixed $definition = null): void;
 
     /**
-     * add config to App instance
+     * Возвращает инстанс сервиса по его имени.
      *
-     * @param $config
-     * @return Dot
+     * @param string $name Имя сервиса
+     * @return mixed Инстанс сервиса или null
      */
-    public function addConfig($config): Dot;
+    public function getService(string $name): mixed;
 
     /**
-     * Возвращает весь конфиг или ключ
+     * Проверяет, зарегистрирован ли сервис.
      *
-     * @param null $key
-     * @return mixed
-     */
-    public function getConfig($key = null);
-
-    /**
-     * Инстанциирует App и возвращает (или устанавливает) значение в конфиге по ключу
-     *
-     * @param $key
-     * @param null $value
-     * @return mixed
-     */
-    public static function config($key = null, $value = null);
-
-    /**
-     * Возвращает конфиг или часть (по ключу) в виде JSON-структуры
-     *
-     * @param $key
-     * @return string
-     */
-    public function getConfigJSON($key = null);
-
-    /* MAGIC METHODS */
-
-    /**
-     * Invoke экземпляра App
-     *
-     * Если передано два аргумента - рассматривается как SET,
-     * Если передан один аргумент - рассматривается как GET
-     *
-     * Позволяет использовать механизм обращения к переменной $APP с аргументами:
-     * $app = (App::factory())
-     * $app($key, $data) or $app($key)
-     *
-     * @param null $key
-     * @param null $data
-     * @return array|mixed|void|null
-     */
-    public function __invoke($key = null, $data = null);
-
-    /**
-     * Setter, хранит в "магическом" репозитории значения
-     * $app->xxx = 1
-     *
-     * @param $key
-     * @param $value
-     */
-    public function __set($key, $value);
-
-    /**
-     * isSet, проверяет наличие значения в "магическом" репозитории
-     *
-     * @param $key
+     * @param string $name Имя сервиса
      * @return bool
      */
-    public function __isset($key);
+    public function isService(string $name): bool;
 
     /**
-     * Getter, возвращает значение из магического репозитория (или null)
+     * Возвращает тип зарегистрированного сервиса (class name, resource type или примитив).
      *
-     * @param $key
-     * @return mixed|null
+     * @param string $name Имя сервиса
+     * @return string|null
      */
-    public function __get($key);
+    public function getServiceType(string $name): ?string;
+
+    /* ===================== REPOSITORY =========================== */
 
     /**
-     * Добавляет сервис в репозиторий сервисов.
+     * Массовое добавление данных в репозиторий.
      *
-     * @param $name
-     * @param $definition
-     * @return void
+     * @param mixed $keys Массив данных или строковый ключ
+     * @param mixed $value Значение (если $keys - строка)
      */
-    public function addService($name, $definition = null);
+    public function add(mixed $keys, mixed $value = null): void;
 
     /**
-     * Возвращает сервис из репозитория сервисов
+     * Устанавливает значение по ключу (dot-notation поддерживается).
      *
-     * @param $name
-     * @return array|mixed
+     * @param string $key Ключ
+     * @param mixed $data Значение
      */
-    public function getService($name);
+    public function set(string $key, mixed $data = null): void;
 
     /**
-     * Проверяет, существует ли сервис с переданным именем?
+     * Получает значение из репозитория.
      *
-     * @param $name
-     * @return bool
+     * @param string|null $key Ключ (или null для получения всего репозитория)
+     * @param mixed $default Значение по умолчанию
+     * @return mixed
      */
-    public function isService($name);
+    public function get(?string $key = null, mixed $default = null): mixed;
 
+    /* ===================== CONFIG =========================== */
+
+    /**
+     * Получает значение из конфигурации.
+     *
+     * @param string|null $key Ключ конфигурации
+     * @return mixed Значение или объект AppConfig, если ключ не передан
+     */
+    public function getConfig(?string $key = null): mixed;
+
+    /**
+     * Устанавливает значение в конфигурацию во время выполнения.
+     *
+     * @param string $key Ключ
+     * @param mixed $value Значение
+     */
+    public function setConfig(string $key, mixed $value = null): void;
+
+    /**
+     * Массовое добавление/слияние данных в конфигурацию.
+     *
+     * @param array|Dot $config Массив или объект Dot с данными
+     */
+    public function addConfig(array|Dot $config): void;
 }
 
-# -eof-
