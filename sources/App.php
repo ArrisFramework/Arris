@@ -1,272 +1,134 @@
 <?php
-
-/**
- * Class Arris\App
- * Application container
- *
- * User: Karel Wintersky
- *
- * Library: https://github.com/KarelWintersky/Arris
- *
- * Date: 10.12.2020
- * Date: 13.12.2023
- *
- * See: https://www.php.net/manual/ru/language.oop5.late-static-bindings.php
- * https://stackoverflow.com/questions/3126130/extending-singletons-in-php
- */
+declare(strict_types=1);
 
 namespace Arris;
 
 use Arris\Core\Dot;
 use RuntimeException;
 
-class App implements AppInterface
+class App /*implements AppInterface*/
 {
     /**
-     * @var App|null ссылка на инстанс
-     */
-    private static ?App $instance = null;
-    
-    /**
-     * Общий репозиторий App
+     * Реестр инстансов. Ключ - имя класса (static::class).
+     * Это элегантно решает проблему наследования синглтонов из твоего треда на SO.
      *
-     * @var array|null|Dot
+     * @var array<class-string<static>, static>
      */
-    private $repository = null;
+    private static array $instances = [];
+
+    private readonly Dot $repository;
+    private readonly Dot $services;
+    private readonly AppConfig $config;
+
+    private ?Dot $magic_repo = null;
 
     /**
-     * "Магический" репозиторий App для методов __set, __get, __isset
-     *
-     * @var array|null|Dot
+     * Закрытый конструктор.
      */
-    private $magic_repo = null;
+    final private function __construct(
+        private readonly array $config_files = [],
+        array $options = [],
+        array $services = []
+    ) {
+        // Запрашиваем дефолты у наследника (App\App) и передаем их в AppConfig
+        $this->config = AppConfig::getInstance($this->config_files, $this->getDefaultConfig());
+        $this->repository = new Dot($options);
+        $this->services = new Dot();
 
-    /**
-     * Репозиторий сервисов
-     *
-     * @var array|null|Dot
-     */
-    private $services = null;
-    
-    /**
-     * Репозиторий конфига
-     *
-     * @var array|null|Dot $config
-     */
-    private $config = null;
-    
-    public static function factory($config = [], $options = [], $services = []): ?App
-    {
-        return self::getInstance($config, $options, $services);
+        foreach ($services as $name => $service) {
+            $this->addService($name, $service);
+        }
     }
 
-    public static function key($key, $default)
+    /**
+     * Метод-заглушка. Переопределяется в классе приложения (App\App).
+     */
+    protected function getDefaultConfig(): array
     {
-        return (self::getInstance())->get($key, $default);
+        return [];
     }
-    
-    public static function config($key = null, $value = null)
+
+    public static function getInstance(array $config_files = [], array $options = [], array $services = []): static
     {
-        if (is_null($value)) {
-            return (self::getInstance())->getConfig($key);
+        $class = static::class;
+
+        if (!isset(self::$instances[$class])) {
+            self::$instances[$class] = new static($config_files, $options, $services);
+        } elseif (!empty($options)) {
+            // Если инстанс уже создан, но переданы новые опции - merging
+            self::$instances[$class]->add($options);
         }
 
-        return (self::getInstance())->setConfig($key, $value);
+        return self::$instances[$class];
     }
-    
-    /**
-     * @param null $config
-     * @return App
-     */
-    protected static function getInstance($config = [], $options = [], $services = []): ?App
+
+    public static function factory(array $config_files = [], array $options = [], array $services = []): static
     {
-        if (!self::$instance) {
-            // not self!!! later static binding, allowing inheritance of Arris\App class
-            self::$instance = new static($config, $options, $services);
-        } else {
-            (self::$instance)->add($options);
-        }
-    
-        return self::$instance;
+        return static::getInstance($config_files, $options, $services);
     }
 
-    /**
-     * Приватный конструктор
-     *
-     * @param $options
-     * @param array $config_files
-     * @param $services
-     */
-    private function __construct(array $config_files = [], $options = [], $services = [])
+    public static function key(string $key, mixed $default = null): mixed
     {
-        $this->config = AppConfig::getInstance($config_files);
-
-        /*if (is_null($this->config)) {
-            $this->config = new Dot($config);
-        }
-
-        if (is_null($this->repository)) {
-            $this->repository = new Dot();
-        } else if (!empty($options)) {
-            $this->repository->add($options);
-        }
-
-        if (is_null($this->services)) {
-            $this->services = new Dot();
-        }
-
-        if (!empty($services)) {
-            foreach ($services as $service_name => $service) {
-                $this->addService($service_name, $service);
-            }
-        }*/
+        return static::getInstance()->get($key, $default);
     }
 
-    public function addService($name, $definition = null)
+    public static function config(?string $key = null, mixed $value = null): mixed
     {
-        $this->services->add($name, $definition);
+        $instance = static::getInstance();
+        return func_num_args() === 1 ? $instance->getConfig($key) : $instance->setConfig($key, $value);
     }
 
-    public function getService($name)
+    /* ===================== DI & SERVICES =========================== */
+
+    public function addService(string $name, mixed $definition = null): void
+    {
+        $this->services->set($name, $definition);
+    }
+
+    public function getService(string $name): mixed
     {
         return $this->services->get($name);
     }
 
-    public function isService($name)
+    public function isService(string $name): bool
     {
         return $this->services->has($name);
     }
 
-    //@todo: проверить
-    public function getServiceType($name)
+    public function getServiceType(string $name): ?string
     {
-        if ($this->isService($name)) {
-            $instance = $this->services->get($name);
+        if (!$this->isService($name)) return null;
 
-            if (is_object($instance)) {
-                return get_class($instance);
-            } elseif (is_resource($instance)) {
-                return get_resource_type($instance);
-            } else {
-                return gettype($instance);
-            }
-        }
-        return null;
-    }
-    
-    public function add($keys, $value = null)
-    {
-        $this->repository->add($keys, $value);
-    }
-    
-    public function set($key, $data = null)
-    {
-        return $this->repository->set($key, $data);
-    }
-    
-    public function get($key = null, $default = null)
-    {
-        return $this->repository->get($key, $default);
+        $instance = $this->services->get($name);
+        // PHP 8.0+ match expression
+        return match(true) {
+            is_object($instance) => get_class($instance),
+            is_resource($instance) => get_resource_type($instance),
+            default => gettype($instance)
+        };
     }
 
-    public function getConfig($key = null)
-    {
-        return  is_null($key)
-                ? $this->config
-                : $this->config[$key];
-    }
-    
-    public function setConfig($key, $value = null):Dot
-    {
-        if (is_array($key) || $key instanceof Dot) {
-            return $this->config->replace($key);
-        }
+    /* ===================== REPOSITORY & CONFIG =========================== */
 
-        return $this->config->set($key, $value);
+    public function add(mixed $keys, mixed $value = null): void { $this->repository->add($keys, $value); }
+    public function set(string $key, mixed $data = null): void { $this->repository->set($key, $data); }
+    public function get(?string $key = null, mixed $default = null): mixed { return $this->repository->get($key, $default); }
+
+    public function getConfig(?string $key = null): mixed
+    {
+        return is_null($key) ? $this->config : $this->config->get($key);
     }
 
-    /**
-     * add config to App instance
-     *
-     * @param $config
-     * @return Dot
-     */
-    public function addConfig($config): Dot
-    {
-        return $this->config->add($config);
-    }
+    public function setConfig(string $key, mixed $value = null): void { $this->config->set($key, $value); }
+    /*public function addConfig(array|Dot $config): void { $this->config->add($config); }*/
 
-    public function getConfigJSON($key = null)
-    {
-        return is_null($key)
-            ? $this->config->toJson()
-            : $this->config[$key]->toJson();
-    }
+    /* ===================== MAGIC & PROTECTION =========================== */
+    public function __invoke(?string $key = null, mixed $data = null): mixed { return is_null($data) ? $this->get($key) : $this->set($key, $data); }
+    public function __set(string $key, mixed $value): void { $this->magic_repo ??= new Dot(); $this->magic_repo->set($key, $value); }
+    public function __isset(string $key): bool { return $this->magic_repo?->has($key) ?? false; }
+    public function __get(string $key): mixed { return $this->__isset($key) ? $this->magic_repo->get($key) : null; }
 
-    /* ===================== MAGIC METHODS =========================== */
-
-    public function __invoke($key = null, $data = null)
-    {
-        return
-            is_null($data)
-            ? $this->repository->get($key)
-            : $this->repository->set($key, $data);
-    }
-
-    public function __set($key, $value)
-    {
-        if (is_null($this->magic_repo)) {
-            $this->magic_repo = new Dot([]);
-        }
-        $this->magic_repo->set($key, $value);
-    }
-
-    public function __isset($key)
-    {
-        return $this->magic_repo->has($key);
-    }
-
-    public function __get($key)
-    {
-        return $this->__isset($key) ? $this->magic_repo->get($key) : null;
-    }
-
-    /**
-     * Prevent the instance from being cloned.
-     * Предотвращаем клонирование инстанса
-     *
-     * @return void
-     * @throws RuntimeException
-     */
-    final public function __clone()
-    {
-        throw new RuntimeException("Can't clone " . __CLASS__);
-    }
-
-    /**
-     * Prevent from being unserialized.
-     * Предотвращаем десериализацию инстанса
-     *
-     * @return void
-     * @throws RuntimeException
-     */
-    final public function __wakeup()
-    {
-        throw new RuntimeException("Can't unserialize " . __CLASS__);
-    }
-
-    /**
-     * Prevent from being serialized.
-     * Предотвращает сериализацию инстанса.
-     *
-     * @return void
-     * @throws RuntimeException
-     */
-    final public function __sleep()
-    {
-        throw new RuntimeException("Can't serialize " . __CLASS__);
-    }
-
+    private function __clone() {}
+    final public function __serialize(): array { throw new RuntimeException("Cannot serialize " . static::class); }
+    final public function __unserialize(array $data): void { throw new RuntimeException("Cannot unserialize " . static::class); }
 }
-
-# -eof-
