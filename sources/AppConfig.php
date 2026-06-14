@@ -5,11 +5,19 @@ namespace Arris;
 
 use Arris\Core\Config\AbstractConfig;
 use Arris\Core\Config\Config;
+use Arris\Core\Config\Exception\EmptyDirectoryException;
+use Arris\Core\Config\Exception\FileNotFoundException;
+use Arris\Core\Config\Exception\UnsupportedFormatException;
 
 class AppConfig extends AbstractConfig
 {
     private static array $instances = [];
 
+    /**
+     * @throws UnsupportedFormatException
+     * @throws FileNotFoundException
+     * @throws EmptyDirectoryException
+     */
     final private function __construct(array $files = [], array $defaults = [])
     {
         parent::__construct($files);
@@ -20,6 +28,11 @@ class AppConfig extends AbstractConfig
         $this->data = self::arrayMergeRecursiveReplace($defaults, $loadedData);
     }
 
+    /**
+     * @throws UnsupportedFormatException
+     * @throws FileNotFoundException
+     * @throws EmptyDirectoryException
+     */
     public static function getInstance(array $files = [], array $defaults = []): static
     {
         $class = static::class;
