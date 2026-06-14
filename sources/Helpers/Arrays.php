@@ -52,7 +52,7 @@ class Arrays implements ArraysInterface
             return array_map(
                 fn($item, $type) => is_callable($type)
                     ? $type($item)
-                    : Dataset::castToType($item, $type),
+                    : self::castToType($item, $type),
                 $items,
                 $typeOrCallback
             );
@@ -65,7 +65,7 @@ class Arrays implements ArraysInterface
 
         // Если передана строка — приводим к типу
         return array_map(
-            fn($item) => Dataset::castToType($item, $typeOrCallback),
+            fn($item) => self::castToType($item, $typeOrCallback),
             $items
         );
     }
@@ -125,6 +125,25 @@ class Arrays implements ArraysInterface
             $result[ $row[ $column_id ] ] = $row;
         }, $dataset);
         return $result;
+    }
+
+    /**
+     * Приводит значение к указанному типу.
+     * Вынесен в отдельный метод для чистоты кода
+     */
+    private static function castToType(mixed $value, string $type): mixed
+    {
+        // match (PHP 8.0+) — быстрее и безопаснее switch
+        return match (strtolower($type)) {
+            'int', 'integer'    => (int) $value,
+            'float', 'double'   => (float) $value,
+            'bool', 'boolean'   => filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false,
+            'string', 'str'     => (string) $value,
+            'array'             => (array) $value,
+            default             => throw new InvalidArgumentException(
+                sprintf('Unsupported type "%s" for explodeToType.', $type)
+            ),
+        };
     }
 
 }
