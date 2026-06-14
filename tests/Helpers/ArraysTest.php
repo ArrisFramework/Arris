@@ -2,6 +2,8 @@
 
 declare(strict_types=1);
 
+namespace Tests\Helpers;
+
 use Arris\Helpers\Arrays;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\DataProvider;
