@@ -27,4 +27,30 @@ class HTTP
 
         return $cached;
     }
+
+    /**
+     * Единая функция для получения reason phrase по коду
+     *
+     * @param int $code
+     *
+     * @return string
+     */
+    public static function getHttpReasonPhrase(int $code): string
+    {
+        return HTTPStatus::tryFrom($code)?->getReasonPhrase()
+            ?? HTTPStatusExtended::tryFrom($code)?->getReasonPhrase()
+            ?? 'Unknown Status';
+    }
+
+    /**
+     * Проверка: является ли код стандартным или расширенным
+     *
+     * @param int $code
+     *
+     * @return bool
+     */
+    public static function isStandardHttpStatus(int $code): bool
+    {
+        return HTTPStatus::tryFrom($code) !== null;
+    }
 }
