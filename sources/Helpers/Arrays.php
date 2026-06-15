@@ -6,12 +6,42 @@ use InvalidArgumentException;
 
 class Arrays implements ArraysInterface
 {
+
     /**
-     * Обёртка над filter
+     * Безопасное получение значения из массива с дефолтом.
+     * Замена setOption().
+     */
+    public static function get(array $options, ?string $key, mixed $default = null): mixed
+    {
+        if ($key === null) {
+            return $default;
+        }
+
+        return $options[$key] ?? $default;
+    }
+
+    /**
+     * Проверяет, входит ли значение в список разрешённых.
+     * Замена checkAllowedValue().
      *
-     * @param array $input
-     * @param $callback
-     * @param $flag
+     * Оптимизация: in_array() быстрее array_search(),
+     * когда не нужен ключ. Строгое сравнение по умолчанию.
+     */
+    public static function allowed(mixed $value, array $allowed, mixed $default = null, bool $strict = true): mixed
+    {
+        if (empty($value)) {
+            return $default;
+        }
+
+        return in_array($value, $allowed, $strict) ? $value : $default;
+    }
+
+    /**
+     * Обёртка над array_filter.
+     *
+     * @param array    $input         Входной массив
+     * @param callable|null $callback Функция фильтрации
+     * @param int $flag               Флаг режима (ARRAY_FILTER_USE_KEY, ARRAY_FILTER_USE_BOTH)
      *
      * @return array
      */
@@ -70,8 +100,6 @@ class Arrays implements ArraysInterface
         );
     }
 
-
-
     /**
      * Безопасно получает значение из массива по ключу с валидацией разрешенных значений.
      *
@@ -109,6 +137,8 @@ class Arrays implements ArraysInterface
     /**
      * Возвращает новый датасет, индекс для строк которого равен значению колонки строки
      * Предназначен для переформатирования PDO-ответов, полученных в режиме FETCH_ASSOC
+     *
+     * (Переиндексирует массив ассоциативных массивов по значению указанной колонки.)
      *
      * [ 0 => [ 'id' => 5, 'data' => 10], 1 => [ 'id' => 6, 'data' => 12] .. ]
      * При вызове с аргументами ($dataset, 'id') возвращает
