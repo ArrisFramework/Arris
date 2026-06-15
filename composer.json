@@ -56,14 +56,12 @@
     },
     "autoload": {
         "files": [
-            "functions/functions.php",
             "functions/helpers.php",
-            "functions/helpers.dump.php",
-            "functions/helpers.dot.php"
+            "functions/helpers.app.php",
+            "functions/helpers.deprecated.php"
         ],
         "psr-4": {
-            "Arris\\"           : ["interfaces", "sources"],
-            "Arris\\Traits\\"   : ["traits"]
+            "Arris\\"           : ["interfaces", "sources"]
         }
     },
     "autoload-dev": {

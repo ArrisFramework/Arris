@@ -4,38 +4,40 @@ namespace Arris\Helpers;
 
 use InvalidArgumentException;
 
-class Dataset
+class Dataset implements DatasetInterface
 {
     /**
-     * Возвращает новый датасет, индекс для строк которого равен значению колонки строки
-     * Предназначен для переформатирования PDO-ответов, полученных в режиме FETCH_ASSOC
+     * Конвертирует в JSON
      *
-     * [ 0 => [ 'id' => 5, 'data' => 10], 1 => [ 'id' => 6, 'data' => 12] .. ]
-     * При вызове с аргументами ($dataset, 'id') возвращает
-     * [ 5 => [ 'id' => 5, 'data' => 10], 6 => [ 'id' => 6, 'data' => 12] .. ]
+     * @param mixed $data
+     * @param int $flags
      *
-     * @param array $dataset
-     * @param $column_id
-     * @return array
+     * @return string
      */
-    public static function groupByColumn(array $dataset, $column_id):array
+    public static function jsonize(mixed $data, int $flags = JSON_UNESCAPED_UNICODE | JSON_PRESERVE_ZERO_FRACTION | JSON_INVALID_UTF8_SUBSTITUTE | JSON_THROW_ON_ERROR):string
     {
-        $result = [];
-        \array_map(static function ($row) use (&$result, $column_id) {
-            $result[ $row[ $column_id ] ] = $row;
-        }, $dataset);
-        return $result;
+        return json_encode($data, $flags);
     }
 
     /**
      * Генерирует новый массив на основе исходного по набору правил.
      *
      * Структура правила:
-     *  - source    - ключ исходного массива (по умолчанию = ключ правила)
-     *  - target    - ключ целевого массива (по умолчанию = ключ правила)
-     *  - default   - значение, если ключ отсутствует в исходном массиве
-     *  - processor - callable($value, $source) или фиксированное значение
+     * KEY - имя правила
+     *  - source    - из какого поля исходного массива брать данные? Если отсутствует - совпадает с ключом
+     *  - target    - в какое поле целевого массива записать данные? Если отсутствует - совпадает с ключом
+     *  - default   - значение поля в целевом массиве, если в исходном оно не найдено. Если не задано, то null (переопределимо 3 аргументом).
+     *  - processor - возвращаемый результат ИЛИ closure - функция, получающая два значения (исходное и исходный массив) и возвращающая значение
      *  - type      - приведение типа: 'int', 'float', 'bool', 'string', 'array'
+     *
+     *  Теперь о нюансах:
+     *  1) processor:
+     *  а) - НЕ Closure - в результирующий массив передается его значение (которому может быть задан тип)
+     *  б) - Closure - передается результат функции
+     *  2) чтобы просто скопировать ключ:значение из исходного массива, достаточно указать пустое правило
+     *     для ключа ( например, `'mode' => []` )
+     *  3) результирующий массив содержит ТЕ И ТОЛЬКО ТЕ ключи, которые указаны в списке ПРАВИЛ.
+     *  4) если в исходном массиве нет ключа XXX, то в результирующем будет XXX => null (по умолчанию)
      *
      * Примеры:
      *  - map(['name' => 'John', 'age' => '25'], ['name' => [], 'age' => ['type' => 'int']])
@@ -52,6 +54,7 @@ class Dataset
      * @param array<string, mixed> $source Исходный массив
      * @param array<string, array<string, mixed>> $rules Правила маппинга
      * @param mixed $defaultUndefinedValue Значение по умолчанию для отсутствующих ключей
+     *
      * @return array<string, mixed> Сформированный массив
      */
     public static function map(
@@ -114,17 +117,15 @@ class Dataset
      */
     public static function castToType(mixed $value, string $type): mixed
     {
-        // match (PHP 8.0+) — быстрее и безопаснее switch
         return match (strtolower($type)) {
             'int', 'integer'    => (int) $value,
             'float', 'double'   => (float) $value,
             'bool', 'boolean'   => filter_var($value, FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? false,
             'string', 'str'     => (string) $value,
-            'array'             => (array) $value,
-            default             => throw new InvalidArgumentException(
-                sprintf('Unsupported type "%s" for explodeToType.', $type)
-            ),
+            'array'             => is_array($value) ? $value : [$value],
+            default             => $value
         };
     }
+
 
 }

@@ -5,6 +5,18 @@ namespace Arris\Helpers;
 class Objects
 {
     /**
+     * https://www.php.net/manual/en/reflectionfunctionabstract.isclosure.php
+     *
+     * @throws \ReflectionException
+     */
+    public static function is_closure($suspected_closure): bool
+    {
+        $reflection = new \ReflectionFunction($suspected_closure);
+
+        return $reflection->isClosure();
+    }
+
+    /**
      * Рекурсивно проверяет существование свойства у объекта или ключа у массива.
      *
      * Примеры:
