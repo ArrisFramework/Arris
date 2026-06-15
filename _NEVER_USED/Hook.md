@@ -99,5 +99,27 @@ $smarty->registerClass("Foo", "\my\php\application\Bar");
 ```
    
 
+# Использование в Smarty
 
+Прямой доступ (скорее всего DEPRECATED)
+```
+{Hook::run('template:header')}
+{assign var=result value=Hook::run('cart:total', [$cart])}
+```
 
+```php 
+// Через registerClass (рекомендуемый)
+$smarty->registerClass('Hook', \Arris\Hook::class);
+
+// Как модификатор (для фильтрации данных)
+// Зарегистрировать как modifier
+$smarty->registerPlugin('modifier', 'apply_hook', function($value, string $hookName) {
+    \Arris\Hook::run($hookName, [&$value]);
+    return $value;
+});
+
+```
+
+```html
+{$title|apply_hook:'filter:title'}
+```
