@@ -102,4 +102,28 @@ class Strings implements StringsInterface
         return $forms[$index];
     }
 
+    /**
+     * Конвертит запись 5m, 3h, 2d в секунды
+     *
+     * @param string|int|float $val
+     *
+     * @return int
+     */
+    public static function returnSeconds(string|int|float $val): int
+    {
+        $val = trim((string) $val);
+        if ($val === '') return 0;
+
+        if (preg_match('/^\s*([0-9]+(?:\.[0-9]+)?)\s*([smhd])?\s*$/i', $val, $matches)) {
+            $num = (float) $matches[1];
+            return match (strtolower($matches[2] ?? '')) {
+                'm' => (int) ($num * 60),
+                'h' => (int) ($num * 3600),
+                'd' => (int) ($num * 86400),
+                default => (int) $num, // секунды
+            };
+        }
+        return (int) $val;
+    }
+
 }
