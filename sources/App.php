@@ -16,6 +16,10 @@ class App implements AppInterface
      */
     private static array $instances = [];
 
+    /**
+     * Репозиторий опций класса
+     * @var Dot
+     */
     private readonly Dot $repository;
     private readonly Dot $services;
     private readonly AppConfig $config;
@@ -49,6 +53,13 @@ class App implements AppInterface
         return [];
     }
 
+    /**
+     * @param array $config_files - конфигурационные файлы
+     * @param array $options - кастомные опции
+     * @param array $services - кастомные сервисы
+     *
+     * @return static
+     */
     public static function getInstance(array $config_files = [], array $options = [], array $services = []): static
     {
         $class = static::class;
@@ -63,16 +74,43 @@ class App implements AppInterface
         return self::$instances[$class];
     }
 
+    /**
+     * Алиас getInstance()
+     *
+     * @param array $config_files
+     * @param array $options
+     * @param array $services
+     *
+     * @return static
+     */
     public static function factory(array $config_files = [], array $options = [], array $services = []): static
     {
         return static::getInstance($config_files, $options, $services);
     }
 
+    /**
+     * Возвращает значение из
+     *
+     * @param string $key
+     * @param mixed|null $default
+     *
+     * @return mixed
+     */
     public static function key(string $key, mixed $default = null): mixed
     {
         return static::getInstance()->get($key, $default);
     }
 
+    /**
+     * Аналог функции "config()"
+     * Если передан один аргумент - возвращает его значение из конфига
+     * Если передано два аргумента - устанавливает его значение в конфиге
+     *
+     * @param string|null $key
+     * @param mixed|null $value
+     *
+     * @return mixed
+     */
     public static function config(?string $key = null, mixed $value = null): mixed
     {
         $instance = static::getInstance();
@@ -81,27 +119,55 @@ class App implements AppInterface
 
     /* ===================== DI & SERVICES =========================== */
 
+    /**
+     * Добавляет сервис в репозиторий сервисов
+     *
+     * @param string $name
+     * @param mixed|null $definition
+     *
+     * @return void
+     */
     public function addService(string $name, mixed $definition = null): void
     {
         $this->services->set($name, $definition);
     }
 
+    /**
+     * Возвращает сервис из репозитория сервисов
+     *
+     * @param string $name
+     *
+     * @return mixed
+     */
     public function getService(string $name): mixed
     {
         return $this->services->get($name);
     }
 
+    /**
+     * Проверяет наличие сервиса по имени в репозитории сервисов
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
     public function isService(string $name): bool
     {
         return $this->services->has($name);
     }
 
+    /**
+     * Возвращает тип сервиса по имени (имя класса, тип ресурса, тип переменной)
+     *
+     * @param string $name
+     *
+     * @return string|null
+     */
     public function getServiceType(string $name): ?string
     {
         if (!$this->isService($name)) return null;
 
         $instance = $this->services->get($name);
-        // PHP 8.0+ match expression
         return match(true) {
             is_object($instance) => get_class($instance),
             is_resource($instance) => get_resource_type($instance),
