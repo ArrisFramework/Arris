@@ -39,10 +39,10 @@ final class HttpStatusTest extends TestCase
                 'Not Found',
                 'HTTP/1.1 404 Not Found'
             ],
-            '408 Request Time-out (исключение из match)' => [
+            '408 Request Timeout (исключение из match)' => [
                 408,
-                'Request Time-out',
-                'HTTP/1.1 408 Request Time-out'
+                'Request Timeout',
+                'HTTP/1.1 408 Request Timeout'
             ],
             '500 Internal Server Error (стандартная генерация)' => [
                 500,

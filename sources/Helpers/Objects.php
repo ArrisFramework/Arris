@@ -19,6 +19,8 @@ class Objects
     /**
      * Рекурсивно проверяет существование свойства у объекта или ключа у массива.
      *
+     * https://gist.github.com/nyamsprod/10adbef7926dbc449e01eaa58ead5feb
+     *
      * Примеры:
      *  - propertyExistsRecursive($user, 'address->city')           => true/false
      *  - propertyExistsRecursive($data, 'user->profile->settings') => true/false

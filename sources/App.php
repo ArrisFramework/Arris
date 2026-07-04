@@ -20,11 +20,17 @@ class App implements AppInterface
      * Репозиторий опций класса
      * @var Dot
      */
-    private readonly Dot $repository;
-    private readonly Dot $services;
-    private readonly AppConfig $config;
+    private readonly Dot $options;
 
-    private ?Dot $magic_repo = null;
+    /**
+     * @var Dot
+     */
+    private readonly Dot $services;
+
+    /**
+     * @var AppConfig
+     */
+    private readonly AppConfig $config;
 
     /**
      * Закрытый конструктор.
@@ -37,7 +43,7 @@ class App implements AppInterface
         // Запрашиваем дефолты у наследника (App\App) и передаем их в AppConfig
         $this->config = new AppConfig($this->config_files, $this->getDefaultConfig());
 
-        $this->repository = new Dot($options);
+        $this->options = new Dot($options);
         $this->services = new Dot();
 
         foreach ($services as $name => $service) {
@@ -54,7 +60,7 @@ class App implements AppInterface
     }
 
     /**
-     * @param array $config_files - конфигурационные файлы
+     * @param array $config_files - пути к конфигурационным файлам (? перед файлом - опциональный)
      * @param array $options - кастомные опции
      * @param array $services - кастомные сервисы
      *
@@ -67,7 +73,7 @@ class App implements AppInterface
         if (!isset(self::$instances[$class])) {
             self::$instances[$class] = new static($config_files, $options, $services);
         } elseif (!empty($options)) {
-            // Если инстанс уже создан, но переданы новые опции - merging
+            // Если инстанс уже создан, но переданы новые опции - мержим
             self::$instances[$class]->add($options);
         }
 
@@ -89,7 +95,7 @@ class App implements AppInterface
     }
 
     /**
-     * Возвращает значение из
+     * Возвращает значение из репозитория
      *
      * @param string $key
      * @param mixed|null $default
@@ -102,28 +108,111 @@ class App implements AppInterface
     }
 
     /**
-     * Аналог функции "config()"
-     * Если передан один аргумент - возвращает его значение из конфига
-     * Если передано два аргумента - устанавливает его значение в конфиге
+     * Статический метод-хелпер, аналог функции "config()"
+     *
+     * Передано аргументов:
+     * 0: возвращаем ВЕСЬ конфиг
+     * 1: возвращаем значение аргумента
+     * 2: устанавливаем ключу значение
+     *
+     * Может быть вызвано в виде config(key, default: value) -
+     * В этом случае возвращает значение ключа ИЛИ дефолтное значение.
+     * (В этом случае передается как бы 3 аргумента)
+     *
+     * Поддерживается DOT-нотация.
      *
      * @param string|null $key
      * @param mixed|null $value
+     * @param mixed|null $default
      *
      * @return mixed
      */
-    public static function config(?string $key = null, mixed $value = null): mixed
+    public static function config(?string $key = null, mixed $value = null, mixed $default = null): mixed
     {
         $instance = static::getInstance();
-        return func_num_args() === 1 ? $instance->getConfig($key) : $instance->setConfig($key, $value);
+
+        return match (func_num_args()) {
+            0 => $instance->getConfig(null),
+            1 => $instance->getConfig($key),
+            2 => $instance->setConfig($key, $default),
+            3 => $instance->getConfig($key, $default)
+        };
     }
+
+    /**
+     * Статический метод.
+     * Возвращает значение из конфига или $default, если ключ не найден.
+     *
+     * @param string $key
+     * @param mixed|null $default
+     *
+     * @return mixed
+     */
+    public static function fromConfig(string $key, mixed $default = null):mixed
+    {
+        return static::getInstance()->getConfig($key, $default);
+    }
+
+    /**
+     * Статический метод.
+     * Устанавливает значение в конфиге
+     *
+     * @param string $key
+     * @param mixed|null $value
+     *
+     * @return void
+     */
+    public static function toConfig(string $key, mixed $value = null):void
+    {
+        static::getInstance()->setConfig($key, $value);
+    }
+
+    /**
+     * Получить конфиг для инстанса App
+     *
+     * @param string|null $key
+     * @param mixed|null $default
+     *
+     * @return mixed
+     */
+    public function getConfig(?string $key = null, mixed $default = null): mixed
+    {
+        return is_null($key) ? $this->config : $this->config->get($key, $default);
+    }
+
+    /**
+     * Установить параметр в конфиге инстанса App.
+     *
+     * @param string $key
+     * @param mixed|null $value
+     *
+     * @return void
+     */
+    public function setConfig(string $key, mixed $value = null): void
+    {
+        $this->config->set($key, $value);
+    }
+
+    /**
+     * Массовое добавление/слияние данных в конфигурацию.
+     *
+     * @param array|Dot $config
+     *
+     * @return void
+     */
+    public function addConfig(array|Dot $config): void
+    {
+        $this->config->add($config);
+    }
+
 
     /* ===================== DI & SERVICES =========================== */
 
     /**
      * Добавляет сервис в репозиторий сервисов
      *
-     * @param string $name
-     * @param mixed|null $definition
+     * @param string $name      Уникальное имя сервиса
+     * @param mixed $definition Объект, Closure или массив конфигурации
      *
      * @return void
      */
@@ -133,7 +222,7 @@ class App implements AppInterface
     }
 
     /**
-     * Возвращает сервис из репозитория сервисов
+     * Возвращает инстанс сервиса из репозитория сервисов
      *
      * @param string $name
      *
@@ -145,7 +234,7 @@ class App implements AppInterface
     }
 
     /**
-     * Проверяет наличие сервиса по имени в репозитории сервисов
+     * Проверяет, зарегистрирован ли сервис (в репозитории сервисов)
      *
      * @param string $name
      *
@@ -157,7 +246,7 @@ class App implements AppInterface
     }
 
     /**
-     * Возвращает тип сервиса по имени (имя класса, тип ресурса, тип переменной)
+     * Возвращает тип зарегистрированного сервиса (class name, resource type или примитив)
      *
      * @param string $name
      *
@@ -175,28 +264,98 @@ class App implements AppInterface
         };
     }
 
-    /* ===================== REPOSITORY & CONFIG =========================== */
+    /* ===================== ОПЦИИ (Репозиторий опций App) =========================== */
 
-    public function add(mixed $keys, mixed $value = null): void { $this->repository->add($keys, $value); }
-    public function set(string $key, mixed $data = null): void { $this->repository->set($key, $data); }
-    public function get(?string $key = null, mixed $default = null): mixed { return $this->repository->get($key, $default); }
+    /**
+     * Массовое добавление данных в репозиторий опций.
+     *
+     * @param mixed $keys Массив данных или строковый ключ
+     * @param mixed $value Значение (если $keys - строка)
+     */
+    public function add(mixed $keys, mixed $value = null): void { $this->options->add($keys, $value); }
 
-    public function getConfig(?string $key = null): mixed
-    {
-        return is_null($key) ? $this->config : $this->config->get($key);
-    }
+    /**
+     * Устанавливает значение в репозиторий опций.
+     *
+     * @param string $key Ключ
+     * @param mixed $data Значение
+     */
+    public function set(string $key, mixed $data = null): void { $this->options->set($key, $data); }
 
-    public function setConfig(string $key, mixed $value = null): void { $this->config->set($key, $value); }
-    public function addConfig(array|Dot $config): void { $this->config->add($config); }
+    /**
+     * Получает значение из репозитория опций
+     *
+     * @param string|null $key Ключ (или null для получения всего репозитория)
+     * @param mixed $default Значение по умолчанию
+     * @return mixed
+     */
+    public function get(?string $key = null, mixed $default = null): mixed { return $this->options->get($key, $default); }
+
 
     /* ===================== MAGIC & PROTECTION =========================== */
-    public function __invoke(?string $key = null, mixed $data = null): mixed { return is_null($data) ? $this->get($key) : $this->set($key, $data); }
-    public function __set(string $key, mixed $value): void { $this->magic_repo ??= new Dot(); $this->magic_repo->set($key, $value); }
-    public function __isset(string $key): bool { return $this->magic_repo?->has($key) ?? false; }
-    public function __get(string $key): mixed { return $this->__isset($key) ? $this->magic_repo->get($key) : null; }
 
+    /**
+     * Магический invoke - чтение или запись в репозиторий опций
+     *
+     * @param string|null $key
+     * @param mixed|null $data
+     *
+     * @return mixed
+     */
+    public function __invoke(?string $key = null, mixed $data = null): mixed
+    {
+        return is_null($data) ? $this->get($key) : $this->set($key, $data);
+    }
+
+    /**
+     * Магическая установка значения в "магический репозиторий"
+     *
+     * @param string $key
+     * @param mixed $value
+     *
+     * @return void
+     */
+    public function __set(string $key, mixed $value): void
+    {
+        $this->options->set($key, $value);
+    }
+
+    /**
+     * Проверка существования значения в репозитории опций
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function __isset(string $key): bool { return $this->options->has($key); }
+
+    /**
+     * Получение данных из репозитория опций
+     * @param string $key
+     *
+     * @return mixed
+     */
+    public function __get(string $key): mixed { return $this->options->get($key); }
+
+    /* =========================== ЗАПРЕТЫ ДЕЙСТВИЙ С КЛАССОМ ================================= */
+
+    /**
+     * Запрет клонирования
+     * @return mixed
+     */
     final public function __clone() { throw new RuntimeException("Cannot clone " . static::class); }
+
+    /**
+     * Запрет сериализации
+     * @return array
+     */
     final public function __serialize(): array { throw new RuntimeException("Cannot serialize " . static::class); }
+
+    /**
+     * Запрет десериализации
+     * @param array $data
+     *
+     * @return void
+     */
     final public function __unserialize(array $data): void { throw new RuntimeException("Cannot unserialize " . static::class); }
 
     /**

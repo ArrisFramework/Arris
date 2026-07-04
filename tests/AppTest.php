@@ -70,23 +70,23 @@ class AppTest extends TestCase
     }
 
     #[Test]
-    public function magicRepoIsSeparateFromMainRepo(): void
+    public function magicPropertiesWorkWithOptionsRepo(): void
     {
         $app = App::getInstance();
 
-        // Записываем в магический репозиторий
+        // Записываем через магический сеттер
         $app->magicProp = 'magic';
 
         // Читаем через магические методы
         $this->assertTrue(isset($app->magicProp));
         $this->assertEquals('magic', $app->magicProp);
 
-        // Основной репозиторий не должен видеть магические свойства
-        $this->assertNull($app->get('magicProp'));
+        // Магический репозиторий — это тот же options
+        $this->assertEquals('magic', $app->get('magicProp'));
 
-        // И наоборот: set/get не влияют на магический репозиторий
+        // И наоборот: set/get видно через магический геттер
         $app->set('regular', 'value');
-        $this->assertNull($app->regular ?? null); // магический геттер не видит регулярный
+        $this->assertEquals('value', $app->regular);
     }
 
     #[Test]
