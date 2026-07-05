@@ -178,6 +178,115 @@ class AppTest extends TestCase
     }
 
     #[Test]
+    public function optionsHasReturnsTrueForExistingKey(): void
+    {
+        $app = App::getInstance();
+        $app->set('exists', 'value');
+
+        $this->assertTrue($app->has('exists'));
+        $this->assertFalse($app->has('missing'));
+    }
+
+    #[Test]
+    public function optionsRemoveDeletesKey(): void
+    {
+        $app = App::getInstance();
+        $app->set('temp', 'value');
+        $this->assertTrue($app->has('temp'));
+
+        $app->remove('temp');
+        $this->assertFalse($app->has('temp'));
+        $this->assertNull($app->get('temp'));
+    }
+
+    #[Test]
+    public function optionsAllReturnsFullArray(): void
+    {
+        $app = App::getInstance();
+        $app->set('a', 1)->set('b', 2);
+
+        $this->assertEquals(['a' => 1, 'b' => 2], $app->all());
+    }
+
+    #[Test]
+    public function optionsAddAndSetAreFluent(): void
+    {
+        $app = App::getInstance();
+
+        $result = $app->add(['x' => 10])->set('y', 20);
+        $this->assertSame($app, $result);
+        $this->assertEquals(10, $app->get('x'));
+        $this->assertEquals(20, $app->get('y'));
+    }
+
+    #[Test]
+    public function hasConfigReturnsTrueForExistingKey(): void
+    {
+        $app = App::getInstance();
+        $app->setConfig('test.key', 'value');
+
+        $this->assertTrue($app->hasConfig('test.key'));
+        $this->assertFalse($app->hasConfig('missing'));
+    }
+
+    #[Test]
+    public function removeConfigSetsKeyToNull(): void
+    {
+        $app = App::getInstance();
+        $app->setConfig('temp', 'value');
+        $this->assertTrue($app->hasConfig('temp'));
+
+        $app->removeConfig('temp');
+
+        // remove делегирует в offsetUnset, который ставит null (а не удаляет ключ)
+        $this->assertNull($app->getConfig('temp'));
+    }
+
+    #[Test]
+    public function allConfigReturnsFullArray(): void
+    {
+        $app = App::getInstance();
+        $app->setConfig('a', 1)->setConfig('b', 2);
+
+        $this->assertSame(1, $app->allConfig()['a']);
+        $this->assertSame(2, $app->allConfig()['b']);
+    }
+
+    #[Test]
+    public function replaceConfigReplacesEntireConfig(): void
+    {
+        $app = App::getInstance();
+        $app->setConfig('old', 'value');
+        $app->replaceConfig(['new' => 'data']);
+
+        $this->assertEquals('data', $app->getConfig('new'));
+        $this->assertFalse($app->hasConfig('old'));
+        $this->assertNull($app->getConfig('old'));
+    }
+
+    #[Test]
+    public function addConfigWithDotObject(): void
+    {
+        $app = App::getInstance();
+        $dot = new \Arris\Core\Dot(['key' => 'from_dot']);
+        $app->addConfig($dot);
+
+        $this->assertEquals('from_dot', $app->getConfig('key'));
+    }
+
+    #[Test]
+    public function addConfigIsFluent(): void
+    {
+        $app = App::getInstance();
+
+        $result = $app->addConfig(['a' => 1])->setConfig('b', 2);
+
+        $this->assertSame($app, $result);
+        $this->assertEquals(1, $app->getConfig('a'));
+        $this->assertEquals(2, $app->getConfig('b'));
+    }
+
+    #[Test]
     public function preventCloningThrowsException(): void
     {
         $this->expectException(RuntimeException::class);

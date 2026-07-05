@@ -164,6 +164,84 @@ protected function setUp(): void
 
 ---
 
+## 📖 API — Репозиторий опций
+
+Инстанс `App` предоставляет репозиторий для хранения произвольных данных (опций).
+
+```php
+$app = App::getInstance();
+
+// Запись
+$app->set('db.host', 'localhost');
+$app->add(['db.port' => 3306, 'db.name' => 'test']); // массовое добавление
+
+// Чтение
+$host = $app->get('db.host');              // 'localhost'
+$port = $app->get('db.port', 5432);        // с дефолтом
+$all  = $app->all();                       // весь массив опций
+
+// Проверка и удаление
+$app->has('db.host');                      // true
+$app->remove('db.host');                   // удалить ключ
+
+// Fluent-чейнинг
+$app->add(['a' => 1])->set('b', 2)->get('a'); // 1
+
+// Магические методы (те же опции)
+$app->magicProp = 'value';
+echo $app->magicProp;                      // 'value'
+isset($app->magicProp);                    // true
+```
+
+### Статический shortcut
+
+```php
+App::key('db.host'); // аналог App::getInstance()->get('db.host')
+```
+
+---
+
+## 📖 API — Конфигурация
+
+Управление конфигом приложения (отдельный слой, изолированный от опций).
+
+```php
+// Чтение и запись
+$app->setConfig('app.debug', true);
+$debug = $app->getConfig('app.debug');        // true
+$app->getConfig('app.missing', 'default');     // 'default'
+
+// Слияние
+$app->addConfig(['app' => ['version' => '1.0']]);
+
+// Замена целиком
+$app->replaceConfig(['new' => 'config']);
+
+// Проверка, удаление, дамп
+$app->hasConfig('app.debug');                 // true
+$app->removeConfig('app.debug');              // установить в null
+$all = $app->allConfig();                     // весь конфиг массивом
+
+// Fluent
+$app->addConfig(['a' => 1])->setConfig('b', 2);
+```
+
+### Статические shortcuts
+
+```php
+App::config();                    // весь конфиг (объект AppConfig)
+App::config('app.debug');        // get
+App::config('app.debug', true);  // set (внимание: 2 аргумента = set)
+App::config('app.debug', default: false); // get с дефолтом
+
+App::fromConfig('app.debug', false); // get с дефолтом (без путаницы с set)
+App::toConfig('app.debug', true);    // set
+```
+
+> ⚠️ `config()` с 2 аргументами работает как set. Чтобы получить значение с дефолтом, используйте именованный аргумент: `config('key', default: 'val')`.
+
+---
+
 ## 📚 Экосистема Arris
 
 Ядро `karelwintersky/arris` отлично интегрируется с другими пакетами серии:

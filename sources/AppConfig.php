@@ -65,6 +65,7 @@ class AppConfig extends AbstractConfig
     public function replace(array $config): self
     {
         $this->data = $config;
+        $this->cache = [];
         return $this;
     }
 }

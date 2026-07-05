@@ -35,17 +35,31 @@ interface AppInterface
 
     public function getConfig(?string $key = null, mixed $default = null): mixed;
 
-    public function setConfig(string $key, mixed $value = null): void;
+    public function setConfig(string $key, mixed $value = null): static;
 
-    public function addConfig(array|Dot $config): void;
+    public function hasConfig(string $key): bool;
+
+    public function removeConfig(string $key): void;
+
+    public function allConfig(): array;
+
+    public function replaceConfig(array $config): void;
+
+    public function addConfig(array|Dot $config): static;
 
     /* ===================== ОПЦИИ (Репозиторий опций App) =========================== */
 
-    public function add(mixed $keys, mixed $value = null): void;
+    public function add(mixed $keys, mixed $value = null): static;
 
-    public function set(string $key, mixed $data = null): void;
+    public function set(string $key, mixed $data = null): static;
 
     public function get(?string $key = null, mixed $default = null): mixed;
+
+    public function has(string $key): bool;
+
+    public function remove(string $key): void;
+
+    public function all(): array;
 
 
     /* ===================== DI & SERVICES =========================== */
@@ -58,6 +72,10 @@ interface AppInterface
 
     public function getServiceType(string $name): ?string;
 
+    /* =============================== MAGIC =============================== */
 
+    public function __invoke(?string $key = null, mixed $data = null): mixed;
+
+    public function __set(string $key, mixed $value): void;
 }
 

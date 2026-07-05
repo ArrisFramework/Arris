@@ -186,11 +186,54 @@ class App implements AppInterface
      * @param string $key
      * @param mixed|null $value
      *
-     * @return void
+     * @return App
      */
-    public function setConfig(string $key, mixed $value = null): void
+    public function setConfig(string $key, mixed $value = null): static
     {
         $this->config->set($key, $value);
+        return $this;
+    }
+
+    /**
+     * Проверяет существование ключа в конфиге инстанса App
+     *
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function hasConfig(string $key): bool
+    {
+        return $this->config->has($key);
+    }
+
+    /**
+     * Удаляет ключ из конфига.
+     */
+    public function removeConfig(string $key): void
+    {
+        $this->config->remove($key);
+    }
+
+    /**
+     * Возвращает весь конфиг как массив.
+     *
+     * @return array
+     */
+    public function allConfig(): array
+    {
+        return $this->config->all();
+    }
+
+    /**
+     * Заменяет конфиг целиком.
+     *
+     * @param array $config
+     *
+     * @return void
+     */
+    public function replaceConfig(array $config): void
+    {
+        $this->config->replace($config);
     }
 
     /**
@@ -198,11 +241,12 @@ class App implements AppInterface
      *
      * @param array|Dot $config
      *
-     * @return void
+     * @return $this
      */
-    public function addConfig(array|Dot $config): void
+    public function addConfig(array|Dot $config): static
     {
-        $this->config->add($config);
+        $this->config->add($config instanceof Dot ? $config->all() : $config);
+        return $this;
     }
 
 
@@ -271,16 +315,18 @@ class App implements AppInterface
      *
      * @param mixed $keys Массив данных или строковый ключ
      * @param mixed $value Значение (если $keys - строка)
+     * @return $this
      */
-    public function add(mixed $keys, mixed $value = null): void { $this->options->add($keys, $value); }
+    public function add(mixed $keys, mixed $value = null): static { $this->options->add($keys, $value); return $this; }
 
     /**
      * Устанавливает значение в репозиторий опций.
      *
      * @param string $key Ключ
      * @param mixed $data Значение
+     * @return $this
      */
-    public function set(string $key, mixed $data = null): void { $this->options->set($key, $data); }
+    public function set(string $key, mixed $data = null): static { $this->options->set($key, $data); return $this; }
 
     /**
      * Получает значение из репозитория опций
@@ -290,6 +336,31 @@ class App implements AppInterface
      * @return mixed
      */
     public function get(?string $key = null, mixed $default = null): mixed { return $this->options->get($key, $default); }
+
+    /**
+     * Проверяет существование ключа в репозитории опций.
+     *
+     * @param string $key
+     *
+     * @return bool
+     */
+    public function has(string $key): bool { return $this->options->has($key); }
+
+    /**
+     * Удаляет ключ из репозитория опций.
+     *
+     * @param string $key
+     *
+     * @return void
+     */
+    public function remove(string $key): void { $this->options->delete($key); }
+
+    /**
+     * Возвращает все опции как массив.
+     *
+     * @return array
+     */
+    public function all(): array { return $this->options->all(); }
 
 
     /* ===================== MAGIC & PROTECTION =========================== */
@@ -308,7 +379,7 @@ class App implements AppInterface
     }
 
     /**
-     * Магическая установка значения в "магический репозиторий"
+     * Магическая установка значения в репозиторий опций
      *
      * @param string $key
      * @param mixed $value
@@ -322,6 +393,7 @@ class App implements AppInterface
 
     /**
      * Проверка существования значения в репозитории опций
+     *
      * @param string $key
      *
      * @return bool
@@ -330,6 +402,7 @@ class App implements AppInterface
 
     /**
      * Получение данных из репозитория опций
+     *
      * @param string $key
      *
      * @return mixed
