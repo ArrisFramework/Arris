@@ -134,7 +134,7 @@ class App implements AppInterface
         return match (func_num_args()) {
             0 => $instance->getConfig(null),
             1 => $instance->getConfig($key),
-            2 => $instance->setConfig($key, $default),
+            2 => $instance->setConfig($key, $value),
             3 => $instance->getConfig($key, $default)
         };
     }
