@@ -2,7 +2,7 @@
 
 namespace Arris\Helpers;
 
-class SizeFormatter
+class SizeFormatter implements SizeFormatterInterface
 {
     /**
      * Форматирует размер в человекочитаемый вид.

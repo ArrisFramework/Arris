@@ -2,7 +2,7 @@
 
 namespace Arris\Helpers;
 
-class Objects
+class Objects implements ObjectsInterface
 {
     /**
      * https://www.php.net/manual/en/reflectionfunctionabstract.isclosure.php

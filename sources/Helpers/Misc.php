@@ -2,7 +2,7 @@
 
 namespace Arris\Helpers;
 
-class Misc
+class Misc implements MiscInterface
 {
     /**
      * Максимальный размер закачиваемого файла

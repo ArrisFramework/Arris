@@ -3,7 +3,7 @@ declare(strict_types=1);
 
 namespace Arris\Helpers;
 
-class Env
+class Env implements EnvInterface
 {
     /**
      * Читает переменную окружения с приведением типа.

@@ -2,7 +2,7 @@
 
 namespace Arris\Helpers;
 
-class HTTP
+class HTTP implements HTTPInterface
 {
     /**
      * Получает и декодирует JSON из тела POST-запроса.

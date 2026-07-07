@@ -9,7 +9,7 @@ use RuntimeException;
 use SplFileInfo;
 use UnexpectedValueException;
 
-class FS
+class FS implements FSInterface
 {
     /**
      * Рекурсивно удаляет директорию и всё её содержимое.

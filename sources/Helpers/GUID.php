@@ -2,7 +2,7 @@
 
 namespace Arris\Helpers;
 
-class GUID
+class GUID implements GUIDInterface
 {
     /**
      * Генерирует UUID версии 4 (случайный) согласно RFC 4122.

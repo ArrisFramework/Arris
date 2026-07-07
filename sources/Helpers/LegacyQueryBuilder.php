@@ -4,7 +4,7 @@ namespace Arris\Helpers;
 
 use InvalidArgumentException;
 
-class LegacyQueryBuilder
+class LegacyQueryBuilder implements LegacyQueryBuilderInterface
 {
     /**
      * Строит INSERT-запрос на основе массива данных для указанной таблицы.

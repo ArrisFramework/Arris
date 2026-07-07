@@ -14,7 +14,7 @@ namespace Arris\Helpers;
  *  - HTTPStatusExtended::CF_WEB_SERVER_DOWN->getReasonPhrase() => "Web Server Is Down"
  *  - HTTPStatusExtended::LARAVEL_PAGE_EXPIRED->isClientError() => true
  */
-enum HTTPStatusExtended: int
+enum HTTPStatusExtended: int implements HTTPStatusExtendedInterface
 {
     // =========================================================================
     // nginx

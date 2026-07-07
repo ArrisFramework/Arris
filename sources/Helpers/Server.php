@@ -4,7 +4,7 @@ namespace Arris\Helpers;
 
 use InvalidArgumentException;
 
-class Server
+class Server implements ServerInterface
 {
     public static function getIP():?string
     {

@@ -18,7 +18,7 @@ namespace Arris\Helpers;
  *
  * Source: https://en.wikipedia.org/wiki/List_of_HTTP_status_codes
  */
-enum HTTPStatus: int
+enum HTTPStatus: int implements HTTPStatusInterface
 {
     // 1xx Informational
 

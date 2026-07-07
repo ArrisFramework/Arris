@@ -4,7 +4,7 @@ namespace Arris\Helpers;
 
 use InvalidArgumentException;
 
-class Math
+class Math implements MathInterface
 {
     /**
      * Ограничивает значение диапазоном [min, max] (операция clamp).
