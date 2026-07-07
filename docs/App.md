@@ -242,6 +242,25 @@ App::toConfig('app.debug', true);    // set
 
 ---
 
+## 📖 API — PSR-11 Service Container
+
+`App` — это сервис-локатор (DI), но его метод `get(?string, mixed)` несовместим с `Psr\Container\ContainerInterface::get(string $id)`.  
+Для PSR-11-совместимости используется адаптер `Arris\Core\Container\ServiceContainer`:
+
+```php
+use Arris\Core\Container\ServiceContainer;
+
+$container = new ServiceContainer(); // адаптирует App::getInstance()
+$container = new ServiceContainer($customAppInstance);
+
+$container->has('db');               // true/false
+$container->get('db');               // сервис или ContainerNotFoundException
+```
+
+Адаптер делегирует в `isService()` / `getService()` и пробрасывает `ContainerNotFoundException` при отсутствии ключа.
+
+---
+
 ## 📚 Экосистема Arris
 
 Ядро `karelwintersky/arris` отлично интегрируется с другими пакетами серии:
