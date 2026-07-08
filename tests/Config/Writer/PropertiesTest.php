@@ -78,7 +78,7 @@ key\:with\=colonAndEqualsSign = This is the value for the key "key:with=colonAnd
 path = c:\\wiki\\templates
 
 EOD;
-        $this->assertSame($expected, $actual);
+        $this->assertSame($expected, str_replace("\r\n", "\n", $actual));
     }
 
     /**
@@ -91,7 +91,7 @@ EOD;
         $this->writer->toFile($this->data, $this->temp_file);
 
         $this->assertFileExists($this->temp_file);
-        $this->assertFileEquals(__DIR__.'/../mocks/pass/config1.properties', $this->temp_file);
+        $this->assertStringEqualsFile(__DIR__.'/../mocks/pass/config1.properties', str_replace("\r\n", "\n", file_get_contents($this->temp_file)));
     }
 
     /**

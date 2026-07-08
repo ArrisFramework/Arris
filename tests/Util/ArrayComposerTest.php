@@ -1,9 +1,10 @@
 <?php
 
+namespace Tests\Util;
+
 use Arris\Util\ArrayComposer;
 use PHPUnit\Framework\TestCase;
 use PHPUnit\Framework\Attributes\Test;
-use PHPUnit\Framework\Attributes\DataProvider;
 
 class ArrayComposerTest extends TestCase
 {

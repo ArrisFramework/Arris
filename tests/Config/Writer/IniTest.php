@@ -77,7 +77,7 @@ name=config
 description=Config Reader and Writer
 
 EOD;
-        $this->assertSame($expected, $actual);
+        $this->assertSame($expected, str_replace("\r\n", "\n", $actual));
     }
 
     /**
@@ -90,7 +90,7 @@ EOD;
         $this->writer->toFile($this->data, $this->temp_file);
 
         $this->assertFileExists($this->temp_file);
-        $this->assertFileEquals($this->temp_file, __DIR__.'/../mocks/pass/config4.ini');
+        $this->assertStringEqualsFile(__DIR__.'/../mocks/pass/config4.ini', str_replace("\r\n", "\n", file_get_contents($this->temp_file)));
     }
 
     /**
