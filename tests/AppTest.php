@@ -178,6 +178,23 @@ class AppTest extends TestCase
     }
 
     #[Test]
+    public function staticConfigAllModes(): void
+    {
+        App::factory();
+        App::config('database.username', 'wombat');
+
+        // 1 arg: get
+        $this->assertSame('wombat', App::config('database.username'));
+
+        // 2 positional args: set
+        App::config('database.username', 'test');
+        $this->assertSame('test', App::config('database.username'));
+
+        // 3 positional args: get with fallback
+        $this->assertSame('rabbit', App::config('database.xxx', null, 'rabbit'));
+    }
+
+    #[Test]
     public function optionsHasReturnsTrueForExistingKey(): void
     {
         $app = App::getInstance();
