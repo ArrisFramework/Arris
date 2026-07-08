@@ -247,7 +247,7 @@ class AppTest extends TestCase
     }
 
     #[Test]
-    public function removeConfigSetsKeyToNull(): void
+    public function removeConfigRemovesKey(): void
     {
         $app = App::getInstance();
         $app->setConfig('temp', 'value');
@@ -255,7 +255,7 @@ class AppTest extends TestCase
 
         $app->removeConfig('temp');
 
-        // remove делегирует в offsetUnset, который ставит null (а не удаляет ключ)
+        $this->assertFalse($app->hasConfig('temp'));
         $this->assertNull($app->getConfig('temp'));
     }
 

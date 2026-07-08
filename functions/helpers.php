@@ -32,23 +32,7 @@ if (!function_exists('_env')) {
      */
     function _env(string $key, $default, string $type = ''): mixed
     {
-        $k = getenv($key);
-        if ($k === false) {
-            return $default;
-        }
-
-        if ($type !== '') {
-            if ($type === 'array') {
-                return explode(' ', trim(str_replace(['[', ']'], '', $k)));
-            }
-
-            $st = settype($k, $type);
-
-            if ($st === false) {
-                return $default;
-            }
-        }
-        return $k;
+        return \Arris\Helpers\Env::get($key, $default, $type);
     }
 }
 

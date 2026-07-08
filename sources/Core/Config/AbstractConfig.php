@@ -77,7 +77,7 @@ abstract class AbstractConfig implements ArrayAccess, ConfigInterface, Iterator
         $cacheKey = '';
 
         // Look for the key, creating nested keys if needed
-        while ($part = array_shift($segments)) {
+        while (($part = array_shift($segments)) !== null) {
             if ($cacheKey != '') {
                 $cacheKey .= '.';
             }
@@ -210,7 +210,33 @@ abstract class AbstractConfig implements ArrayAccess, ConfigInterface, Iterator
     #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
-        $this->set($offset, null);
+        $segments = explode('.', $offset);
+
+        if (count($segments) === 1) {
+            unset($this->data[$offset]);
+            unset($this->cache[$offset]);
+            return;
+        }
+
+        $root = &$this->data;
+        while (count($segments) > 1) {
+            $part = array_shift($segments);
+            if (!isset($root[$part]) || !is_array($root[$part])) {
+                return;
+            }
+            $root = &$root[$part];
+        }
+
+        $last = array_shift($segments);
+        if ($last !== null && array_key_exists($last, $root)) {
+            unset($root[$last]);
+        }
+
+        foreach ($this->cache as $cacheKey => $cacheValue) {
+            if (str_starts_with((string)$cacheKey, $offset)) {
+                unset($this->cache[$cacheKey]);
+            }
+        }
     }
 
     /**

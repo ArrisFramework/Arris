@@ -149,7 +149,7 @@ abstract class AbstractController
             $this->error('Invalid JSON Payload: ' . json_last_error_msg(), 400);
         }
 
-        return $data ?? [];
+        return is_array($data) ? $data : [];
     }
 
     /**

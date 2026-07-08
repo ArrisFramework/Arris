@@ -63,7 +63,7 @@ interface StrInterface extends Stringable, JsonSerializable
     public function prepend(string $string): static;
 
     public function explode(string $separator = ' '): array;
-    public function split(string $pattern = '/' . PREG_SPLIT_NO_EMPTY): array;
+    public function split(string $pattern = '/\s+/', int $flags = PREG_SPLIT_NO_EMPTY): array;
 
     public function jsonSerialize(): mixed;
 }

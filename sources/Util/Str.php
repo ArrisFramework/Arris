@@ -290,9 +290,9 @@ class Str implements StrInterface
         return explode($separator, $this->string);
     }
 
-    public function split(string $pattern = '/' . PREG_SPLIT_NO_EMPTY): array
+    public function split(string $pattern = '/\s+/', int $flags = PREG_SPLIT_NO_EMPTY): array
     {
-        return preg_split($pattern, $this->string);
+        return preg_split($pattern, $this->string, -1, $flags);
     }
 
     public function jsonSerialize(): mixed

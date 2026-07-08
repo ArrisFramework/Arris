@@ -641,7 +641,7 @@ class Dot implements ArrayAccess, Countable, IteratorAggregate, JsonSerializable
      */
     public function count($key = null): int
     {
-        return count($this->get($key));
+        return count($this->get($key) ?? []);
     }
 
     /*
