@@ -24,9 +24,7 @@
         "ext-pdo": "*",
         "ext-readline": "*",
         "ext-simplexml": "*",
-        "psr/container": "^2.0",
-        "psr/log": "*",
-        "psr/simple-cache": "^3.0"
+        "psr/log": "*"
     },
     "require-dev": {
         "predis/predis": "^2.0",
@@ -38,6 +36,8 @@
         "symfony/yaml": "^5.4"
     },
     "suggest": {
+        "psr/simple-cache": "^3.0",
+        "psr/container": "^2.0",
         "symfony/yaml": "^5.4",
         "ramsey/collection": "*",
         "karelwintersky/arris.entity": "Arris µFramework: Entity Types",

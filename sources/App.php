@@ -167,6 +167,11 @@ class App implements AppInterface
         static::getInstance()->setConfig($key, $value);
     }
 
+    public static function theConfig(): AppConfig
+    {
+        return static::getInstance()->config;
+    }
+
     /**
      * Получить конфиг для инстанса App
      *

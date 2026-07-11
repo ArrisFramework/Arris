@@ -42,7 +42,7 @@ class Serialize implements ParserInterface
      */
     protected function parse($data = null, $filename = null)
     {
-        $serializedData = @unserialize($data);
+        $serializedData = @unserialize($data, ['allowed_classes' => false]);
         if($serializedData === false){
 
             throw new ParseException(error_get_last());

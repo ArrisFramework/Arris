@@ -2,7 +2,6 @@
 
 namespace Arris\Core\Config\Parser;
 
-use Exception;
 use Arris\Core\Config\Exception\ParseException;
 use Arris\Core\Config\Exception\UnsupportedFormatException;
 
@@ -30,7 +29,7 @@ class Php implements ParserInterface
         // Run the fileEval the string, if it throws an exception, rethrow it
         try {
             $data = require $filename;
-        } catch (Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new ParseException(
                 [
                     'message'   => 'PHP file threw an exception',
@@ -61,7 +60,7 @@ class Php implements ParserInterface
         // Eval the string, if it throws an exception, rethrow it
         try {
             $data = $this->isolate($config);
-        } catch (Exception $exception) {
+        } catch (\Throwable $exception) {
             throw new ParseException(
                 [
                     'message'   => 'PHP string threw an exception',
