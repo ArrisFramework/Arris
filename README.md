@@ -13,3 +13,12 @@ Class collection for some my projects
   - [Arris.Toolkit.Sphinx](https://github.com/KarelWintersky/Arris.Toolkit.Sphinx), `composer require karelwintersky/arris.toolkit.sphinx`
 
 
+```php
+// Добавление в конфиг
+App::factory()->addConfig([
+    'smarty'    =>  [
+        'path_template' =>  self::$path_install->join('templates'),
+        'path_cache'    =>  self::$path_install->join('cache')
+    ]
+]);
+```

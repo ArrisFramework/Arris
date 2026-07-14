@@ -305,6 +305,46 @@ class ArraysTest extends TestCase
     }
 
     // ─────────────────────────────────────────────
+    //  filterValueForAllowed()
+    // ─────────────────────────────────────────────
+
+    #[Test]
+    #[TestDox('filterValueForAllowed: возвращает значение, если оно в списке разрешённых')]
+    public function filterValueForAllowedReturnsValueWhenAllowed(): void
+    {
+        $result = Arrays::filterValueForAllowed('active', ['active', 'inactive'], 'unknown');
+
+        $this->assertSame('active', $result);
+    }
+
+    #[Test]
+    #[TestDox('filterValueForAllowed: возвращает default, если значение не разрешено')]
+    public function filterValueForAllowedReturnsDefaultWhenNotAllowed(): void
+    {
+        $result = Arrays::filterValueForAllowed('banned', ['active', 'inactive'], 'unknown');
+
+        $this->assertSame('unknown', $result);
+    }
+
+    #[Test]
+    #[TestDox('filterValueForAllowed: null значение возвращает default')]
+    public function filterValueForAllowedNullReturnsDefault(): void
+    {
+        $result = Arrays::filterValueForAllowed(null, ['a', 'b'], 'none');
+
+        $this->assertSame('none', $result);
+    }
+
+    #[Test]
+    #[TestDox('filterValueForAllowed: default может быть null')]
+    public function filterValueForAllowedDefaultNull(): void
+    {
+        $result = Arrays::filterValueForAllowed('bad', ['good'], null);
+
+        $this->assertNull($result);
+    }
+
+    // ─────────────────────────────────────────────
     //  groupDatasetByColumn()
     // ─────────────────────────────────────────────
 

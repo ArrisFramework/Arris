@@ -199,6 +199,10 @@ class LegacyQueryBuilder implements LegacyQueryBuilderInterface
     /**
      * Строит WHERE-условие из различных форматов ввода.
      *
+     * ВНИМАНИЕ: строковые значения экранируются через addslashes(), что НЕ является
+     * защитой от SQL-инъекций при многобайтовых кодировках. Использовать ТОЛЬКО
+     * с доверенными данными. Для пользовательского ввода используйте prepared statements.
+     *
      * @param array<string, mixed>|string|null $condition WHERE условие
      * @return string WHERE-клауза или пустая строка
      */

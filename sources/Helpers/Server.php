@@ -6,30 +6,37 @@ use InvalidArgumentException;
 
 class Server implements ServerInterface
 {
-    public static function getIP():?string
+    /**
+     * @param array $trustedProxies Список IP доверенных прокси.
+     *   X-Forwarded-For и подобные заголовки учитываются, только если REMOTE_ADDR
+     *   входит в этот список. Пустой массив = не доверять ни одному прокси.
+     * @param bool $trustAnyProxy Если true — доверяем заголовкам прокси от любого IP,
+     *   игнорируя проверку REMOTE_ADDR.
+     */
+    public static function getIP(array $trustedProxies = [], bool $trustAnyProxy = false): ?string
     {
         if (PHP_SAPI === 'cli') {
             return '127.0.0.1';
         }
 
-        // 2. Массив заголовков в порядке приоритета
-        // X-Real-IP обычно надежнее, так как Nginx его перезаписывает, а не дописывает
-        $headers = [
-            'HTTP_X_REAL_IP',
-            'HTTP_X_FORWARDED_FOR',
-            'HTTP_CLIENT_IP',
-        ];
+        $remoteAddr = $_SERVER['REMOTE_ADDR'] ?? null;
 
-        // 3. Проверяем заголовки от прокси
-        foreach ($headers as $header) {
-            if (!empty($_SERVER[$header])) {
-                // В X-Forwarded-For может быть цепочка: client, proxy1, proxy2
-                // Берем первый IP и очищаем от пробелов
-                $ip = trim(explode(',', $_SERVER[$header])[0]);
+        // 2. Доверяем заголовкам прокси если REMOTE_ADDR в списке доверенных ИЛИ доверяем любому прокси
+        if ($trustAnyProxy || ($remoteAddr !== null && in_array($remoteAddr, $trustedProxies, true))) {
+            $headers = [
+                'HTTP_X_REAL_IP',
+                'HTTP_X_FORWARDED_FOR',
+                'HTTP_CLIENT_IP',
+            ];
 
-                // Строгая валидация (поддерживает и IPv4, и IPv6)
-                if (filter_var($ip, FILTER_VALIDATE_IP)) {
-                    return $ip;
+            // 3. Проверяем заголовки от прокси
+            foreach ($headers as $header) {
+                if (!empty($_SERVER[$header])) {
+                    $ip = trim(explode(',', $_SERVER[$header])[0]);
+
+                    if (filter_var($ip, FILTER_VALIDATE_IP)) {
+                        return $ip;
+                    }
                 }
             }
         }

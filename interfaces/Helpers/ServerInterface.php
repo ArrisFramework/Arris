@@ -4,7 +4,7 @@ namespace Arris\Helpers;
 
 interface ServerInterface
 {
-    public static function getIP(): ?string;
+    public static function getIP(array $trustedProxies = [], bool $trustAnyProxy = false): ?string;
 
     public static function isSSL(): bool;
 

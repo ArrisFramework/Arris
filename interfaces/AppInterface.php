@@ -25,11 +25,12 @@ interface AppInterface
     // Хелпер
     public static function config(?string $key = null, mixed $value = null, mixed $default = null): mixed;
 
-
     // Статические методы
     public static function fromConfig(string $key, mixed $default = null):mixed;
 
     public static function toConfig(string $key, mixed $value = null):void;
+
+    public static function theConfig():AppConfig;
 
     // Динамические методы работы с инстансом App.
 
@@ -41,11 +42,11 @@ interface AppInterface
 
     public function removeConfig(string $key): void;
 
-    public function allConfig(): array;
-
     public function replaceConfig(array $config): void;
 
     public function addConfig(array|Dot $config): static;
+
+    public function allConfig(): array;
 
     /* ===================== ОПЦИИ (Репозиторий опций App) =========================== */
 

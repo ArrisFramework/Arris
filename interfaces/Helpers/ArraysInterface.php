@@ -10,6 +10,12 @@ interface ArraysInterface
 
     public static function allowed(mixed $value, array $allowed, mixed $default = null, bool $strict = true): mixed;
 
+    public static function filterValueForAllowed(
+        mixed $value,
+        array $allowedValues,
+        mixed $defaultValue
+    ): mixed;
+
     public static function explodeToType(
         string $string,
         string $separator = ' ',

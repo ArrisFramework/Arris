@@ -37,6 +37,28 @@ class Arrays implements ArraysInterface
     }
 
     /**
+     * Прямая замена функции getAllowedValue($data, $allowed, $default).
+     * Делегирует методу allowed().
+     *
+     * Примеры:
+     *  - filterValueForAllowed('active', ['active', 'inactive'], 'unknown') => 'active'
+     *  - filterValueForAllowed('banned', ['active', 'inactive'], 'unknown') => 'unknown'
+     *  - filterValueForAllowed(null, ['a', 'b'], 'none') => 'none'
+     *
+     * @param mixed $value Проверяемое значение
+     * @param array<mixed> $allowedValues Разрешенные значения
+     * @param mixed $defaultValue Значение по умолчанию
+     * @return mixed Значение если разрешено, иначе дефолт
+     */
+    public static function filterValueForAllowed(
+        mixed $value,
+        array $allowedValues,
+        mixed $defaultValue
+    ): mixed {
+        return self::allowed($value, $allowedValues, $defaultValue);
+    }
+
+    /**
      * Обёртка над array_filter.
      *
      * @param array    $input         Входной массив
@@ -102,6 +124,13 @@ class Arrays implements ArraysInterface
 
     /**
      * Безопасно получает значение из массива по ключу с валидацией разрешенных значений.
+     *
+     * Прямая замена getAllowedValue() с сигнатурой (value, allowed, default) —
+     * см. метод allowed().
+     *
+     * Например,    $sort = getAllowedValue($_GET['sort'], ['asc', 'desc'], 'asc'); меняем на
+     *              $sort = Arrays::allowed($_GET['sort'], ['asc', 'desc'], 'asc');
+     *          или  $sort = Arrays::filterArrayForAllowed($_GET, 'sort', ['asc', 'desc'], 'asc');
      *
      * Примеры:
      *  - filterArrayForAllowed(['status' => 'active'], 'status', ['active', 'inactive'], 'unknown')
