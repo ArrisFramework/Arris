@@ -167,6 +167,12 @@ class App implements AppInterface
         static::getInstance()->setConfig($key, $value);
     }
 
+    /**
+     * Возвращает ВЕСЬ конфиг как объект AppConfig
+     * Используется, к примеру, для проброса в шаблоны, внутри которых ключи доступны с дот-нотацией.
+     *
+     * @return AppConfig
+     */
     public static function theConfig(): AppConfig
     {
         return static::getInstance()->config;

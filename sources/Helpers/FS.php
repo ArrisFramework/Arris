@@ -90,4 +90,99 @@ class FS implements FSInterface
         }
     }
 
+    /**
+     * Ищет файлы в директории с фильтрацией.
+     *
+     * Примеры:
+     *  - findFiles('/src')                              => все файлы рекурсивно
+     *  - findFiles('/src', extension: 'php')            => только .php
+     *  - findFiles('/src', extension: ['php', 'json'])  => .php и .json
+     *  - findFiles('/src', startWith: 'Controller')     => файлы начинаются на Controller
+     *  - findFiles('/src', endWith: 'Test')             => файлы заканчиваются на Test
+     *  - findFiles('/src', recursive: false)            => только текущая директория
+     *
+     * @param string $directory Путь к директории
+     * @param string|array|null $extension Расширение(я) для фильтрации (без точки)
+     * @param string|array|null $startWith Начало имени файла (строка или массив)
+     * @param string|array|null $endWith Конец имени файла (строка или массив)
+     * @param bool $recursive Рекурсивный обход
+     * @return array<int, string> Массив абсолютных путей к файлам
+     * @throws RuntimeException Если директория не существует
+     */
+    public static function findFiles(
+        string $directory,
+        string|array|null $extension = null,
+        string|array|null $startWith = null,
+        string|array|null $endWith = null,
+        bool $recursive = true
+    ): array {
+        $directory = rtrim($directory, DIRECTORY_SEPARATOR);
+
+        if (!is_dir($directory)) {
+            throw new RuntimeException("Directory does not exist: {$directory}");
+        }
+
+        $extension = $extension !== null ? (array) $extension : null;
+        $startWith = $startWith !== null ? (array) $startWith : null;
+        $endWith = $endWith !== null ? (array) $endWith : null;
+
+        $iterator = $recursive
+            ? new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($directory, FilesystemIterator::SKIP_DOTS),
+                RecursiveIteratorIterator::SELF_FIRST
+            )
+            : new FilesystemIterator($directory, FilesystemIterator::SKIP_DOTS);
+
+        $results = [];
+
+        foreach ($iterator as $fileInfo) {
+            /** @var SplFileInfo $fileInfo */
+            if (!$fileInfo->isFile()) {
+                continue;
+            }
+
+            $filename = $fileInfo->getFilename();
+            $info = pathinfo($filename);
+
+            // Фильтр по расширению
+            if ($extension !== null) {
+                if (!isset($info['extension']) || !in_array($info['extension'], $extension, true)) {
+                    continue;
+                }
+            }
+
+            // Фильтр по началу имени
+            if ($startWith !== null) {
+                $matched = false;
+                foreach ($startWith as $prefix) {
+                    if (str_starts_with($info['filename'], $prefix)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    continue;
+                }
+            }
+
+            // Фильтр по концу имени
+            if ($endWith !== null) {
+                $matched = false;
+                foreach ($endWith as $suffix) {
+                    if (str_ends_with($info['filename'], $suffix)) {
+                        $matched = true;
+                        break;
+                    }
+                }
+                if (!$matched) {
+                    continue;
+                }
+            }
+
+            $results[] = $fileInfo->getPathname();
+        }
+
+        return $results;
+    }
+
 }
