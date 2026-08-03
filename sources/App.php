@@ -248,6 +248,9 @@ class App implements AppInterface
     }
 
     /**
+     * @TODO: А почему аргумент тут array|Dot а не array|AppConfig ???
+     * и почему config и остальное в этом классе - READONLY ???
+     *
      * Массовое добавление/слияние данных в конфигурацию.
      *
      * @param array|Dot $config

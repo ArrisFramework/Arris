@@ -51,6 +51,32 @@ class Server implements ServerInterface
     }
 
     /**
+     * @return string|null
+     */
+    public static function getIPOld(): ?string
+    {
+        if (PHP_SAPI === 'cli') {
+            return '127.0.0.1';
+        }
+
+        if (!isset($_SERVER['REMOTE_ADDR'])) {
+            return null;
+        }
+
+        if (\array_key_exists("HTTP_X_FORWARDED_FOR", $_SERVER)) {
+            $http_x_forwarded_for = \explode(",", $_SERVER["HTTP_X_FORWARDED_FOR"]);
+            $client_ip = \trim(\end($http_x_forwarded_for));
+            if (\filter_var($client_ip, FILTER_VALIDATE_IP)) {
+                return $client_ip;
+            }
+        }
+
+        return \filter_var($_SERVER['REMOTE_ADDR'], FILTER_VALIDATE_IP)
+            ? $_SERVER['REMOTE_ADDR']
+            : null;
+    }
+
+    /**
      * Определяет, установлен ли защищённый HTTPS-соединение.
      * Поддерживает работу за балансировщиками (Nginx, AWS ELB, Cloudflare).
      *

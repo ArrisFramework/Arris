@@ -1,3 +1,50 @@
+```php
+    /**
+     * @TODO: А почему аргумент тут array|Dot а не array|AppConfig ???
+     * и почему config и остальное в этом классе - READONLY ???
+     *
+     * Массовое добавление/слияние данных в конфигурацию.
+     *
+     * @param array|Dot $config
+     *
+     * @return $this
+     */
+    public function addConfig(array|Dot $config): static
+    {
+        $this->config->add($config instanceof Dot ? $config->all() : $config);
+        return $this;
+    }
+```
+
+И мне нужен статический метод, позволяющий вмерживать в конфиг ключи:
+
+```php
+App::factory()->addConfig([
+    'auth'  =>  $auth
+]);
+```
+Замена этому, что-то в духе:
+```php
+App::injectConfig('auth', $auth)
+```
+ 
+Потому что вот такая конструкция:
+```php
+App::toConfig(
+    'auth', 
+    array_merge(
+        App::fromConfig('auth'),
+        $auth
+        )
+    )
+);
+```
+Это слишком монструозно.
+
+Смысл? В конфиг, определенный в YAML вмержить данные, вычисленные на проде (например, ipV4)
+
+
+
 # CLI Tables
 
 https://packagist.org/packages/jc21/clitable -- выглядит отлично, но таблицы нужно именно _создавать_
