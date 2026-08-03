@@ -24,6 +24,7 @@
         "ext-pdo": "*",
         "ext-readline": "*",
         "ext-simplexml": "*",
+        "karelwintersky/arris.config": "^1",
         "psr/log": "*"
     },
     "require-dev": {
@@ -67,7 +68,6 @@
     "autoload-dev": {
         "psr-4": {
             "Tests\\": "tests"
-
         }
     }
 }
