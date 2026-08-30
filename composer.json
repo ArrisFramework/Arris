@@ -29,7 +29,6 @@
     },
     "require-dev": {
         "predis/predis": "^2.0",
-        "vlucas/phpdotenv": "^3.3",
         "symfony/var-dumper": "^5.4",
         "phpunit/phpunit": "^10",
         "scrutinizer/ocular": "^1.9",

@@ -6,6 +6,46 @@ namespace Arris\Util;
 
 class Request implements RequestInterface
 {
+    public static ?array $source_of_truth = null;
+
+    /**
+     * Устанавливает источник данных
+     *
+     * @param array|null $from
+     *
+     * @return void
+     */
+    public static function init(?array $from = null): void
+    {
+        self::$source_of_truth = $_REQUEST;
+
+        if (!is_null($from)) {
+            self::$source_of_truth = $from;
+        }
+    }
+
+    /**
+     * Абстрактный ответ из REQUEST без фильтрации и валидации
+     *
+     * @todo тесты
+     *
+     * @param string $field
+     * @param mixed $default
+     *
+     * @return mixed
+     */
+    public static function any(string $field = '', mixed $default = ''):mixed
+    {
+        $source = $from ?? self::$source_of_truth ?? $_REQUEST;
+
+        if (empty($field)) {
+            return $source;
+        }
+
+        return $source[$field] ?? $default;
+    }
+
+
     /**
      * Получает строковое значение из REQUEST с фильтрацией и валидацией
      *
@@ -48,11 +88,9 @@ class Request implements RequestInterface
         ?array $from = null
     ): string {
 
-        if (is_null($from)) {
-            $from = $_REQUEST;
-        }
+        $source = $from ?? self::$source_of_truth ?? $_REQUEST;
 
-        $value = $from[$field] ?? $default;
+        $value = $source[$field] ?? $default;
         $value = (string)$value;
 
         if ($trim) {
@@ -106,11 +144,9 @@ class Request implements RequestInterface
         ?array $from = null
     ): int {
 
-        if (is_null($from)) {
-            $from = $_REQUEST;
-        }
+        $source = $from ?? self::$source_of_truth ?? $_REQUEST;
 
-        $value = $from[$field] ?? $default;
+        $value = $source[$field] ?? $default;
 
         $value = filter_var($value, FILTER_VALIDATE_INT);
 
@@ -139,11 +175,9 @@ class Request implements RequestInterface
      */
     public static function bool(string $field, bool $default = false, ?array $from = null): bool
     {
-        if (is_null($from)) {
-            $from = $_REQUEST;
-        }
+        $source = $from ?? self::$source_of_truth ?? $_REQUEST;
 
-        $value = $from[$field] ?? $default;
+        $value = $source[$field] ?? $default;
 
         if (is_bool($value)) {
             return $value;
@@ -183,9 +217,11 @@ class Request implements RequestInterface
      * Получает массив значений (для множественного выбора)
      * НЕ поддерживает множественные массивы вида nominations[ids][]
      *
-     * @param string $field Имя поля
+     * @param string $field  Имя поля
      * @param array $default Значение по умолчанию
      * @param int $maxLength Максимальная длина каждого элемента
+     * @param array|null $from
+     *
      * @return array
      */
     public static function array(
@@ -194,11 +230,10 @@ class Request implements RequestInterface
         int $maxLength = 0,
         ?array $from = null
     ): array {
-        if (is_null($from)) {
-            $from = $_REQUEST;
-        }
 
-        $value = $from[$field] ?? $default;
+        $source = $from ?? self::$source_of_truth ?? $_REQUEST;
+
+        $value = $source[$field] ?? $default;
 
         if (!is_array($value)) {
             return $default;
@@ -220,10 +255,12 @@ class Request implements RequestInterface
      * Получает массив значений (для множественного выбора)
      * Поддерживает вложенные массивы вида `nominations[ids][]`
      *
-     * @param string $field Имя поля
+     * @param string $field  Имя поля
      * @param array $default Значение по умолчанию
      * @param int $maxLength Максимальная длина каждого элемента
      * @param bool $transposeMatrix
+     * @param array|null $from
+     *
      * @return array
      */
     public static function arr(
@@ -233,11 +270,9 @@ class Request implements RequestInterface
         bool $transposeMatrix = false,
         ?array $from = null
     ): array {
-        if (is_null($from)) {
-            $from = $_REQUEST;
-        }
+        $source = $from ?? self::$source_of_truth ?? $_REQUEST;
 
-        $value = $from[$field] ?? $default;
+        $value = $source[$field] ?? $default;
 
         if (!is_array($value)) {
             return $default;
@@ -273,8 +308,10 @@ class Request implements RequestInterface
     /**
      * Получает URL с валидацией
      *
-     * @param string $field Имя поля
+     * @param string $field   Имя поля
      * @param string $default Значение по умолчанию
+     * @param array|null $from
+     *
      * @return string
      */
     public static function url(string $field, string $default = '', ?array $from = null): string

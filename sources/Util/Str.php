@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Arris\Util;
 
-use Stringable;
-
 class Str implements StrInterface
 {
     private string $string;

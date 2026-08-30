@@ -17,6 +17,13 @@ class App implements AppInterface
     private static array $instances = [];
 
     /**
+     * Буфер результата рендера глобального шаблона.
+     * Заполняется фронт-контроллером в try, читается в finally.
+     * @var string|null
+     */
+    public static ?string $render = null;
+
+    /**
      * Репозиторий опций класса
      * @var Dot
      */
@@ -453,6 +460,7 @@ class App implements AppInterface
     public static function reset(): void
     {
         self::$instances = [];
+        static::$render = null;
     }
 
 
