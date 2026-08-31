@@ -190,6 +190,8 @@ class ErrorHandler
         $html .= '<script>'
             . 'try { var t=localStorage.getItem("arris-theme"); '
             . 'if( t==="light" || t==="dark"){ document.documentElement.setAttribute("data-theme",t); }'
+            . 'else { var h=new Date().getHours(); '
+            . 'document.documentElement.setAttribute("data-theme", (h>=22||h<8)?"dark":"light"); }'
             . ' } catch(e) { }</script>' . "\n";
         $html .= '<style>' . $this->css() . "</style>\n";
         $html .= '</head>' . "\n";
@@ -249,7 +251,6 @@ class ErrorHandler
 /* ===== Тема: переменные ===== */
 :root, html[data-theme="dark"]{ --bg:#11151c; --fg:#e6edf3; --muted:#8b949e; --heading:#79c0ff; --class:#ff7b72; --accent:#ffa657; --prev-border:#30363d; --prev-class:#d29922; --frame-border:#30363d; --frame-head:#161b22; --snippet-bg:#0d1117; --snippet-fg:#c9d1d9; --lineno:#484f58; --hit-bg:#3d2f00; --hit-fg:#ffa657 }
 html[data-theme="light"]{ --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --heading:#0969da; --class:#cf222e; --accent:#bf8700; --prev-border:#d0d7de; --prev-class:#9a6700; --frame-border:#d0d7de; --frame-head:#f6f8fa; --snippet-bg:#f6f8fa; --snippet-fg:#1f2328; --lineno:#6e7781; --hit-bg:#fff8c5; --hit-fg:#9a6700 }
-@media (prefers-color-scheme: light){ :root:not([data-theme]){ --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --heading:#0969da; --class:#cf222e; --accent:#bf8700; --prev-border:#d0d7de; --prev-class:#9a6700; --frame-border:#d0d7de; --frame-head:#f6f8fa; --snippet-bg:#f6f8fa; --snippet-fg:#1f2328; --lineno:#6e7781; --hit-bg:#fff8c5; --hit-fg:#9a6700 } }
 
 /* ===== Базовые стили ===== */
 *{transition:background-color .15s ease,color .15s ease,border-color .15s ease}
@@ -336,7 +337,7 @@ CSS;
             $text = rtrim((string)($content[$n - 1] ?? ''), "\r\n");
             $text = $this->cut($text, 200);
             $cls = $n === $line ? ' class="hit"' : '';
-            $out .= '<span' . $cls . '><i>' . str_pad((string)$n, 4, ' ', STR_PAD_LEFT) . "</i> " . $this->esc($text) . "</span>\n";
+            $out .= '<span' . $cls . '><i>' . str_pad((string)$n, 4, ' ', STR_PAD_LEFT) . "</i> " . $this->esc($text) . "</span>";
         }
         $out .= "</pre></div>\n";
         return $out;
