@@ -87,8 +87,8 @@ class App implements AppInterface
 
     /**
      * @param array $config_files - пути к конфигурационным файлам (? перед файлом - опциональный)
-     * @param array $options - кастомные опции
-     * @param array $services - кастомные сервисы
+     * @param array $options      - кастомные опции
+     * @param array $services     - кастомные сервисы
      *
      * @return static
      */
