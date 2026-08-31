@@ -187,10 +187,16 @@ class ErrorHandler
         $html .= "<head>\n";
         $html .= "<meta charset=\"utf-8\">\n";
         $html .= '<title>' . $this->esc($e::class . ': ' . $e->getMessage()) . "</title>\n";
+        $html .= '<script>'
+            . 'try { var t=localStorage.getItem("arris-theme"); '
+            . 'if( t==="light" || t==="dark"){ document.documentElement.setAttribute("data-theme",t); }'
+            . ' } catch(e) { }</script>' . "\n";
         $html .= '<style>' . $this->css() . "</style>\n";
         $html .= '</head>' . "\n";
         $html .= '<body>' . "\n";
         $html .= '<header class="catcher-head">' . "\n";
+        $html .= '<button class="theme-toggle" type="button" title="Переключить тему" aria-label="Переключить тему">'
+            . '<span class="icon-light">☀</span><span class="icon-dark">☾</span></button>' . "\n";
         $html .= '<div class="class">' . $this->esc($e::class) . "</div>\n";
         $html .= '<div class="message">' . $this->esc($e->getMessage()) . "</div>\n";
         $html .= '<dl class="meta">' . "\n";
@@ -220,6 +226,14 @@ class ErrorHandler
         }
         $html .= "</ol>\n</section>\n";
 
+        $html .= '<script>'
+            . 'var b=document.querySelector(".theme-toggle");'
+            . 'b&&b.addEventListener("click",function(){ '
+            . 'var r=document.documentElement,'
+            . 'c=r.getAttribute("data-theme")==="light"?"dark":"light";'
+            . 'r.setAttribute("data-theme",c);'
+            . 'try{ localStorage.setItem("arris-theme",c); }catch(e){}});'
+            . '</script>' . "\n";
         $html .= "</body>\n</html>\n";
         return $html;
     }
@@ -232,23 +246,38 @@ class ErrorHandler
     private function css(): string
     {
         return <<<CSS
-body{background:#11151c;color:#e6edf3;font:14px/1.55 Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:0;padding:28px}
-h2{color:#79c0ff;font-size:16px;margin:22px 0 8px}
-.catcher-head .class{font-size:19px;color:#ff7b72;font-weight:700}
+/* ===== Тема: переменные ===== */
+:root, html[data-theme="dark"]{ --bg:#11151c; --fg:#e6edf3; --muted:#8b949e; --heading:#79c0ff; --class:#ff7b72; --accent:#ffa657; --prev-border:#30363d; --prev-class:#d29922; --frame-border:#30363d; --frame-head:#161b22; --snippet-bg:#0d1117; --snippet-fg:#c9d1d9; --lineno:#484f58; --hit-bg:#3d2f00; --hit-fg:#ffa657 }
+html[data-theme="light"]{ --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --heading:#0969da; --class:#cf222e; --accent:#bf8700; --prev-border:#d0d7de; --prev-class:#9a6700; --frame-border:#d0d7de; --frame-head:#f6f8fa; --snippet-bg:#f6f8fa; --snippet-fg:#1f2328; --lineno:#6e7781; --hit-bg:#fff8c5; --hit-fg:#9a6700 }
+@media (prefers-color-scheme: light){ :root:not([data-theme]){ --bg:#ffffff; --fg:#1f2328; --muted:#57606a; --heading:#0969da; --class:#cf222e; --accent:#bf8700; --prev-border:#d0d7de; --prev-class:#9a6700; --frame-border:#d0d7de; --frame-head:#f6f8fa; --snippet-bg:#f6f8fa; --snippet-fg:#1f2328; --lineno:#6e7781; --hit-bg:#fff8c5; --hit-fg:#9a6700 } }
+
+/* ===== Базовые стили ===== */
+*{transition:background-color .15s ease,color .15s ease,border-color .15s ease}
+body{background:var(--bg);color:var(--fg);font:14px/1.55 Menlo,Consolas,"DejaVu Sans Mono",monospace;margin:0;padding:28px}
+h2{color:var(--heading);font-size:16px;margin:22px 0 8px}
+.catcher-head{position:relative;padding-right:60px}
+.catcher-head .class{font-size:19px;color:var(--class);font-weight:700}
 .catcher-head .message{font-size:15px;margin:6px 0 12px}
-dl.meta{display:grid;grid-template-columns:64px 1fr;gap:2px 12px;margin:0;color:#8b949e}
-dl.meta dd{margin:0;color:#c9d1d9}.meta b{color:#ffa657}
-.previous{margin-top:16px;border-left:3px solid #30363d;padding-left:14px}
-.previous .class{font-size:13px;color:#d29922}
+dl.meta{display:grid;grid-template-columns:64px 1fr;gap:2px 12px;margin:0;color:var(--muted)}
+dl.meta dd{margin:0;color:var(--fg)}.meta b{color:var(--accent)}
+.previous{margin-top:16px;border-left:3px solid var(--prev-border);padding-left:14px}
+.previous .class{font-size:13px;color:var(--prev-class)}
 .frames ol{padding-left:0;list-style:none;margin:0}
-.frame{margin:10px 0 18px;border:1px solid #30363d;border-radius:8px;overflow:hidden}
-.frame-head{background:#161b22;padding:6px 10px;color:#8b949e;word-break:break-all}
-.frame-head b{color:#ffa657}
-.snippet{background:#0d1117;padding:8px 10px;overflow-x:auto}
-.snippet pre{margin:0;color:#c9d1d9}
+.frame{margin:10px 0 18px;border:1px solid var(--frame-border);border-radius:8px;overflow:hidden}
+.frame-head{background:var(--frame-head);padding:6px 10px;color:var(--muted);word-break:break-all}
+.frame-head b{color:var(--accent)}
+.snippet{background:var(--snippet-bg);padding:8px 10px;overflow-x:auto}
+.snippet pre{margin:0;color:var(--snippet-fg)}
 .snippet span{display:block;white-space:pre}
-.snippet i{color:#484f58;font-style:normal;user-select:none}
-.snippet span.hit{background:#3d2f00;color:#ffa657}
+.snippet i{color:var(--lineno);font-style:normal;user-select:none}
+.snippet span.hit{background:var(--hit-bg);color:var(--hit-fg)}
+
+/* ===== Переключатель темы ===== */
+.theme-toggle{position:absolute;top:0;right:0;cursor:pointer;background:var(--frame-head);color:var(--fg);border:1px solid var(--frame-border);border-radius:6px;font:13px/1 Menlo,monospace;padding:6px 10px}
+.theme-toggle:hover{border-color:var(--accent)}
+.theme-toggle .icon-dark{display:none}
+html[data-theme="light"] .theme-toggle .icon-dark{display:inline}
+html[data-theme="light"] .theme-toggle .icon-light{display:none}
 CSS;
     }
 
