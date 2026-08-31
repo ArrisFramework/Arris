@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Arris;
 
-class ErrorHandler
+class AppErrorHandler
 {
     /**
      * Режим отладки. Если true — в вебе выводится полный HTML-дамп,
@@ -39,6 +39,19 @@ class ErrorHandler
     private int $maxArgChars = 2000;
 
     /**
+     * Маска error_reporting, с которой работают @-подавленные ошибки.
+     * По умолчанию: E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED.
+     * Если severity ошибки не входит в эту маску и при этом error_reporting() == 0
+     * (т.е. ошибка подавлена оператором @), хендлер её пропустит.
+     */
+    private int $errorReporting;
+
+    public function __construct(int $errorReporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED)
+    {
+        $this->errorReporting = $errorReporting;
+    }
+
+    /**
      * Устанавливает режим отладки.
      */
     public function setDebug(bool $debug = true): static
@@ -57,11 +70,19 @@ class ErrorHandler
 
     /**
      * Регистрирует обработчики исключений и ошибок.
+     *
+     * @throws \ErrorException
      */
     public function register(): void
     {
         set_exception_handler([$this, 'handle']);
-        set_error_handler(function (int $severity, string $message, string $file, int $line): never {
+        set_error_handler(function (int $severity, string $message, string $file, int $line) {
+            if (!(error_reporting() & $severity)) {
+                return;
+            }
+            if (!(($this->errorReporting ?? E_ALL) & $severity)) {
+                return;
+            }
             throw new \ErrorException($message, 0, $severity, $file, $line);
         });
     }

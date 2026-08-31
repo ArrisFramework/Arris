@@ -34,14 +34,14 @@ declare(strict_types=1);
 
 namespace App;
 
-use Arris\ErrorHandler;
+use Arris\AppErrorHandler;
 
 class App extends \Arris\App
 {
     public static function init(array $config_files = []): void
     {
         // Регистрируем обработчик до любых инициализаций
-        $errorHandler = new ErrorHandler();
+        $errorHandler = new AppErrorHandler();
         $errorHandler->setDebug(getenv('ENV_STATE') !== 'prod');
         $errorHandler->register();
 
@@ -133,6 +133,11 @@ $ echo $?   # 2 (E_WARNING)
 ---
 
 ## 📖 API
+
+### `__construct(int $errorReporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED)`
+Задаёт маску severity-уровней, которые превращаются в `\ErrorException`. По умолчанию
+исключения из NOTICE/DEPRECATED/USER_DEPRECATED не бросаются. Ошибки, подавленные оператором `@`
+(`error_reporting() == 0` внутри обработчика), тоже пропускаются молча.
 
 ### `register(): void`
 Регистрирует `set_exception_handler()` и `set_error_handler()`.
