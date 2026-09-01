@@ -39,12 +39,20 @@ class AppErrorHandler
     private int $maxArgChars = 2000;
 
     /**
-     * Маска error_reporting, с которой работают @-подавленные ошибки.
+     * Маска severity-уровней, которые превращаются в \ErrorException (throw).
      * По умолчанию: E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED.
-     * Если severity ошибки не входит в эту маску и при этом error_reporting() == 0
-     * (т.е. ошибка подавлена оператором @), хендлер её пропустит.
+     * Ошибка бросается, только если её severity входит в эту маску.
+     * Задаётся в конструкторе и НЕ зависит от глобального error_reporting().
      */
     private int $errorReporting;
+
+    /**
+     * Глобальный error_reporting(), зафиксированный при register().
+     * Используется, чтобы отличить штатный вызов от временного подавления
+     * оператором @: PHP внутри обработчика ставит error_reporting() в 4437,
+     * отличное от сохранённого значения, поэтому такую ошибку хендлер пропускает.
+     */
+    private int $globalErrorReporting;
 
     public function __construct(int $errorReporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED)
     {
@@ -75,12 +83,13 @@ class AppErrorHandler
      */
     public function register(): void
     {
+        $this->globalErrorReporting = error_reporting();
         set_exception_handler([$this, 'handle']);
         set_error_handler(function (int $severity, string $message, string $file, int $line) {
-            if (!(error_reporting() & $severity)) {
+            if (error_reporting() !== $this->globalErrorReporting) {
                 return;
             }
-            if (!(($this->errorReporting ?? E_ALL) & $severity)) {
+            if (!($this->errorReporting & $severity)) {
                 return;
             }
             throw new \ErrorException($message, 0, $severity, $file, $line);

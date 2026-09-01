@@ -136,8 +136,10 @@ $ echo $?   # 2 (E_WARNING)
 
 ### `__construct(int $errorReporting = E_ALL & ~E_NOTICE & ~E_DEPRECATED & ~E_USER_DEPRECATED)`
 Задаёт маску severity-уровней, которые превращаются в `\ErrorException`. По умолчанию
-исключения из NOTICE/DEPRECATED/USER_DEPRECATED не бросаются. Ошибки, подавленные оператором `@`
-(`error_reporting() == 0` внутри обработчика), тоже пропускаются молча.
+исключения из NOTICE/DEPRECATED/USER_DEPRECATED не бросаются. Маска НЕ зависит от
+глобального `error_reporting()`: передав `E_ALL`, вы заставите хендлер ловить deprecated,
+даже если глобально `error_reporting()` их исключает. Ошибки, подавленные оператором `@`
+(PHP внутри обработчика временно меняет `error_reporting()`), всегда пропускаются молча.
 
 ### `register(): void`
 Регистрирует `set_exception_handler()` и `set_error_handler()`.
