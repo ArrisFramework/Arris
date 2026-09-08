@@ -100,7 +100,7 @@ abstract class AbstractController
      * @param int $statusCode HTTP-статус
      * @param mixed $data Дополнительные данные
      *
-     * @throws \RuntimeException
+     * @throws \Arris\Exceptions\HttpException
      */
     protected function error(string $message, int $statusCode = 400, mixed $data = null): never
     {
@@ -111,7 +111,7 @@ abstract class AbstractController
         ];
         $this->responseStatusCode = $statusCode;
 
-        throw new \RuntimeException($message, $statusCode);
+        throw new \Arris\Exceptions\HttpException($message, $statusCode, $data);
     }
 
     /**

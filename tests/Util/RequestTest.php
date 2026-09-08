@@ -99,6 +99,44 @@ class RequestTest extends TestCase
         $this->assertSame('', Request::any('missing', from: []));
     }
 
+    // ── parseJson() / jsonBody() ──────────────────────────────────────
+
+    #[Test]
+    public function parseJsonDecodesObjectAsArray(): void
+    {
+        $this->assertSame(
+            ['name' => 'Ada', 'tags' => ['a', 'b']],
+            Request::parseJson('{"name":"Ada","tags":["a","b"]}')
+        );
+    }
+
+    #[Test]
+    public function parseJsonReturnsEmptyOnEmptyString(): void
+    {
+        $this->assertSame([], Request::parseJson(''));
+    }
+
+    #[Test]
+    public function parseJsonReturnsEmptyOnInvalidJson(): void
+    {
+        $this->assertSame([], Request::parseJson('not-json'));
+        $this->assertSame([], Request::parseJson('{"bad":'));
+    }
+
+    #[Test]
+    public function parseJsonReturnsEmptyOnScalarJson(): void
+    {
+        $this->assertSame([], Request::parseJson('42'));
+        $this->assertSame([], Request::parseJson('"string"'));
+        $this->assertSame([], Request::parseJson('null'));
+    }
+
+    #[Test]
+    public function jsonBodyAlwaysReturnsArrayInCli(): void
+    {
+        $this->assertIsArray(Request::jsonBody());
+    }
+
     // ── email() ───────────────────────────────────────────────────────
 
     #[Test]

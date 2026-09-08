@@ -44,6 +44,42 @@ class Request implements RequestInterface
         return $source[$field] ?? $default;
     }
 
+    /**
+     * Декодирует JSON из строки в ассоциативный массив.
+     * Пустая или невалидная строка, или не-массив (скаляр/null) -> [].
+     *
+     * @param string $raw Сырой JSON
+     *
+     * @return array
+     */
+    public static function parseJson(string $raw): array
+    {
+        if ($raw === '') {
+            return [];
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (json_last_error() !== JSON_ERROR_NONE || !is_array($decoded)) {
+            return [];
+        }
+
+        return $decoded;
+    }
+
+    /**
+     * Декодирует JSON-тело HTTP-запроса (php://input) в ассоциативный массив.
+     * Пустое/невалидное тело -> []. Для webhook'ов и REST API.
+     *
+     * @return array
+     */
+    public static function jsonBody(): array
+    {
+        $raw = file_get_contents('php://input');
+
+        return self::parseJson(is_string($raw) ? $raw : '');
+    }
+
 
     /**
      * Получает строковое значение из REQUEST с фильтрацией и валидацией

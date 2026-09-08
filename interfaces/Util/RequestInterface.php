@@ -53,6 +53,10 @@ interface RequestInterface
         ?array $from = null
     ): array;
 
+    public static function parseJson(string $raw): array;
+
+    public static function jsonBody(): array;
+
     public static function url(string $field, string $default = '', ?array $from = null): string;
 
     public static function text(string $field, bool $allowHtml = false, ?array $from = null, bool $noEmptyContent = true): string;

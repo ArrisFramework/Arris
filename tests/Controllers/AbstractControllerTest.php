@@ -5,6 +5,7 @@ namespace Tests\Controllers;
 
 use Arris\App;
 use Arris\Controllers\AbstractController;
+use Arris\Exceptions\HttpException;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
@@ -75,24 +76,28 @@ class AbstractControllerTest extends TestCase
     public function errorStoresPayloadAndThrows(): void
     {
         $controller = new ControllerTester(app: $this->app);
+        $payload = ['debug' => 'trace'];
 
-        $this->expectException(RuntimeException::class);
-        $this->expectExceptionMessage('Not Found');
-        $this->expectExceptionCode(404);
-
+        $thrown = null;
         try {
-            $controller->callError(message: 'Not Found', statusCode: 404, data: ['debug' => 'trace']);
-        } catch (RuntimeException $e) {
-            $this->assertTrue($controller->hasResponse());
-            $this->assertSame(404, $controller->getResponseStatusCode());
-            $this->assertSame([
-                'status'  => 'error',
-                'message' => 'Not Found',
-                'data'    => ['debug' => 'trace'],
-            ], $controller->getResponsePayload());
+            $controller->callError(message: 'Not Found', statusCode: 404, data: $payload);
+            $this->fail('Expected HttpException to be thrown');
+        } catch (HttpException $e) {
+            $thrown = $e;
 
-            throw $e;
+            $this->assertSame('Not Found', $e->getMessage());
+            $this->assertSame(404, $e->getStatusCode());
+            $this->assertSame($payload, $e->getPayload());
         }
+
+        $this->assertNotNull($thrown);
+        $this->assertTrue($controller->hasResponse());
+        $this->assertSame(404, $controller->getResponseStatusCode());
+        $this->assertSame([
+            'status'  => 'error',
+            'message' => 'Not Found',
+            'data'    => $payload,
+        ], $controller->getResponsePayload());
     }
 
     #[Test]
@@ -317,7 +322,7 @@ class ControllerTester extends AbstractController
 
     public function callGetJsonBody(): array
     {
-        return $this->getJsonBody();
+        return $this->getJSONPayload();
     }
 
     public function callQuery(string $key, mixed $default = null): mixed
