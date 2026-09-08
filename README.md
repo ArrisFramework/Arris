@@ -4,13 +4,36 @@ Class collection for some my projects
 
 # Sub-packages
 
-- Core classes
-  - [Arris.AppLogger](https://github.com/ArrisFramework/Arris.AppLogger), `composer require karelwintersky/arris.logger`
-  - [Arris.AppRouter](https://github.com/ArrisFramework/Arris.AppRouter), `composer require karelwintersky/arris.router`
-- Toolkits
-  - [Arris.Toolkit.MimeTypes](https://github.com/ArrisFramework/Arris.Toolkit.MimeTypes), `composer require karelwintersky/arris.toolkit.mimetypes`
-  - [Arris.Toolkit.Nginx](https://github.com/KarelWintersky/Arris.Toolkit.Nginx), `composer require karelwintersky/arris.toolkit.nginx`
-  - [Arris.Toolkit.Sphinx](https://github.com/KarelWintersky/Arris.Toolkit.Sphinx), `composer require karelwintersky/arris.toolkit.sphinx`
+The Arris ecosystem is split into separate composer packages; each package is a
+repository under `/var/www.arris/` and ships its own `AGENTS.md`. Install the ones
+you need: `composer require karelwintersky/<package>`.
+
+## Core
+
+This package — [arris](https://github.com/KarelWintersky/Arris) — the framework core itself:
+`App` singleton, `AppErrorHandler`, `Hook` events, `Controllers\AbstractController`,
+global helpers, `Core\Dot`, PSR-16 compatible cache.
+
+Companion core packages:
+
+- [arris.config](https://github.com/ArrisFramework/Arris.Config) — config reader/writer, `AppConfig`. `composer require karelwintersky/arris.config`
+- [arris.entity](https://github.com/ArrisFramework/Arris.Entity) — entity types for the framework. `composer require karelwintersky/arris.entity`
+- [arris.entity.path](https://github.com/ArrisFramework/Arris.Entity.Path) — path builder. `composer require karelwintersky/arris.entity.path`
+- [arris.entity.url](https://github.com/ArrisFramework/Arris.Entity.URL) — URL builder. `composer require karelwintersky/arris.entity.url`
+- [arris.logger](https://github.com/KarelWintersky/Arris.AppLogger) — application logger. `composer require karelwintersky/arris.logger`
+- [arris.router](https://github.com/ArrisFramework/Arris.AppRouter) — application router. `composer require karelwintersky/arris.router`
+- [arris.cache](https://github.com/ArrisFramework/Arris.Cache) — cache engine. `composer require karelwintersky/arris.cache`
+- arris.catcher — exception catcher: error dump with call hierarchy or a safe stub. `composer require karelwintersky/arris.catcher`
+- [arris.presenter](https://github.com/ArrisFramework/Arris.Template) — presenter with lazy Smarty wrapper. `composer require karelwintersky/arris.presenter`
+
+## Toolkits
+
+- [arris.toolkit.cli-console](https://github.com/KarelWintersky/Arris.Toolkit.CLIConsole) — CLI console helper. `composer require karelwintersky/arris.toolkit.cli-console`
+- [arris.toolkit.firewall](https://github.com/ArrisFramework/Arris.Toolkit.Firewall) — IP filtering. `composer require karelwintersky/arris.toolkit.firewall`
+- [arris.toolkit.mimetypes](https://github.com/ArrisFramework/Arris.Toolkit.MimeTypes) — MimeType ↔ extension resolver. `composer require karelwintersky/arris.toolkit.mimetypes`
+- [arris.toolkit.nanoredis](https://github.com/ArrisFramework/Arris.Toolkit.NanoRedis) — minimal Redis client. `composer require karelwintersky/arris.toolkit.nanoredis`
+- [arris.php-file-download](https://github.com/ArrisFramework/Arris.Toolkit.FileDownload) — file download helper. `composer require karelwintersky/arris.php-file-download`
+- [arris.php-file-upload](https://github.com/ArrisFramework/Arris.Toolkit.FileUpload) — file upload with validation and conversion. `composer require karelwintersky/arris.php-file-upload`
 
 
 ```php
