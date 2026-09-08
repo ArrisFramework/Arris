@@ -22,3 +22,28 @@ App::factory()->addConfig([
     ]
 ]);
 ```
+
+# Global helpers `config()` / `app()`
+
+Helpers `config()` and `app()` are not hard-bound to `Arris\App` — they use the
+application class registered in the framework. This matters when your project has
+its own app class extending `Arris\App` (e.g. `App\App`): without registration the
+helpers would build a *fresh* `Arris\App` instance instead of touching yours.
+
+Register your class once at bootstrap, before any helper call:
+
+```php
+use Arris\App;
+use App\App as MyApp;
+
+MyApp::setApplicationClass(MyApp::class);
+// ... или как зарегистрированный инстанс-класс
+App::setApplicationClass(MyApp::class);
+
+config('database.host');  // теперь читает конфиг MyApp-инстанса
+app();                    // возвращает MyApp-инстанс (соблюдение singleton)
+```
+
+The given class must extend `Arris\App`, otherwise `RuntimeException` is thrown.
+If nothing was registered (`setApplicationClass()` was not called) the helpers fall
+back to `Arris\App`.

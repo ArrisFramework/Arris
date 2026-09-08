@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
+use LogicException;
 use PDO;
 
 #[CoversClass(App::class)]
@@ -331,6 +332,62 @@ class AppTest extends TestCase
 
         // После reset() должен создаться новый объект
         $this->assertNotSame($instance1, $instance2);
+    }
+
+    #[Test]
+    public function setApplicationClassForcesHelperClass(): void
+    {
+        App::setApplicationClass(TestAppHeir::class);
+
+        $this->assertSame(TestAppHeir::class, App::applicationClass());
+    }
+
+    #[Test]
+    public function applicationClassDefaultsToSelf(): void
+    {
+        $this->assertSame(App::class, App::applicationClass());
+    }
+
+    #[Test]
+    public function setApplicationClassRejectsNonHeir(): void
+    {
+        $this->expectException(RuntimeException::class);
+        $this->expectExceptionMessage('must extend');
+
+        App::setApplicationClass(\stdClass::class);
+    }
+
+    #[Test]
+    public function getInstanceRejectsRepeatedConfigFiles(): void
+    {
+        App::getInstance();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('already exists');
+
+        App::getInstance(['config.php']);
+    }
+
+    #[Test]
+    public function getInstanceRejectsRepeatedServices(): void
+    {
+        App::getInstance();
+
+        $this->expectException(LogicException::class);
+        $this->expectExceptionMessage('already exists');
+
+        App::getInstance([], [], ['service' => fn() => 'x']);
+    }
+
+    #[Test]
+    public function getInstanceMergesOptionsOnRepeatedCall(): void
+    {
+        App::getInstance([], ['first' => 1]);
+
+        $app = App::getInstance([], ['second' => 2]);
+
+        $this->assertSame(1, $app->get('first'));
+        $this->assertSame(2, $app->get('second'));
     }
 }
 

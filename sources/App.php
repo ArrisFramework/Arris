@@ -17,6 +17,16 @@ class App implements AppInterface
     private static array $instances = [];
 
     /**
+     * Класс приложения, используемый глобальными хелперами config()/app().
+     * Позволяет хелперам обращаться к инстансу переопределённого класса
+     * приложения (App\App extends Arris\App), а не быть жёстко привязанными
+     * к имени App\App. Если не задан — хелперы работают с Arris\App.
+     *
+     * @var class-string<static>|null
+     */
+    private static ?string $applicationClass = null;
+
+    /**
      * Буфер результата рендера глобального шаблона.
      * Заполняется фронт-контроллером в try, читается в finally.
      * @var string|null
@@ -86,6 +96,30 @@ class App implements AppInterface
     }
 
     /**
+     * Регистрирует класс приложения для глобальных хелперов config()/app().
+     * Класс должен расширять Arris\App.
+     *
+     * @param class-string $class
+     */
+    public static function setApplicationClass(string $class): void
+    {
+        if (!is_subclass_of($class, self::class)) {
+            throw new RuntimeException($class . ' must extend ' . self::class);
+        }
+        self::$applicationClass = $class;
+    }
+
+    /**
+     * Возвращает зарегистрированный класс приложения или Arris\App.
+     *
+     * @return class-string
+     */
+    public static function applicationClass(): string
+    {
+        return self::$applicationClass ?? self::class;
+    }
+
+    /**
      * @param array $config_files - пути к конфигурационным файлам (? перед файлом - опциональный)
      * @param array $options      - кастомные опции
      * @param array $services     - кастомные сервисы
@@ -98,9 +132,18 @@ class App implements AppInterface
 
         if (!isset(self::$instances[$class])) {
             self::$instances[$class] = new static($config_files, $options, $services);
-        } elseif (!empty($options)) {
-            // Если инстанс уже создан, но переданы новые опции - мержим
-            self::$instances[$class]->add($options);
+        } else {
+            // Инстанс уже создан. Переданные config_files и services при этом
+            // молча игнорируются — выбросить исключение, чтобы не было foot-gun'а.
+            if (!empty($config_files) || !empty($services)) {
+                throw new \LogicException(
+                    sprintf('App instance for %s already exists; config_files/services can be provided only on first getInstance()', $class)
+                );
+            }
+            if (!empty($options)) {
+                // Если инстанс уже создан, но переданы новые опции - мержим
+                self::$instances[$class]->add($options);
+            }
         }
 
         return self::$instances[$class];
@@ -488,6 +531,7 @@ class App implements AppInterface
     {
         self::$instances = [];
         static::$render = null;
+        self::$applicationClass = null;
     }
 
 
