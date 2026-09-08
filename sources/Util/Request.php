@@ -27,18 +27,17 @@ class Request implements RequestInterface
     /**
      * Абстрактный ответ из REQUEST без фильтрации и валидации
      *
-     * @todo тесты
-     *
      * @param string $field
      * @param mixed $default
+     * @param array|null $from
      *
      * @return mixed
      */
-    public static function any(string $field = '', mixed $default = ''):mixed
+    public static function any(string $field = '', mixed $default = '', ?array $from = null): mixed
     {
         $source = $from ?? self::$source_of_truth ?? $_REQUEST;
 
-        if (empty($field)) {
+        if ($field === '') {
             return $source;
         }
 
@@ -252,18 +251,18 @@ class Request implements RequestInterface
     }
 
     /**
-     * Получает массив значений (для множественного выбора)
-     * Поддерживает вложенные массивы вида `nominations[ids][]`
+     * Получает многомерный массив значений (для множественного выбора)
+     * Поддерживает вложенные массивы вида `nominations[ids][]` и опциональное транспонирование матрицы
      *
      * @param string $field  Имя поля
      * @param array $default Значение по умолчанию
      * @param int $maxLength Максимальная длина каждого элемента
-     * @param bool $transposeMatrix
+     * @param bool $transposeMatrix Транспонировать матрицу формы вида `nominations[ids][]`
      * @param array|null $from
      *
      * @return array
      */
-    public static function arr(
+    public static function arrayMulti(
         string $field,
         array $default = [],
         int $maxLength = 0,

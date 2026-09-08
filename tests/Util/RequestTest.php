@@ -72,6 +72,33 @@ class RequestTest extends TestCase
         );
     }
 
+    // ── any() ─────────────────────────────────────────────────────────
+
+    #[Test]
+    public function anyReturnsRawValue(): void
+    {
+        $this->assertSame(['a', 'b'], Request::any('items', from: ['items' => ['a', 'b']]));
+        $this->assertSame('on', Request::any('flag', from: ['flag' => 'on']));
+    }
+
+    #[Test]
+    public function anyReturnsDefaultWhenMissing(): void
+    {
+        $this->assertSame('fallback', Request::any('missing', default: 'fallback', from: []));
+    }
+
+    #[Test]
+    public function anyReturnsWholeSourceWhenFieldEmpty(): void
+    {
+        $this->assertSame(['a' => 1], Request::any('', from: ['a' => 1]));
+    }
+
+    #[Test]
+    public function anyNeverRaisesUndefinedKeyWarning(): void
+    {
+        $this->assertSame('', Request::any('missing', from: []));
+    }
+
     // ── email() ───────────────────────────────────────────────────────
 
     #[Test]
@@ -291,35 +318,35 @@ class RequestTest extends TestCase
         $this->assertSame(['he', 'wo'], Request::array('items', maxLength: 2, from: ['items' => ['hello', 'world']]));
     }
 
-    // ── arr() ─────────────────────────────────────────────────────────
+    // ── arrayMulti() ──────────────────────────────────────────────────
 
     #[Test]
-    public function arrSimpleArray(): void
+    public function arrayMultiSimpleArray(): void
     {
-        $this->assertSame(['a', 'b'], Request::arr('items', from: ['items' => ['a', 'b']]));
+        $this->assertSame(['a', 'b'], Request::arrayMulti('items', from: ['items' => ['a', 'b']]));
     }
 
     #[Test]
-    public function arrNestedArray(): void
+    public function arrayMultiNestedArray(): void
     {
         $data = ['nominations' => ['ids' => ['1', '2'], 'titles' => ['A', 'B']]];
-        $result = Request::arr('nominations', from: $data);
+        $result = Request::arrayMulti('nominations', from: $data);
         $this->assertSame(['ids' => ['1', '2'], 'titles' => ['A', 'B']], $result);
     }
 
     #[Test]
-    public function arrDeepNestedArray(): void
+    public function arrayMultiDeepNestedArray(): void
     {
         $data = ['level1' => ['level2' => ['value']]];
-        $result = Request::arr('level1', from: $data);
+        $result = Request::arrayMulti('level1', from: $data);
         $this->assertSame(['level2' => ['value']], $result);
     }
 
     #[Test]
-    public function arrWithTransposeMatrix(): void
+    public function arrayMultiWithTransposeMatrix(): void
     {
         $data = ['items' => ['ids' => ['1', '2'], 'titles' => ['A', 'B']]];
-        $result = Request::arr('items', transposeMatrix: true, from: $data);
+        $result = Request::arrayMulti('items', transposeMatrix: true, from: $data);
         $this->assertSame([
             ['ids' => '1', 'titles' => 'A'],
             ['ids' => '2', 'titles' => 'B'],
@@ -327,22 +354,22 @@ class RequestTest extends TestCase
     }
 
     #[Test]
-    public function arrReturnsDefaultWhenMissing(): void
+    public function arrayMultiReturnsDefaultWhenMissing(): void
     {
-        $this->assertSame(['fallback'], Request::arr('items', default: ['fallback'], from: []));
+        $this->assertSame(['fallback'], Request::arrayMulti('items', default: ['fallback'], from: []));
     }
 
     #[Test]
-    public function arrReturnsDefaultWhenNotArray(): void
+    public function arrayMultiReturnsDefaultWhenNotArray(): void
     {
-        $this->assertSame([], Request::arr('items', from: ['items' => 'string']));
+        $this->assertSame([], Request::arrayMulti('items', from: ['items' => 'string']));
     }
 
     #[Test]
-    public function arrRespectsMaxLength(): void
+    public function arrayMultiRespectsMaxLength(): void
     {
         $data = ['items' => ['long' => 'hello']];
-        $result = Request::arr('items', maxLength: 3, from: $data);
+        $result = Request::arrayMulti('items', maxLength: 3, from: $data);
         $this->assertSame(['long' => 'hel'], $result);
     }
 

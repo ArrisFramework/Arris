@@ -45,7 +45,7 @@ interface RequestInterface
         ?array $from = null
     ): array;
 
-    public static function arr(
+    public static function arrayMulti(
         string $field,
         array $default = [],
         int $maxLength = 0,
