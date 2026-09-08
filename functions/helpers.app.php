@@ -2,12 +2,14 @@
 
 namespace Arris;
 
-use App\App; // Привязка к приложению, а не к ядру!
-
 if (!function_exists('Arris\config')) {
     /**
      * Глобальный хелпер для чтения конфига в шаблонах.
      * Поддерживает dot-notation: config('database.host')
+     *
+     * Использует класс приложения, зарегистрированный через
+     * App::setApplicationClass(), с fallback на Arris\App — поэтому хелпер
+     * работает при любом имени класса приложения.
      *
      * @param string|null $key Ключ конфигурации
      * @param mixed $default Значение по умолчанию, если ключ не найден
@@ -15,7 +17,8 @@ if (!function_exists('Arris\config')) {
      */
     function config(?string $key = null, mixed $default = null): mixed
     {
-        return App::getInstance()->getConfig($key) ?? $default;
+        $class = App::applicationClass();
+        return $class::getInstance()->getConfig($key) ?? $default;
     }
 }
 
@@ -29,7 +32,8 @@ if (!function_exists('Arris\app')) {
      */
     function app(string|array|null $key = null, mixed $value = null): mixed
     {
-        $app = App::getInstance();
+        $class = App::applicationClass();
+        $app = $class::getInstance();
 
         // 1. Если аргументов нет, возвращаем сам инстанс App (как в Laravel)
         if (func_num_args() === 0) {

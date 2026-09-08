@@ -201,16 +201,16 @@ class Request implements RequestInterface
     }
 
     /**
-     * Получает значение чекбокса как булево
+     * Получает значение чекбокса как INT (0/1) — готово для вставки в INT-поле БД
      *
      * @param string $field Имя поля
-     * @param bool $default Значение по умолчанию
+     * @param int $default Значение по умолчанию
      * @param array|null $from
-     * @return bool
+     * @return int
      */
-    public static function checkbox(string $field, bool $default = false, ?array $from = null): bool
+    public static function checkbox(string $field, int $default = 0, ?array $from = null): int
     {
-        return self::bool($field, $default, $from);
+        return self::bool($field, (bool)$default, $from) ? 1 : 0;
     }
 
     /**
@@ -339,7 +339,10 @@ class Request implements RequestInterface
         $value = self::string($field, from: $from);
 
         if (!$allowHtml) {
+            // Удаляем HTML теги
             $value = strip_tags($value);
+
+            // Экранируем специальные символы
             $value = htmlspecialchars($value, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         }
 
@@ -347,16 +350,25 @@ class Request implements RequestInterface
             do {
                 $oldValue = $value;
 
+                // Удаляем одиночные br теги
                 $value = preg_replace('/<br\s*\/?>/i', '', $value);
+
+                // Удаляем пустые div и p с br тегами
                 $value = preg_replace('/<(div|p)[^>]*>\s*(?:<br\s*\/?>\s*)*\s*<\/\1>/i', '', $value);
+
+                // Удаляем пустые p с &nbsp;
                 $value = preg_replace('/<p[^>]*>\s*(?:&nbsp;\s*)+\s*<\/p>/i', '', $value);
+
+                // Удаляем пустые p с любыми пробельными символами (пробелы, табуляции, переносы строк)
                 $value = preg_replace('/<p[^>]*>[\s\x{00A0}]*<\/p>/iu', '', $value);
 
             } while ($oldValue !== $value);
 
+            // Очищаем пробельные символы
             $value = preg_replace('/\s+/', ' ', $value);
             $value = trim($value);
 
+            // Возвращаем пустую строку если контент пустой
             if (empty($value)) {
                 return '';
             }

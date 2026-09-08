@@ -237,19 +237,26 @@ class RequestTest extends TestCase
     // ── checkbox() ────────────────────────────────────────────────────
 
     #[Test]
-    public function checkboxReturnsBool(): void
+    public function checkboxReturnsIntOne(): void
     {
         $result = Request::checkbox('c', from: ['c' => '1']);
-        $this->assertIsBool($result);
-        $this->assertTrue($result);
+        $this->assertIsInt($result);
+        $this->assertSame(1, $result);
     }
 
     #[Test]
-    public function checkboxFalse(): void
+    public function checkboxReturnsIntZero(): void
     {
         $result = Request::checkbox('c', from: ['c' => '0']);
-        $this->assertIsBool($result);
-        $this->assertFalse($result);
+        $this->assertIsInt($result);
+        $this->assertSame(0, $result);
+    }
+
+    #[Test]
+    public function checkboxReturnsDefaultWhenMissing(): void
+    {
+        $this->assertSame(1, Request::checkbox('c', default: 1, from: []));
+        $this->assertSame(0, Request::checkbox('c', from: []));
     }
 
     // ── array() ───────────────────────────────────────────────────────

@@ -36,7 +36,7 @@ interface RequestInterface
 
     public static function bool(string $field, bool $default = false, ?array $from = null): bool;
 
-    public static function checkbox(string $field, bool $default = false, ?array $from = null): bool;
+    public static function checkbox(string $field, int $default = 0, ?array $from = null): int;
 
     public static function array(
         string $field,
