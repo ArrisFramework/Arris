@@ -4,6 +4,13 @@ declare(strict_types=1);
 
 namespace Arris\Util;
 
+/**
+ * Immutable fluent string.
+ *
+ * All transformers (lower, upper, trim, append, ...) return a NEW instance
+ * and leave the original untouched. The only exception: limit()/words()
+ * return $this when the string does not change.
+ */
 class Str implements StrInterface
 {
     private string $string;
@@ -11,6 +18,11 @@ class Str implements StrInterface
     public function __construct(string $string = '')
     {
         $this->string = $string;
+    }
+
+    private function newInstance(string $string): static
+    {
+        return new static($string);
     }
 
     public static function of(string $string = ''): static
@@ -35,62 +47,52 @@ class Str implements StrInterface
 
     public function lower(): static
     {
-        $this->string = mb_strtolower($this->string);
-        return $this;
+        return $this->newInstance(mb_strtolower($this->string));
     }
 
     public function upper(): static
     {
-        $this->string = mb_strtoupper($this->string);
-        return $this;
+        return $this->newInstance(mb_strtoupper($this->string));
     }
 
     public function ucfirst(): static
     {
-        $this->string = mb_strtoupper(mb_substr($this->string, 0, 1)) . mb_substr($this->string, 1);
-        return $this;
+        return $this->newInstance(mb_strtoupper(mb_substr($this->string, 0, 1)) . mb_substr($this->string, 1));
     }
 
     public function lcfirst(): static
     {
-        $this->string = mb_strtolower(mb_substr($this->string, 0, 1)) . mb_substr($this->string, 1);
-        return $this;
+        return $this->newInstance(mb_strtolower(mb_substr($this->string, 0, 1)) . mb_substr($this->string, 1));
     }
 
     public function substr(int $start, ?int $length = null): static
     {
-        $this->string = mb_substr($this->string, $start, $length);
-        return $this;
+        return $this->newInstance(mb_substr($this->string, $start, $length));
     }
 
     public function replace(string $search, string $replace): static
     {
-        $this->string = str_replace($search, $replace, $this->string);
-        return $this;
+        return $this->newInstance(str_replace($search, $replace, $this->string));
     }
 
     public function replaceRegex(string $pattern, string $replacement): static
     {
-        $this->string = preg_replace($pattern, $replacement, $this->string);
-        return $this;
+        return $this->newInstance(preg_replace($pattern, $replacement, $this->string));
     }
 
     public function trim(string $characters = " \t\n\r\0\x0B"): static
     {
-        $this->string = trim($this->string, $characters);
-        return $this;
+        return $this->newInstance(trim($this->string, $characters));
     }
 
     public function trimLeft(string $characters = " \t\n\r\0\x0B"): static
     {
-        $this->string = ltrim($this->string, $characters);
-        return $this;
+        return $this->newInstance(ltrim($this->string, $characters));
     }
 
     public function trimRight(string $characters = " \t\n\r\0\x0B"): static
     {
-        $this->string = rtrim($this->string, $characters);
-        return $this;
+        return $this->newInstance(rtrim($this->string, $characters));
     }
 
     public function contains(string $needle): bool
@@ -133,10 +135,10 @@ class Str implements StrInterface
         $pos = mb_strpos($this->string, $delimiter);
 
         if ($pos === false) {
-            return new static($this->string);
+            return $this->newInstance($this->string);
         }
 
-        return new static(mb_substr($this->string, $pos + mb_strlen($delimiter)));
+        return $this->newInstance(mb_substr($this->string, $pos + mb_strlen($delimiter)));
     }
 
     public function afterLast(string $delimiter): static
@@ -144,10 +146,10 @@ class Str implements StrInterface
         $pos = mb_strrpos($this->string, $delimiter);
 
         if ($pos === false) {
-            return new static($this->string);
+            return $this->newInstance($this->string);
         }
 
-        return new static(mb_substr($this->string, $pos + mb_strlen($delimiter)));
+        return $this->newInstance(mb_substr($this->string, $pos + mb_strlen($delimiter)));
     }
 
     public function before(string $delimiter): static
@@ -155,10 +157,10 @@ class Str implements StrInterface
         $pos = mb_strpos($this->string, $delimiter);
 
         if ($pos === false) {
-            return new static($this->string);
+            return $this->newInstance($this->string);
         }
 
-        return new static(mb_substr($this->string, 0, $pos));
+        return $this->newInstance(mb_substr($this->string, 0, $pos));
     }
 
     public function beforeLast(string $delimiter): static
@@ -166,10 +168,10 @@ class Str implements StrInterface
         $pos = mb_strrpos($this->string, $delimiter);
 
         if ($pos === false) {
-            return new static($this->string);
+            return $this->newInstance($this->string);
         }
 
-        return new static(mb_substr($this->string, 0, $pos));
+        return $this->newInstance(mb_substr($this->string, 0, $pos));
     }
 
     public function match(string $pattern): ?string
@@ -189,40 +191,34 @@ class Str implements StrInterface
 
     public function padLeft(int $length, string $pad = ' '): static
     {
-        $this->string = str_pad($this->string, $length, $pad, STR_PAD_LEFT);
-        return $this;
+        return $this->newInstance(str_pad($this->string, $length, $pad, STR_PAD_LEFT));
     }
 
     public function padRight(int $length, string $pad = ' '): static
     {
-        $this->string = str_pad($this->string, $length, $pad, STR_PAD_RIGHT);
-        return $this;
+        return $this->newInstance(str_pad($this->string, $length, $pad, STR_PAD_RIGHT));
     }
 
     public function padBoth(int $length, string $pad = ' '): static
     {
-        $this->string = str_pad($this->string, $length, $pad, STR_PAD_BOTH);
-        return $this;
+        return $this->newInstance(str_pad($this->string, $length, $pad, STR_PAD_BOTH));
     }
 
     public function repeat(int $times): static
     {
-        $this->string = str_repeat($this->string, $times);
-        return $this;
+        return $this->newInstance(str_repeat($this->string, $times));
     }
 
     public function reverse(): static
     {
-        $this->string = implode('', array_reverse(mb_str_split($this->string)));
-        return $this;
+        return $this->newInstance(implode('', array_reverse(mb_str_split($this->string))));
     }
 
     public function shuffle(): static
     {
         $chars = mb_str_split($this->string);
         shuffle($chars);
-        $this->string = implode('', $chars);
-        return $this;
+        return $this->newInstance(implode('', $chars));
     }
 
     public function slug(string $separator = '-'): static
@@ -230,20 +226,26 @@ class Str implements StrInterface
         $string = mb_strtolower($this->string);
         $string = preg_replace('/[^\w\x{0600}-\x{06FF}\x{0400}-\x{04FF}a-z0-9-]/u', $separator, $string);
         $string = preg_replace('/' . preg_quote($separator, '/') . '+/', $separator, $string);
-        $this->string = trim($string, $separator);
-        return $this;
+        return $this->newInstance(trim($string, $separator));
     }
 
+    /**
+     * Ограничивает строку по ширине.
+     * Если строка уже короче лимита — возвращает $this (без изменений).
+     */
     public function limit(int $limit = 100, string $end = '...'): static
     {
         if (mb_strwidth($this->string, 'UTF-8') <= $limit) {
             return $this;
         }
 
-        $this->string = rtrim(mb_strimwidth($this->string, 0, $limit, '', 'UTF-8')) . $end;
-        return $this;
+        return $this->newInstance(rtrim(mb_strimwidth($this->string, 0, $limit, '', 'UTF-8')) . $end);
     }
 
+    /**
+     * Ограничивает строку количеством слов.
+     * Если слова уже помещаются — возвращает $this (без изменений).
+     */
     public function words(int $words = 100, string $end = '...'): static
     {
         preg_match('/^\s*+(?:\S++\s*+){1,' . $words . '}/u', $this->string, $matches);
@@ -252,8 +254,7 @@ class Str implements StrInterface
             return $this;
         }
 
-        $this->string = rtrim($matches[0]) . $end;
-        return $this;
+        return $this->newInstance(rtrim($matches[0]) . $end);
     }
 
     public function isEmpty(): bool
@@ -273,14 +274,12 @@ class Str implements StrInterface
 
     public function append(string $string): static
     {
-        $this->string .= $string;
-        return $this;
+        return $this->newInstance($this->string . $string);
     }
 
     public function prepend(string $string): static
     {
-        $this->string = $string . $this->string;
-        return $this;
+        return $this->newInstance($string . $this->string);
     }
 
     public function explode(string $separator = ' '): array

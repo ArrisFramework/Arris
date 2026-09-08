@@ -5,6 +5,7 @@ namespace Tests\Util;
 
 use Arris\Util\Str;
 use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\Test;
 use PHPUnit\Framework\TestCase;
 
@@ -317,5 +318,69 @@ class StrTest extends TestCase
     {
         $s = new Str('test');
         $this->assertSame('"test"', json_encode($s));
+    }
+
+    // ── Immutability contract ─────────────────────────────────────────
+
+    #[Test]
+    #[DataProvider('immutableTransformers')]
+    public function transformerReturnsNewInstanceAndKeepsOriginal(string $seed, callable $transform, string $expected): void
+    {
+        $original = Str::of($seed);
+        $result = $transform($original);
+
+        $this->assertSame($seed, (string)$original, 'Original must not be mutated');
+        $this->assertSame($expected, (string)$result);
+        $this->assertNotSame($original, $result, 'Transformer must return a new instance');
+    }
+
+    public static function immutableTransformers(): iterable
+    {
+        yield 'lower'      => ['HELLO',       fn(Str $s) => $s->lower(),                 'hello'];
+        yield 'upper'      => ['hello',       fn(Str $s) => $s->upper(),                 'HELLO'];
+        yield 'ucfirst'    => ['hello',       fn(Str $s) => $s->ucfirst(),               'Hello'];
+        yield 'lcfirst'    => ['HELLO',       fn(Str $s) => $s->lcfirst(),               'hELLO'];
+        yield 'substr'     => ['hello world', fn(Str $s) => $s->substr(0, 5),            'hello'];
+        yield 'replace'    => ['hello world', fn(Str $s) => $s->replace('world', 'there'), 'hello there'];
+        yield 'replaceRegex' => ['abc123',    fn(Str $s) => $s->replaceRegex('/\d+/', 'X'), 'abcX'];
+        yield 'trim'       => ['  hi  ',      fn(Str $s) => $s->trim(),                  'hi'];
+        yield 'trimLeft'   => ['  hi  ',      fn(Str $s) => $s->trimLeft(),              'hi  '];
+        yield 'trimRight'  => ['  hi  ',      fn(Str $s) => $s->trimRight(),             '  hi'];
+        yield 'after'      => ['hello@world', fn(Str $s) => $s->after('@'),              'world'];
+        yield 'afterLast'  => ['a@b@c',       fn(Str $s) => $s->afterLast('@'),          'c'];
+        yield 'before'     => ['hello@world', fn(Str $s) => $s->before('@'),             'hello'];
+        yield 'beforeLast' => ['a@b@c',       fn(Str $s) => $s->beforeLast('@'),         'a@b'];
+        yield 'padLeft'    => ['hi',          fn(Str $s) => $s->padLeft(4, '-'),         '--hi'];
+        yield 'padRight'   => ['hi',          fn(Str $s) => $s->padRight(4, '-'),        'hi--'];
+        yield 'padBoth'    => ['hi',          fn(Str $s) => $s->padBoth(5, '-'),         '-hi--'];
+        yield 'repeat'     => ['ab',          fn(Str $s) => $s->repeat(2),               'abab'];
+        yield 'reverse'    => ['hello',       fn(Str $s) => $s->reverse(),               'olleh'];
+        yield 'slug'       => ['Hello World', fn(Str $s) => $s->slug(),                  'hello-world'];
+        yield 'append'     => ['hello',       fn(Str $s) => $s->append('!'),             'hello!'];
+        yield 'prepend'    => ['world',       fn(Str $s) => $s->prepend('!'),            '!world'];
+    }
+
+    #[Test]
+    public function shuffleDoesNotMutateOriginal(): void
+    {
+        $original = Str::of('hello');
+        $result = $original->shuffle();
+
+        $this->assertSame('hello', (string)$original);
+        $this->assertNotSame($original, $result);
+    }
+
+    #[Test]
+    public function limitReturnsSameInstanceWhenStringFits(): void
+    {
+        $s = Str::of('hi');
+        $this->assertSame($s, $s->limit(5));
+    }
+
+    #[Test]
+    public function wordsReturnsSameInstanceWhenStringFits(): void
+    {
+        $s = Str::of('one two');
+        $this->assertSame($s, $s->words(5));
     }
 }
