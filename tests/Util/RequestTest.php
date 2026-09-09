@@ -345,15 +345,19 @@ class RequestTest extends TestCase
     }
 
     #[Test]
-    public function arrayCastsElementsToString(): void
+    public function arrayReturnsElementsAsIs(): void
     {
-        $this->assertSame(['1', '2', '3'], Request::array('items', from: ['items' => [1, 2, 3]]));
+        $this->assertSame([1, 2, 3], Request::array('items', from: ['items' => [1, 2, 3]]));
     }
 
     #[Test]
-    public function arrayRespectsMaxLength(): void
+    public function arrayReturnsNestedArrayAsIs(): void
     {
-        $this->assertSame(['he', 'wo'], Request::array('items', maxLength: 2, from: ['items' => ['hello', 'world']]));
+        $nested = [
+            1 => ['status' => 'insert', 'order' => '1'],
+            2 => ['status' => 'update'],
+        ];
+        $this->assertSame($nested, Request::array('dishes', from: ['dishes' => $nested]));
     }
 
     // ── arrayMulti() ──────────────────────────────────────────────────

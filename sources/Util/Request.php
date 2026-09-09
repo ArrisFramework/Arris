@@ -249,12 +249,11 @@ class Request implements RequestInterface
     }
 
     /**
-     * Получает массив значений (для множественного выбора)
+     * Получает массив значений (для множественного выбора) как есть, без каста и обрезки
      * НЕ поддерживает множественные массивы вида nominations[ids][]
      *
      * @param string $field  Имя поля
      * @param array $default Значение по умолчанию
-     * @param int $maxLength Максимальная длина каждого элемента
      * @param array|null $from
      *
      * @return array
@@ -262,7 +261,6 @@ class Request implements RequestInterface
     public static function array(
         string $field,
         array $default = [],
-        int $maxLength = 0,
         ?array $from = null
     ): array {
 
@@ -274,16 +272,7 @@ class Request implements RequestInterface
             return $default;
         }
 
-        $result = [];
-        foreach ($value as $item) {
-            $item = (string)$item;
-            if ($maxLength > 0) {
-                $item = mb_substr($item, 0, $maxLength, 'UTF-8');
-            }
-            $result[] = $item;
-        }
-
-        return $result;
+        return $value;
     }
 
     /**
