@@ -8,7 +8,6 @@
 
 **Namespace:** `Arris\Helpers`  
 **Реализует:** `ArraysInterface`  
-**Зависимости:** `Arris\Helpers\Dataset` (для `explodeToType` при строковых типах)
 
 ---
 
@@ -84,7 +83,7 @@ public static function explodeToType(
 | Значение            | Поведение                                            |
 |---------------------|------------------------------------------------------|
 | `null`              | Элементы возвращаются как строки                     |
-| `'int'`, `'float'`… | Каждый элемент приводится через `Dataset::castToType`|
+| `'int'`, `'float'`… | Каждый элемент приводится через внутренний `castToType` |
 | `callable`          | Callback применяется к каждому элементу              |
 | `array`             | N-й элемент обрабатывается N-м элементом массива     |
 
@@ -115,9 +114,6 @@ Arrays::explodeToType('42,3.14,hello', ',', ['int', 'float', 'string']);
 Arrays::explodeToType('100,hello', ',', ['int', fn($v) => strtoupper($v)]);
 // => [100, 'HELLO']
 ```
-
-> ⚠️ При использовании строковых типов (`'int'`, `'float'`, `'bool'`, `'string'`)
-> требуется наличие класса `Arris\Helpers\Dataset` с методом `castToType()`.
 
 ---
 
@@ -233,9 +229,6 @@ Arrays::groupDatasetByColumn($dataset, 'id');
 | `filterArrayForAllowed()`| 7   | ✅  |
 | `groupDatasetByColumn()` | 5   | ✅  |
 | **Итого**                |**25**|     |
-
-> Тесты для `explodeToType()` со строковыми типами (`'int'`, `'float'`) автоматически
-> пропускаются (`markTestSkipped`), если класс `Dataset` отсутствует в проекте.
 ```
 
 ---

@@ -46,6 +46,7 @@
         "karelwintersky/arris.logger": "Arris µFramework: AppLogger class",
         "karelwintersky/arris.helpers": "Arris µFramework: helpers",
         "karelwintersky/arris.presenter": "Arris µFramework: Presenter engine",
+        "karelwintersky/arris.request": "Arris µFramework: Fluent request data reader (standalone)",
         "karelwintersky/arris.toolkit.cli-console": "Arris µFramework - CLIConsole helper",
         "karelwintersky/arris.cli": "Arris µFramework - CLIConsole helper",
         "sabre/event": "sabre/event is a library for lightweight event-based programming (more complexity than Arris/Hook)",
