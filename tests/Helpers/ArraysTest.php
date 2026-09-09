@@ -142,11 +142,6 @@ class ArraysTest extends TestCase
     #[TestDox('explodeToType: строка-тип int приводит к целым числам')]
     public function explodeToTypeStringInt(): void
     {
-        // Dataset::castToType должен существовать; если нет — пропускаем
-        if (!class_exists(\Arris\Helpers\Dataset::class)) {
-            $this->markTestSkipped('Класс Dataset не найден — тест зависит от внешнего класса.');
-        }
-
         $result = Arrays::explodeToType('1 2 3', ' ', 'int');
 
         $this->assertSame([1, 2, 3], $result);
@@ -156,10 +151,6 @@ class ArraysTest extends TestCase
     #[TestDox('explodeToType: строка-тип float приводит к числам с плавающей точкой')]
     public function explodeToTypeStringFloat(): void
     {
-        if (!class_exists(\Arris\Helpers\Dataset::class)) {
-            $this->markTestSkipped('Класс Dataset не найден.');
-        }
-
         $result = Arrays::explodeToType('1.5,2.7', ',', 'float');
 
         $this->assertSame([1.5, 2.7], $result);
@@ -169,10 +160,6 @@ class ArraysTest extends TestCase
     #[TestDox('explodeToType: массив типов приводит каждый элемент к своему типу')]
     public function explodeToTypeArrayOfTypes(): void
     {
-        if (!class_exists(\Arris\Helpers\Dataset::class)) {
-            $this->markTestSkipped('Класс Dataset не найден.');
-        }
-
         $result = Arrays::explodeToType(
             '42,3.14,hello',
             ',',
@@ -186,10 +173,6 @@ class ArraysTest extends TestCase
     #[TestDox('explodeToType: смешанный массив — callable и строка-тип')]
     public function explodeToTypeMixedArray(): void
     {
-        if (!class_exists(\Arris\Helpers\Dataset::class)) {
-            $this->markTestSkipped('Класс Dataset не найден.');
-        }
-
         $result = Arrays::explodeToType(
             '100,hello',
             ',',

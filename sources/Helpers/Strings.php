@@ -47,6 +47,7 @@ class Strings implements StringsInterface
         return 0;
     }
 
+
     /**
      * Возвращает форму множественного числа для русского языка.
      *
@@ -60,7 +61,6 @@ class Strings implements StringsInterface
      * @param array<string>|string $forms Массив из 3 форм или строка с разделителем
      * @param string $glue Разделитель для строкового формата
      * @return string Правильная форма слова
-     * @throws InvalidArgumentException Если передано меньше 1 формы
      */
     public static function pluralForm(int $number, array|string $forms, string $glue = '|'): string
     {

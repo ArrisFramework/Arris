@@ -13,4 +13,8 @@ interface DebugInterface
     public static function dt($array);
 
     public static function ddt($array);
+
+    public static function dl():void;
+
+    public static function dumpPre(array $data, int $first_gap = 4, int $second_gap = 1): string;
 }

@@ -255,13 +255,15 @@ class Request implements RequestInterface
      * @param string $field  Имя поля
      * @param array $default Значение по умолчанию
      * @param array|null $from
+     * @param bool $allowEmptySource Разрешить пустой массив [] из источника (иначе → default)
      *
      * @return array
      */
     public static function array(
         string $field,
         array $default = [],
-        ?array $from = null
+        ?array $from = null,
+        bool $allowEmptySource = false
     ): array {
 
         $source = $from ?? self::$source_of_truth ?? $_REQUEST;
@@ -269,6 +271,10 @@ class Request implements RequestInterface
         $value = $source[$field] ?? $default;
 
         if (!is_array($value)) {
+            return $default;
+        }
+
+        if (!$allowEmptySource && $value === []) {
             return $default;
         }
 
