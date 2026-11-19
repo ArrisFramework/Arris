@@ -37,7 +37,6 @@
     },
     "suggest": {
         "psr/simple-cache": "^3.0",
-        "psr/container": "^2.0",
         "symfony/yaml": "^5.4",
         "ramsey/collection": "*",
         "karelwintersky/arris.entity": "Arris µFramework: Entity Types",
