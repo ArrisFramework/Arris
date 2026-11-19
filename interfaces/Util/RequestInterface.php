@@ -6,6 +6,12 @@ namespace Arris\Util;
 
 interface RequestInterface
 {
+    public static function any(
+        string $field,
+        mixed $default = null,
+        ?array $from = null
+    ):mixed;
+
     public static function str(
         string $field,
         int $maxLength = 0,

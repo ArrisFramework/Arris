@@ -24,7 +24,7 @@
         "ext-pdo": "*",
         "ext-readline": "*",
         "ext-simplexml": "*",
-        "karelwintersky/arris.config": "^1",
+        "karelwintersky/arris.config": "^2",
         "psr/log": "*"
     },
     "require-dev": {
