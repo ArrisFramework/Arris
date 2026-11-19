@@ -3,8 +3,9 @@
 ```markdown
 # Arris\Helpers\Arrays
 
-> Статический хелпер для работы с массивами: фильтрация, парсинг строк с типизацией,
-> безопасное извлечение значений с whitelist-валидацией, переиндексация PDO-выборок.
+> Статический хелпер для работы с массивами: дополнение дефолтами, фильтрация,
+> парсинг строк с типизацией, безопасное извлечение значений с whitelist-валидацией,
+> переиндексация PDO-выборок.
 
 **Namespace:** `Arris\Helpers`  
 **Реализует:** `ArraysInterface`  
@@ -13,15 +14,66 @@
 
 ## Оглавление
 
-1. [filter()](#filter)
-2. [explodeToType()](#explodetotype)
-3. [filterArrayForAllowed()](#filterarrayforallowed)
-4. [groupDatasetByColumn()](#groupdatasetbycolumn)
-5. [Тестирование](#тестирование)
+1. [withDefaults()](#withdefaults)
+2. [filter()](#filter)
+3. [explodeToType()](#explodetotype)
+4. [filterArrayForAllowed()](#filterarrayforallowed)
+5. [groupDatasetByColumn()](#groupdatasetbycolumn)
+6. [Тестирование](#тестирование)
 
 ---
 
 ## Методы
+
+### `withDefaults()`
+
+Дополняет массив значениями из массива дефолтов: ключи, которых нет во входных
+данных, берутся из `$defaults`; значения входного массива имеют приоритет.
+
+```php
+public static function withDefaults(
+    array $income,
+    array $defaults,
+    bool $treatEmptyAsMissing = false
+): array
+```
+
+| Параметр               | Тип     | По умолчанию | Описание                                                                 |
+|------------------------|---------|--------------|--------------------------------------------------------------------------|
+| `$income`              | `array` | —            | Входящие данные                                                          |
+| `$defaults`            | `array` | —            | Значения по умолчанию                                                    |
+| `$treatEmptyAsMissing` | `bool`  | `false`      | Считать `empty()`-значения (`''`, `0`, `'0'`, `false`, `null`, `[]`) отсутствующими |
+
+**Примеры:**
+
+```php
+use Arris\Helpers\Arrays;
+
+// Отсутствующие ключи дополняются
+Arrays::withDefaults(['a' => 1], ['a' => 0, 'b' => 2]);
+// => ['a' => 1, 'b' => 2]
+
+// null считается отсутствующим значением
+Arrays::withDefaults(['a' => null], ['a' => 'default']);
+// => ['a' => 'default']
+
+// По умолчанию пустая строка и 0 — валидные значения, дефолт их не заменяет
+Arrays::withDefaults(['a' => ''], ['a' => 'x']);
+// => ['a' => '']
+
+// С флагом — используется семантика empty()
+Arrays::withDefaults(['a' => ''], ['a' => 'x'], true);
+// => ['a' => 'x']
+
+// Ключи, которых нет в дефолтах, сохраняются
+Arrays::withDefaults(['extra' => 5], ['a' => 1]);
+// => ['a' => 1, 'extra' => 5]
+```
+
+Метод не рекурсивный: если значение — массив, он заменяется целиком, а не
+сливается поэлементно.
+
+---
 
 ### `filter()`
 
@@ -224,11 +276,13 @@ Arrays::groupDatasetByColumn($dataset, 'id');
 
 | Метод                    | Кол-во тестов | DataProvider |
 |--------------------------|:---:|:---:|
+| `withDefaults()`         | 9   | —   |
 | `filter()`               | 5   | —   |
-| `explodeToType()`        | 8   | —   |
-| `filterArrayForAllowed()`| 7   | ✅  |
-| `groupDatasetByColumn()` | 5   | ✅  |
-| **Итого**                |**25**|     |
+| `explodeToType()`        | 9   | —   |
+| `filterArrayForAllowed()`| 12  | ✅  |
+| `filterValueForAllowed()`| 4   | —   |
+| `groupDatasetByColumn()` | 8   | ✅  |
+| **Итого**                |**47**|     |
 ```
 
 ---
@@ -237,6 +291,6 @@ Arrays::groupDatasetByColumn($dataset, 'id');
 
 | Файл | Назначение |
 |---|---|
-| `ArraysInterface.php` | Контракт — все 4 метода с PHPDoc |
-| `ArraysTest.php` | 25 тестов, PHPUnit 10 атрибуты (`#[Test]`, `#[DataProvider]`, `#[TestDox]`, `#[CoversClass]`) |
+| `ArraysInterface.php` | Контракт — все методы с PHPDoc |
+| `ArraysTest.php` | 47 тестов, PHPUnit 10 атрибуты (`#[Test]`, `#[DataProvider]`, `#[TestDox]`, `#[CoversClass]`) |
 | `Arrays.md` | Полная документация с примерами, таблицами параметров и инструкцией по запуску тестов |

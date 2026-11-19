@@ -504,4 +504,96 @@ class ArraysTest extends TestCase
             Arrays::groupDatasetByColumn($dataset, $column)
         );
     }
+
+    // ─────────────────────────────────────────────
+    //  withDefaults()
+    // ─────────────────────────────────────────────
+
+    #[Test]
+    #[TestDox('withDefaults: отсутствующие ключи берутся из дефолтов')]
+    public function withDefaultsFillsMissingKeys(): void
+    {
+        $this->assertSame(
+            ['a' => 1, 'b' => 2],
+            Arrays::withDefaults(['a' => 1], ['a' => 0, 'b' => 2])
+        );
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: значения income имеют приоритет')]
+    public function withDefaultsPrefersIncomeValues(): void
+    {
+        $this->assertSame(
+            ['a' => 'income', 'b' => 'default'],
+            Arrays::withDefaults(['a' => 'income'], ['a' => 'default', 'b' => 'default'])
+        );
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: null заменяется дефолтом')]
+    public function withDefaultsReplacesNull(): void
+    {
+        $this->assertSame(
+            ['a' => 'default'],
+            Arrays::withDefaults(['a' => null], ['a' => 'default'])
+        );
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: пустые значения не заменяются без флага')]
+    public function withDefaultsKeepsEmptyValuesByDefault(): void
+    {
+        $income = ['empty' => '', 'zero' => 0, 'string_zero' => '0', 'false' => false];
+        $defaults = ['empty' => 'x', 'zero' => 1, 'string_zero' => '1', 'false' => true];
+
+        $this->assertSame($income, Arrays::withDefaults($income, $defaults));
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: с флагом empty-значения заменяются дефолтом')]
+    public function withDefaultsReplacesEmptyValuesWhenFlagSet(): void
+    {
+        $income = ['empty' => '', 'zero' => 0, 'string_zero' => '0', 'false' => false, 'null' => null];
+        $defaults = ['empty' => 'x', 'zero' => 1, 'string_zero' => '1', 'false' => true, 'null' => 'x'];
+
+        $this->assertSame($defaults, Arrays::withDefaults($income, $defaults, true));
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: ключи только из income сохраняются')]
+    public function withDefaultsKeepsIncomeOnlyKeys(): void
+    {
+        $this->assertSame(
+            ['a' => 'default', 'extra' => null],
+            Arrays::withDefaults(['extra' => null], ['a' => 'default'])
+        );
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: пустой income возвращает дефолты')]
+    public function withDefaultsReturnsDefaultsForEmptyIncome(): void
+    {
+        $defaults = ['a' => 1, 'b' => 2];
+
+        $this->assertSame($defaults, Arrays::withDefaults([], $defaults));
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: пустые дефолты возвращают income как есть')]
+    public function withDefaultsReturnsIncomeForEmptyDefaults(): void
+    {
+        $income = ['a' => 1, 'b' => null];
+
+        $this->assertSame($income, Arrays::withDefaults($income, []));
+    }
+
+    #[Test]
+    #[TestDox('withDefaults: не рекурсивный — вложенные массивы заменяются целиком')]
+    public function withDefaultsIsNotRecursive(): void
+    {
+        $this->assertSame(
+            ['a' => ['x' => 2]],
+            Arrays::withDefaults(['a' => ['x' => 2]], ['a' => ['x' => 1, 'y' => 3]])
+        );
+    }
 }

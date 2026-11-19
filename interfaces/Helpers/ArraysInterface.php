@@ -6,6 +6,12 @@ interface ArraysInterface
 {
     public static function get(array $options, ?string $key, mixed $default = null): mixed;
 
+    public static function withDefaults(
+        array $income,
+        array $defaults,
+        bool $treatEmptyAsMissing = false
+    ): array;
+
     public static function filter(array $input, callable $callback = null, int $flag = 0): array;
 
     public static function allowed(mixed $value, array $allowed, mixed $default = null, bool $strict = true): mixed;

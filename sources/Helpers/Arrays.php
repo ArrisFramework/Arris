@@ -21,6 +21,44 @@ class Arrays implements ArraysInterface
     }
 
     /**
+     * Дополняет массив значениями из массива дефолтов.
+     *
+     * Ключи, отсутствующие в $income, берутся из $defaults.
+     * Значения из $income имеют приоритет. По умолчанию «пустым» считается
+     * только null; при $treatEmptyAsMissing = true используется семантика
+     * empty() (пустая строка, 0, '0', false, null, []).
+     *
+     * Примеры:
+     *  - withDefaults(['a' => 1], ['a' => 0, 'b' => 2])  => ['a' => 1, 'b' => 2]
+     *  - withDefaults(['a' => ''], ['a' => 'x'])         => ['a' => '']
+     *  - withDefaults(['a' => ''], ['a' => 'x'], true)   => ['a' => 'x']
+     *
+     * @param array $income Входящие данные
+     * @param array $defaults Значения по умолчанию
+     * @param bool $treatEmptyAsMissing Считать empty()-значения отсутствующими
+     * @return array
+     */
+    public static function withDefaults(
+        array $income,
+        array $defaults,
+        bool $treatEmptyAsMissing = false
+    ): array {
+        $result = $defaults;
+
+        foreach ($income as $key => $value) {
+            $isMissing = $treatEmptyAsMissing ? empty($value) : $value === null;
+
+            if ($isMissing && array_key_exists($key, $defaults)) {
+                continue;
+            }
+
+            $result[$key] = $value;
+        }
+
+        return $result;
+    }
+
+    /**
      * Проверяет, входит ли значение в список разрешённых.
      * Замена checkAllowedValue().
      *
